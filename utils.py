@@ -16,13 +16,13 @@ def read_contact_metadata():
 
     return contact_map
 
-def transform_contact(source_contact, contact_map):
+def transform_source_to_destination(source, destination_map):
     post_processed_contact = {}
-    for key, value in source_contact.items():
-        if key not in contact_map:
+    for key, value in source.items():
+        if key not in destination_map:
             print(f"{key} not found in contact")
             continue
-        field_config = contact_map[key]
+        field_config = destination_map[key]
         if field_config["type"] == "object":
             field_value = json.dumps(value)
         elif isinstance(value, list):
@@ -42,8 +42,7 @@ if __name__ == "__main__":
     contact_list = contact_data["items"]
     record_list = []
     for contact in contact_list:
-        post_processed_contact = transform_contact(contact["orgContact"], contact_map)
+        post_processed_contact = transform_source_to_destination(contact["orgContact"], contact_map)
         record_list.append(post_processed_contact)
 
     contact_df = pd.DataFrame(record_list)
-    print(contact_df.dtypes)
