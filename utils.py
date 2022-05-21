@@ -1,6 +1,8 @@
 import json
 
-import pandas as pd 
+import pandas as pd
+
+from etl.datamodel import RedshiftConfig 
 
 standard_dtypes = ["string", "bool", "int", "decimal"]
 

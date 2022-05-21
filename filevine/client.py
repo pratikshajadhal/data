@@ -35,6 +35,9 @@ class FileVineClient(object):
 			"orgId" : self.org_id
 		}
         response = requests.post(url, headers={"Content-Type" : "application/json"}, data=json.dumps(data))
+        if response.status_code != 200:
+            logging.error("Unable to generate tokens")
+            raise Exception("Token genreation error")
         return json.loads(response.text)
 
     def make_request(self, end_point:str, query_param:Dict={}):
@@ -43,21 +46,41 @@ class FileVineClient(object):
         logging.debug("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
                 "Authorization" : "Bearer {}".format(session_info["accessToken"])}
-        response = requests.get(url, headers=headers, data=query_param)
+        response = requests.get(url, headers=headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
+            logging.error(response.status_code)
+        
         return json.loads(response.text)
+
+    def get_entity(self, end_point:str, requested_fields:list=['*']):
+        has_more = True
+        limit=1000
+        offset=0
+        item_list = []
+        
+        while has_more:
+            response = self.make_request(end_point=end_point, 
+                                    query_param={"limit" : limit, "requestedFields" : ','.join(requested_fields), "offset" : offset})
+            has_more = response["hasMore"]
+            offset = offset + limit
+            items = response["items"]
+            item_list = item_list + items
+
+        return items
 
     def get_contact_metadata(self):
         contact_metadata = self.make_request("core/custom-contacts-meta")
         return contact_metadata
 
     def get_contacts(self, project_id:int):
-        contact_list = self.make_request(f"core/projects/{project_id}/contacts")
+        raw_contact_items = self.get_entity(f"core/projects/{project_id}/contacts")
+        contact_list = [item["orgContact"] for item in raw_contact_items]
         return contact_list
 
-    def get_projects(self, requestedFields:list[str]=[]):
-        project_list = self.make_request("core/projects", query_param={"limit" : 1000, "requestedFields" : ','.join(requestedFields)})
+    def get_projects(self, requested_fields:list[str]=[]):
+        return self.get_entity("core/projects", requested_fields=requested_fields)
+        
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
