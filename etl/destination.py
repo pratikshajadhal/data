@@ -1,12 +1,15 @@
 from ctypes import Union
 import pandas as pd
 import os
+import psycopg2
 
-from etl.datamodel import RedshiftConfig
+import pandas_redshift as pr
+        
+from etl.datamodel import ColumnDefn, RedshiftConfig
 
 class Destination(object):
 
-    def __init__(self, config: RedshiftConfig):
+    def __init__(self, config: RedshiftConfig=None):
         self.config = config
 
     def get_config(self) -> RedshiftConfig:
@@ -17,19 +20,84 @@ class Destination(object):
 
 class RedShiftDestination(Destination):
 
-    def initialize_destination(self, table_name) -> RedshiftConfig:
+    def get_default_config(self, table_name) -> RedshiftConfig:
+        print(os.environ["host"])
         rs_config = RedshiftConfig(table_name=table_name, 
                     schema_name=os.environ["schema_name"],
                     host=os.environ["host"],
                     port=os.environ["port"],
                     user=os.environ["user"],
+                    dbname=os.environ["dbname"],
                     password=os.environ["password"],
                     s3_bucket=os.environ["s3_bucket"],
                     s3_temp_dir=os.environ["s3_temp_dir"])
         self.config = rs_config
+        return rs_config
+
+    def get_column_mapper(self):
+        column_mapper = {"string" : "varchar(255)",
+                        "object" : "text",
+                        "int" : "int",
+                        "bool" : "boolean",
+                        "date" : "date",
+                        "decimal" : "numeric(10,3)"
+                        }
+        return column_mapper
+
+    def connect_to_redshift(self):
+        connect = psycopg2.connect(dbname=self.config.dbname,
+                                host=self.config.host,
+                                port=self.config.port,
+                                user=self.config.user,
+                                password=self.config.password
+                                )
+
+        cursor = connect.cursor()
+        return cursor, connect
+
+    def create_redshift_table(self, 
+                          column_def:list[ColumnDefn],
+                          redshift_table_name,
+                          column_data_types=None,
+                          index=False,
+                          append=False,
+                          diststyle='even',
+                          distkey='',
+                          sort_interleaved=False,
+                          sortkey='',
+                          verbose=True):
+        """Create an empty RedShift Table
+        schema_json : 
+        [{"name" : <col_name>, "data_type" : <data_type>}]
+        """
+        columns_and_data_type = ', '.join(
+            ['{0} {1}'.format(column.name, column.data_type) for column in column_def])
+
+        create_table_query = 'create table {0}.{1} ({2})'.format(
+            self.config.schema_name, redshift_table_name, columns_and_data_type)
+
+        print(create_table_query)
+
+        #exit()
+        if not distkey:
+            # Without a distkey, we can set a diststyle
+            if diststyle not in ['even', 'all']:
+                raise ValueError("diststyle must be either 'even' or 'all'")
+            else:
+                create_table_query += ' diststyle {0}'.format(diststyle)
+        else:
+            # otherwise, override diststyle with distkey
+            create_table_query += ' distkey({0})'.format(distkey)
+        if len(sortkey) > 0:
+            if sort_interleaved:
+                create_table_query += ' interleaved'
+            create_table_query += ' sortkey({0})'.format(sortkey)
+        cursor, connect = self.connect_to_redshift()
+        cursor.execute('drop table if exists {0}'.format(redshift_table_name))
+        cursor.execute(create_table_query)
+        connect.commit()
 
     def load_data(self, data_df:pd.DataFrame):
-        import pandas_redshift as pr
         rs_config = self.config
         pr.connect_to_redshift(dbname=rs_config.dbname,
                                 host=rs_config.host,
@@ -39,7 +107,10 @@ class RedShiftDestination(Destination):
 
         pr.connect_to_s3(
                         bucket=rs_config.s3_bucket,
-                        subdirectory=rs_config.s3_temp_dir)
+                        subdirectory=rs_config.s3_temp_dir,
+                        aws_access_key_id=os.environ["aws_access_key_id"],
+                        aws_secret_access_key=os.environ["aws_secret_access_key"]
+                        )
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)

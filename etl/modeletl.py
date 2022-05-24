@@ -1,7 +1,8 @@
 from ast import List
 from typing import Dict
-from etl.datamodel import ETLDestination, ETLSource, FileVineConfig
+from etl.datamodel import ColumnDefn, ETLDestination, ETLSource, FileVineConfig
 import pandas as pd
+from .destination import RedShiftDestination
 import filevine.client as fv_client
 import json
 
@@ -9,7 +10,7 @@ import settings
 
 class ModelETL(object):
     
-    def __init__(self, model_name:str, source:ETLSource, destination:ETLDestination, fv_config:FileVineConfig):
+    def __init__(self, model_name:str, source:ETLSource, destination:RedShiftDestination, fv_config:FileVineConfig):
         self.model_name = model_name
         self.source = source
         self.destination = destination
@@ -36,7 +37,18 @@ class ModelETL(object):
 
         return flattend_map
 
-    def transform_data(self, record_list:list) -> pd.DataFrame:
+    def convert_schema_into_destination_format(self, source_flattened_schema:Dict, destination:str="redshift"):
+        dest_col_defn : list[ColumnDefn] = []
+
+        column_mapper = self.destination.get_column_mapper()
+
+        for col, field_config in source_flattened_schema.items():
+            print(f"{col}{field_config}")
+            dest_col_defn.append(ColumnDefn(name=col, data_type=column_mapper[field_config["type"]]))
+
+        return dest_col_defn
+
+    def transform_data(self, record_list:list):
         transformed_record_list = []
 
         self.get_schema_of_model()
@@ -53,7 +65,7 @@ class ModelETL(object):
                 if field_config["type"] == "object":
                     if isinstance(value, dict):
                         for subkey, subvalue in value.items():
-                            post_processed_record[f"{key}.{subkey}"] = subvalue
+                            post_processed_record[f"{key}__{subkey}"] = subvalue
                         continue
                     if isinstance(value, list):
                         field_value = json.dumps(value)
@@ -68,13 +80,18 @@ class ModelETL(object):
         return pd.DataFrame(transformed_record_list)
 
 
-    def load_data_to_destination(self, trans_df:pd.DataFrame) -> pd.DataFrame:
-        dest_config = self.destination.config
-        
-        from destination import RedShiftDestination
+    def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn]) -> pd.DataFrame:
+        dest = self.destination
 
-        rs_dest = RedShiftDestination(dest_config)
-        rs_dest.load_data(trans_df)
+        dest.create_redshift_table(column_def=schema, 
+                            redshift_table_name=f"{self.model_name}_raw")
+
+
+        
+        #from destination import RedShiftDestination
+        #rs_dest = RedShiftDestination(dest_config)
+        #rs_dest.initialize_destination(table_name="contact")
+        dest.load_data(trans_df)
 
         return 0
 

@@ -12,7 +12,7 @@ class ContactETL(ModelETL):
         contact_schema = self.fv_client.get_contact_metadata()
         
         #Contact ID Field
-        contact_schema.append({"fieldName" : "Contact ID", "selector" : "personId", "value" : "object"})
+        #contact_schema.append({"fieldName" : "Contact ID", "selector" : "personId", "value" : "object"})
         
         self.source_schema = contact_schema
         

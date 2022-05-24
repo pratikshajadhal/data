@@ -31,3 +31,7 @@ class FileVineConfig:
     org_id:int
     user_id:int
 
+@dataclass
+class ColumnDefn:
+    name:str
+    data_type:str
