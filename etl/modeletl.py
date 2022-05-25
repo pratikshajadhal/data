@@ -2,7 +2,7 @@ from ast import List
 from typing import Dict
 from etl.datamodel import ColumnDefn, ETLDestination, ETLSource, FileVineConfig
 import pandas as pd
-from .destination import RedShiftDestination
+from .destination import ETLDestination, RedShiftDestination
 import filevine.client as fv_client
 import json
 
@@ -10,7 +10,7 @@ import settings
 
 class ModelETL(object):
     
-    def __init__(self, model_name:str, source:ETLSource, destination:RedShiftDestination, fv_config:FileVineConfig):
+    def __init__(self, model_name:str, source:ETLSource, destination:ETLDestination, fv_config:FileVineConfig):
         self.model_name = model_name
         self.source = source
         self.destination = destination
@@ -37,7 +37,7 @@ class ModelETL(object):
 
         return flattend_map
 
-    def convert_schema_into_destination_format(self, source_flattened_schema:Dict, destination:str="redshift"):
+    def convert_schema_into_destination_format(self, source_flattened_schema:Dict):
         dest_col_defn : list[ColumnDefn] = []
 
         column_mapper = self.destination.get_column_mapper()

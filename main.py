@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from os import environ
 import re
 from etl.contact import ContactETL
@@ -13,17 +14,25 @@ print(os.environ['host'])
 
 
 if __name__ == "__main__":
-    rs_config = RedShiftDestination().get_default_config("contact")
+    rs_config = RedShiftDestination().get_default_config(table_name="contact")
     contact_etl = ContactETL(model_name="contact", source=None, destination=RedShiftDestination(rs_config), fv_config=FileVineConfig(user_id=31958, org_id=6586))
-    project_list = [10568299, 10568297]
+    
+    #project_list = [10568299, 10568297]
 
+    project_list = contact_etl.get_projects()
+    #print(len(project_list))
+    contact_etl.extract_data_from_source(project_list=project_list[:100])
+
+    '''
     source_schema = contact_etl.get_schema_of_model()
     flattened_schema = contact_etl.flatten_schema(source_schema=source_schema)
     dest_schema = contact_etl.convert_schema_into_destination_format(source_flattened_schema=flattened_schema)
 
-    contact_etl.load_data_to_destination(trans_df=None, schema=dest_schema)
     print(dest_schema)
+    #contact_etl.load_data_to_destination(trans_df=None, schema=dest_schema)
+    #print(dest_schema)
     exit()
+    '''
     '''
     record_list = contact_etl.extract_data_from_source(project_list=project_list)
 

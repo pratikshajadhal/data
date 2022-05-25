@@ -67,7 +67,7 @@ class FileVineClient(object):
             items = response["items"]
             item_list = item_list + items
 
-        return items
+        return item_list
 
     def get_contact_metadata(self):
         contact_metadata = self.make_request("core/custom-contacts-meta")

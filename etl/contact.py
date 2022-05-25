@@ -19,9 +19,15 @@ class ContactETL(ModelETL):
         self.persist_source_schema()
         return contact_schema
 
+    def get_projects(self) -> list[int]:
+        project_data_list = self.fv_client.get_projects(requested_fields=["projectId"])
+        project_list = [project_data["projectId"]["native"] for project_data in project_data_list]
+        return project_list
+
     def extract_data_from_source(self, project_list:list[int]=[]):
         final_contact_list = []
         for project in project_list:
+            print(f"Getting contact for project {project}")
             contact_list = self.fv_client.get_contacts(project_id=project)
             final_contact_list = final_contact_list + contact_list
 

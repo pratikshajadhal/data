@@ -1,28 +1,36 @@
 from ctypes import Union
+from dataclasses import asdict, dataclass
+from typing import Dict
 import pandas as pd
 import os
 import psycopg2
+from dacite import from_dict
+        
 
 import pandas_redshift as pr
         
 from etl.datamodel import ColumnDefn, RedshiftConfig
 
-class Destination(object):
+class ETLDestination(object):
 
-    def __init__(self, config: RedshiftConfig=None):
+    def __init__(self, config: Dict=None):
         self.config = config
 
-    def get_config(self) -> RedshiftConfig:
+    def get_config(self) -> Dict:
         return {}
 
     def load_data(self, data_df:pd.DataFrame):
         return 0 
 
-class RedShiftDestination(Destination):
+class S3Destination(ETLDestination):
+    def get_default_config(self, **kwargs) -> Dict:
+        return None
 
-    def get_default_config(self, table_name) -> RedshiftConfig:
+class RedShiftDestination(ETLDestination):
+
+    def get_default_config(self, **kwargs) -> Dict:
         print(os.environ["host"])
-        rs_config = RedshiftConfig(table_name=table_name, 
+        rs_config = RedshiftConfig(table_name=kwargs["table_name"], 
                     schema_name=os.environ["schema_name"],
                     host=os.environ["host"],
                     port=os.environ["port"],
@@ -32,7 +40,7 @@ class RedShiftDestination(Destination):
                     s3_bucket=os.environ["s3_bucket"],
                     s3_temp_dir=os.environ["s3_temp_dir"])
         self.config = rs_config
-        return rs_config
+        return asdict(rs_config)
 
     def get_column_mapper(self):
         column_mapper = {"string" : "varchar(255)",
@@ -45,11 +53,12 @@ class RedShiftDestination(Destination):
         return column_mapper
 
     def connect_to_redshift(self):
-        connect = psycopg2.connect(dbname=self.config.dbname,
-                                host=self.config.host,
-                                port=self.config.port,
-                                user=self.config.user,
-                                password=self.config.password
+        rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
+        connect = psycopg2.connect(dbname=rs_config.dbname,
+                                host=rs_config.host,
+                                port=rs_config.port,
+                                user=rs_config.user,
+                                password=rs_config.password
                                 )
 
         cursor = connect.cursor()
@@ -98,7 +107,8 @@ class RedShiftDestination(Destination):
         connect.commit()
 
     def load_data(self, data_df:pd.DataFrame):
-        rs_config = self.config
+        rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
+        
         pr.connect_to_redshift(dbname=rs_config.dbname,
                                 host=rs_config.host,
                                 port=rs_config.port,
