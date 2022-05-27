@@ -5,26 +5,46 @@ import pandas as pd
 import os
 import psycopg2
 from dacite import from_dict
+import datetime
         
-
+import boto3
 import pandas_redshift as pr
-        
+import awswrangler as wr
+
 from etl.datamodel import ColumnDefn, RedshiftConfig
 
 class ETLDestination(object):
 
-    def __init__(self, config: Dict=None):
-        self.config = config
+    def __init__(self, **kwargs):
+        self.dummy = 1
 
     def get_config(self) -> Dict:
         return {}
 
-    def load_data(self, data_df:pd.DataFrame):
+    def load_data(self, data_df:pd.DataFrame, **kwargs):
         return 0 
 
 class S3Destination(ETLDestination):
-    def get_default_config(self, **kwargs) -> Dict:
-        return None
+    def __init__(self, org_id:int, s3_bucket:str=None):
+        self.config = {"org_id" : org_id,
+                    "bucket" : s3_bucket or os.environ["s3_bucket"]
+                    }
+        self.s3_session = boto3.Session(aws_access_key_id=os.environ["aws_access_key_id"],
+                        aws_secret_access_key=os.environ["aws_secret_access_key"])
+        
+    def load_data(self, data_df: pd.DataFrame, **kwargs):
+        file_name = "{}.parquet".format(datetime.datetime.now().strftime('%Y-%d-%m_%H:%M:%S'))
+        
+        if kwargs["section"] == "core":
+            s3_key = f"{self.config['org_id']}/{kwargs['entity']}/{file_name}"
+        else:
+            s3_key = f"{self.config['org_id']}/{kwargs['project_type']}/{kwargs['section']}/{kwargs['entity']}/{file_name}"
+
+        wr.s3.to_parquet(
+                df=data_df,
+                path=f"s3://{self.config['bucket']}/{s3_key}",
+                boto3_session=self.s3_session
+        )
 
 class RedShiftDestination(ETLDestination):
 
@@ -106,7 +126,7 @@ class RedShiftDestination(ETLDestination):
         cursor.execute(create_table_query)
         connect.commit()
 
-    def load_data(self, data_df:pd.DataFrame):
+    def load_data(self, data_df:pd.DataFrame, **kwrags):
         rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
         
         pr.connect_to_redshift(dbname=rs_config.dbname,

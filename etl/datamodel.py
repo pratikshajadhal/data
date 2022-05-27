@@ -53,3 +53,6 @@ class ProjectTypeConfig:
 @dataclass
 class SelectedConfig:
     projectTypes: list[ProjectTypeConfig]
+    org_id:int
+    user_id:int
+    core:list[ColumnConfig]

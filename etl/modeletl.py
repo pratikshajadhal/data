@@ -2,7 +2,7 @@ from ast import List
 from typing import Dict
 from etl.datamodel import ColumnConfig, ColumnDefn, ETLDestination, ETLSource, FileVineConfig
 import pandas as pd
-from .destination import ETLDestination, RedShiftDestination
+from .destination import ETLDestination, RedShiftDestination, S3Destination
 import filevine.client as fv_client
 import json
 
@@ -10,7 +10,14 @@ import settings
 
 class ModelETL(object):
     
-    def __init__(self, model_name:str, source:ETLSource, destination:ETLDestination, fv_config:FileVineConfig, column_config:ColumnConfig, primary_key_column:str):
+    def __init__(self, model_name:str, 
+                    source:ETLSource, 
+                    entity_type:str,
+                    project_type:str,
+                    destination:ETLDestination, 
+                    fv_config:FileVineConfig, 
+                    column_config:ColumnConfig, 
+                    primary_key_column:str):
         self.model_name = model_name
         self.column_config = column_config
         self.source = source
@@ -21,6 +28,8 @@ class ModelETL(object):
         self.source_schema = None
         self.key_column = primary_key_column
         self.column_config.fields.append(self.key_column)
+        self.project_type = project_type
+        self.entity_type = entity_type
 
         
     def persist_source_schema(self):
@@ -91,15 +100,16 @@ class ModelETL(object):
     def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn]) -> pd.DataFrame:
         dest = self.destination
 
-        dest.create_redshift_table(column_def=schema, 
-                            redshift_table_name=f"{self.model_name}_raw")
-
+        if isinstance(dest, S3Destination):
+            dest.load_data(trans_df, project_type=self.project_type, section=self.entity_type, entity=self.model_name)
 
         
+        #dest.create_redshift_table(column_def=schema, 
+        #                    redshift_table_name=f"{self.model_name}_raw")
         #from destination import RedShiftDestination
         #rs_dest = RedShiftDestination(dest_config)
         #rs_dest.initialize_destination(table_name="contact")
-        dest.load_data(trans_df)
+        #dest.load_data(trans_df)
 
         return 0
 
