@@ -1,10 +1,22 @@
-models:
-- name: contact
-  fields:
-    - firstName
-    - lastName
-    - personTypes
-    
-- name: casesummary
-  fields:
-    - projectId
+projectTypes:
+  - id: 18764
+    sections:
+    - name: contact
+      fields:
+      - firstName
+      - lastName
+      - personTypes
+      
+    - name: casesummary
+      fields:
+      - projectId
+
+  - id: 18561
+    sections:
+    - name: contact
+      fields:
+      - firstName
+
+    - name: casesummary
+      fields:
+      - projectId

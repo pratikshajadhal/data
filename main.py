@@ -20,8 +20,8 @@ print(os.environ['host'])
 if __name__ == "__main__":
 
     selected_field_config = load_config(file_path="src.yaml")
-
-    for model in selected_field_config.models:
+    print(selected_field_config.projectTypes[0])
+    for model in selected_field_config.projectTypes[0].sections:
         print(model.name)
         if model.name == "contact":
             rs_config = RedShiftDestination().get_default_config(table_name="contact")

@@ -12,6 +12,7 @@ def load_config(file_path: str) -> SelectedConfig:
     """Loads devenv.yaml from the given file path."""
     with open(file_path, "r") as stream:
         data = yaml.safe_load(stream)
+        #print(data)
         return from_dict(data=data, data_class=SelectedConfig)
 
 
@@ -49,7 +50,7 @@ def transform_source_to_destination(source, destination_map):
 if __name__ == "__main__":
 
     config = load_config(file_path="src.yaml")
-    print(config.models)
+    print(config.projectTypes)
     '''
     contact_map = read_contact_metadata()
     with open("contacts.json", "r") as f:

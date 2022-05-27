@@ -45,5 +45,11 @@ class ColumnConfig:
 
 
 @dataclass
+class ProjectTypeConfig:
+    id: int
+    sections: list[ColumnConfig]
+
+
+@dataclass
 class SelectedConfig:
-    models: list[ColumnConfig]
+    projectTypes: list[ProjectTypeConfig]
