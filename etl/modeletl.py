@@ -1,6 +1,6 @@
 from ast import List
 from typing import Dict
-from etl.datamodel import ColumnDefn, ETLDestination, ETLSource, FileVineConfig
+from etl.datamodel import ColumnConfig, ColumnDefn, ETLDestination, ETLSource, FileVineConfig
 import pandas as pd
 from .destination import ETLDestination, RedShiftDestination
 import filevine.client as fv_client
@@ -10,15 +10,19 @@ import settings
 
 class ModelETL(object):
     
-    def __init__(self, model_name:str, source:ETLSource, destination:ETLDestination, fv_config:FileVineConfig):
+    def __init__(self, model_name:str, source:ETLSource, destination:ETLDestination, fv_config:FileVineConfig, column_config:ColumnConfig, primary_key_column:str):
         self.model_name = model_name
+        self.column_config = column_config
         self.source = source
         self.destination = destination
         self.source_df = None
         self.fv_client = fv_client.FileVineClient(org_id=fv_config.org_id, user_id=fv_config.user_id)
         self.flattend_map = None
         self.source_schema = None
+        self.key_column = primary_key_column
+        self.column_config.fields.append(self.key_column)
 
+        
     def persist_source_schema(self):
         with open(f"{settings.SCHEMA_DIR}/{self.model_name}.json", "w") as f:
             f.write(json.dumps(self.source_schema))
@@ -29,12 +33,14 @@ class ModelETL(object):
     def extract_data_from_source(self) -> List:
         return []
 
-    def flatten_schema(self, source_schema:Dict) -> Dict:
+    def get_filtered_schema(self, source_schema:Dict) -> Dict:
         flattend_map = {}
         for field in source_schema:
             field_data_type = field["value"]
-            flattend_map[field["selector"].replace("custom.", "")] = {"type" : field_data_type}
+            if field["selector"] in self.column_config.fields:
+                flattend_map[field["selector"]] = {"type" : field_data_type}
 
+        flattend_map[self.key_column] = {"type" :object}
         return flattend_map
 
     def convert_schema_into_destination_format(self, source_flattened_schema:Dict):
@@ -53,22 +59,24 @@ class ModelETL(object):
 
         self.get_schema_of_model()
 
-        self.flattend_map = self.flatten_schema(self.source_schema)
+        self.flattend_map = self.get_filtered_schema(self.source_schema)
         
         for record in record_list:
             post_processed_record = {}
             for key, value in record.items():
                 if key not in self.flattend_map:
-                    print(f"{key} not found in contact")
+                    #print(f"{key} not found in contact")
                     continue
                 field_config = self.flattend_map[key]
                 if field_config["type"] == "object":
                     if isinstance(value, dict):
-                        for subkey, subvalue in value.items():
-                            post_processed_record[f"{key}__{subkey}"] = subvalue
+                        #TODO Flatten nested data
+                        #for subkey, subvalue in value.items():
+                        #    post_processed_record[f"{key}__{subkey}"] = subvalue
+                        post_processed_record[key] = value
                         continue
                     if isinstance(value, list):
-                        field_value = json.dumps(value)
+                        field_value = value
                 elif isinstance(value, list):
                     field_value = '|'.join(value)
                 else:

@@ -1,0 +1,10 @@
+models:
+- name: contact
+  fields:
+    - firstName
+    - lastName
+    - personTypes
+    
+- name: casesummary
+  fields:
+    - projectId

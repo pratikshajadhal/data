@@ -1,7 +1,9 @@
+from ast import List
 from ctypes import Union
 from dataclasses import dataclass
 from enum import Enum
 import os
+from typing import Dict
 
 @dataclass
 class ETLSource:
@@ -35,3 +37,13 @@ class FileVineConfig:
 class ColumnDefn:
     name:str
     data_type:str
+
+@dataclass
+class ColumnConfig:
+    name:str
+    fields:list[str]
+
+
+@dataclass
+class SelectedConfig:
+    models: list[ColumnConfig]
