@@ -43,13 +43,16 @@ class FileVineClient(object):
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
         url = f"{self.base_url}{end_point}"
-        logging.debug("Hitting URL {}".format(url))
+        print("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
                 "Authorization" : "Bearer {}".format(session_info["accessToken"])}
         response = requests.get(url, headers=headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
             logging.error(response.status_code)
+            if response.status_code == 404:
+                return None
+            raise
         
         return json.loads(response.text)
 
@@ -69,6 +72,12 @@ class FileVineClient(object):
 
         return item_list
 
+    def get_section_metadata(self, projectTypeId, section_name):
+        end_point = f"core/projecttypes/{projectTypeId}/sections/{section_name}"
+        section_metadata = self.make_request(end_point)
+        return section_metadata
+
+
     def get_contact_metadata(self):
         contact_metadata = self.make_request("core/custom-contacts-meta")
         return contact_metadata
@@ -78,6 +87,11 @@ class FileVineClient(object):
         contact_list = [item["orgContact"] for item in raw_contact_items]
         return contact_list
 
+    def get_section_data(self, project_id:int, section_name:str):
+        end_point = f"core/projects/{project_id}/forms/{section_name}"
+        section_data = self.make_request(end_point)
+        return section_data
+
     def get_projects(self, requested_fields:list[str]=[]):
         return self.get_entity("core/projects", requested_fields=requested_fields)
         
@@ -85,4 +99,4 @@ class FileVineClient(object):
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
     #print(fv_client.get_contacts(project_id=10561860))
-    print(fv_client.get_projects())
+    print(fv_client.get_section_data(10568297, "intake"))

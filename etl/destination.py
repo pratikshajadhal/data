@@ -1,6 +1,7 @@
 from ctypes import Union
 from dataclasses import asdict, dataclass
 from typing import Dict
+from numpy import dtype
 import pandas as pd
 import os
 import psycopg2
@@ -31,6 +32,24 @@ class S3Destination(ETLDestination):
                     }
         self.s3_session = boto3.Session(aws_access_key_id=os.environ["aws_access_key_id"],
                         aws_secret_access_key=os.environ["aws_secret_access_key"])
+
+    def get_column_mapper(self):
+        column_mapper = {"Text" : "string",
+                        "Dropdown" : "string",
+                        "Boolean" : "boolean",
+                        "PersonLink" : "string",
+                        "Date" : "date",
+                        "Percent" : "double",
+                        "Currency" : "string",
+                        "IncidentDate" : "date",
+                        "MultiSelectList" : "string",
+                        "Header" : "string",
+                        "String" : "string",
+                        "object" : "struct"
+                        }
+
+        #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}
+        return column_mapper
         
     def load_data(self, data_df: pd.DataFrame, **kwargs):
         file_name = "{}.parquet".format(datetime.datetime.now().strftime('%Y-%d-%m_%H:%M:%S'))
@@ -40,10 +59,14 @@ class S3Destination(ETLDestination):
         else:
             s3_key = f"{self.config['org_id']}/{kwargs['project_type']}/{kwargs['section']}/{kwargs['entity']}/{file_name}"
 
+        print(kwargs['dtype'])
+        data_df.to_csv("sample.csv")
+
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",
-                boto3_session=self.s3_session
+                boto3_session=self.s3_session,
+                dtype=kwargs["dtype"]
         )
 
 class RedShiftDestination(ETLDestination):

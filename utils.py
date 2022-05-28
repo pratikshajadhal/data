@@ -1,3 +1,4 @@
+from itertools import islice
 import json
 from dacite import from_dict
 
@@ -44,6 +45,10 @@ def transform_source_to_destination(source, destination_map):
 
         post_processed_contact[key] = field_value
     return post_processed_contact
+
+def get_chunks(it, size):
+    it = iter(it)
+    return iter(lambda: tuple(islice(it, size)), ())
 
         
 
