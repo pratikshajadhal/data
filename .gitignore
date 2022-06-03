@@ -49,3 +49,4 @@ Thumbs.db
 *.wmv
 *.json
 .env
+*.csv

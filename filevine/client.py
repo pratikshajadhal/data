@@ -69,7 +69,7 @@ class FileVineClient(object):
             offset = offset + limit
             items = response["items"]
             item_list = item_list + items
-
+            
         return item_list
 
     def get_section_metadata(self, projectTypeId, section_name):
@@ -82,15 +82,27 @@ class FileVineClient(object):
         contact_metadata = self.make_request("core/custom-contacts-meta")
         return contact_metadata
 
-    def get_contacts(self, project_id:int):
+    def get_project_contacts(self, project_id:int):
         raw_contact_items = self.get_entity(f"core/projects/{project_id}/contacts")
         contact_list = [item["orgContact"] for item in raw_contact_items]
+        return contact_list
+
+    def get_contacts(self):
+        raw_contact_items = self.get_entity(f"core/contacts")
+        contact_list = raw_contact_items
         return contact_list
 
     def get_section_data(self, project_id:int, section_name:str):
         end_point = f"core/projects/{project_id}/forms/{section_name}"
         section_data = self.make_request(end_point)
         return section_data
+
+    def get_collections(self, project_id:int, collection_name:str):
+        end_point = f"core/projects/{project_id}/collections/{collection_name}?limit=1000"
+        collection_data = self.make_request(end_point)
+        if collection_data:
+            return collection_data["items"]
+        return None
 
     def get_projects(self, requested_fields:list[str]=[]):
         return self.get_entity("core/projects", requested_fields=requested_fields)
@@ -99,4 +111,7 @@ class FileVineClient(object):
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
     #print(fv_client.get_contacts(project_id=10561860))
-    print(fv_client.get_section_data(10568297, "intake"))
+    #print(fv_client.get_section_data(10568297, "intake"))
+    print(json.dumps(fv_client.get_collections(5965342, "meds")))
+    #collection_metadata = fv_client.get_section_metadata(projectTypeId=18764, section_name="meds")
+    #print(json.dumps(collection_metadata))

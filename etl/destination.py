@@ -45,14 +45,26 @@ class S3Destination(ETLDestination):
                         "MultiSelectList" : "string",
                         "Header" : "string",
                         "String" : "string",
-                        "object" : "struct"
+                        "object" : "struct",
+                        "ProjectId" : "int", #Truve Defined
+                        "Id" : "string", #Truve Defined
+                        "CalculatedCurrency" : "string",
+                        "Deadline" : "string",
+                        "Instructions" : "string",
+                        "StringList" : "string",
+                        "PersonList" : "string",
+                        "string" : "string",
+                        "int" : "int",
+                        "bool" : "boolean",
+                        "date" : "date",
+                        "decimal" : "double"
                         }
 
         #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}
         return column_mapper
         
     def load_data(self, data_df: pd.DataFrame, **kwargs):
-        file_name = "{}.parquet".format(datetime.datetime.now().strftime('%Y-%d-%m_%H:%M:%S'))
+        file_name = "{}.parquet".format(kwargs['project'])
         
         if kwargs["section"] == "core":
             s3_key = f"{self.config['org_id']}/{kwargs['entity']}/{file_name}"
@@ -60,8 +72,9 @@ class S3Destination(ETLDestination):
             s3_key = f"{self.config['org_id']}/{kwargs['project_type']}/{kwargs['section']}/{kwargs['entity']}/{file_name}"
 
         print(kwargs['dtype'])
-        data_df.to_csv("sample.csv")
+        #data_df.to_csv("sample.csv")
 
+        
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",

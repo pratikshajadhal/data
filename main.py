@@ -2,6 +2,7 @@ from dataclasses import asdict
 from os import environ
 import re
 from select import select
+from etl.collections import CollectionETL
 from etl.contact import ContactETL
 from etl.datamodel import ETLSource, FileVineConfig
 from dotenv import load_dotenv
@@ -32,22 +33,35 @@ def start_contact_etl():
                             primary_key_column="personId")
 
         project_list = [10568297] #contact_etl.get_projects()
-        src_contact_data = contact_etl.extract_data_from_source(project_list=project_list[:10])
 
-        '''
-        for contact_data in src_contact_data:
-            for key in contact_data:
-                print(key)
-            break
-        exit()
-        '''
-        contact_df = contact_etl.transform_data(record_list=src_contact_data)
-        print(contact_df.dtypes)
-        print(contact_df.isnull().sum())
+        #project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
+
+            #project_list = [10598323]
+
+        contact_etl.get_schema_of_model()
+
+        contact_etl.flattend_map = contact_etl.get_filtered_schema(contact_etl.source_schema)
+
+        dest_col_format = contact_etl.convert_schema_into_destination_format(contact_etl.flattend_map)
+
+        count = 0
         
-        contact_etl.load_data_to_destination(trans_df=contact_df, schema=None)
-        #print(contact_df)
+        contact_list = contact_etl.extract_data_from_source()
+
+        for contact in contact_list:
+            contact_df = contact_etl.transform_data(record_list=[contact])
+            personId = contact_df["personId"].tolist()[0]
+            contact_etl.load_data_to_destination(trans_df=contact_df, schema=dest_col_format, project=personId)
+
+        #count = count + 1
+
+        print("Total processed {}".format(count))
+
         break
+
+
+
+        
 
 def start_form_etl(project_type, form_name):
     selected_field_config = load_config(file_path="src.yaml")
@@ -57,7 +71,7 @@ def start_form_etl(project_type, form_name):
         #Handle Contact Entity
     for section in selected_field_config.projectTypes[0].sections:
         if section.name == form_name:
-            form_etl = FormETL(model_name="intake", 
+            form_etl = FormETL(model_name=form_name, 
                             source=None, 
                             entity_type="form",
                             project_type=18764,
@@ -67,40 +81,80 @@ def start_form_etl(project_type, form_name):
                             primary_key_column="projectId")
 
             project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
-            #project_list = [10487166]
-            #project_chunks = get_chunks(project_list, size=100)
-            
-            new_project_list = []
 
-            for project in project_list:
-                if project > 10283874:
-                    continue
-                new_project_list.append(project)
-            
-            project_list = new_project_list
-            
-            #project_list = [10487166]
-            project_chunks = get_chunks(project_list, size=100)
-            
+            #project_list = [10598323]
+
+            form_etl.get_schema_of_model()
+
+            form_etl.flattend_map = form_etl.get_filtered_schema(form_etl.source_schema)
+
+            dest_col_format = form_etl.convert_schema_into_destination_format(form_etl.flattend_map)
+
             count = 0
             
-            for chunk in project_chunks:
-                form_data_list = form_etl.extract_data_from_source(project_list=chunk)
+            for project in project_list[:30]:
+                form_data_list = form_etl.extract_data_from_source(project_list=[project])
 
-                form_df, dest_col_format = form_etl.transform_data(record_list=form_data_list)
+                form_df = form_etl.transform_data(record_list=form_data_list)
                 
-                form_etl.load_data_to_destination(trans_df=form_df, schema=dest_col_format)
+                form_etl.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
 
-                count = count + len(chunk)
+                count = count + 1
 
                 print("Total processed {}".format(count))
 
-                #break
+            break
+
+def start_collection_etl(project_type, section_name):
+    selected_field_config = load_config(file_path="src.yaml")
+    print(selected_field_config.projectTypes[0])
+    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
+
+        #Handle Contact Entity
+    for section in selected_field_config.projectTypes[0].sections:
+        if section.name == section_name:
+            form_etl = CollectionETL(model_name=section_name, 
+                            source=None, 
+                            entity_type="collections",
+                            project_type=18764,
+                            destination=S3Destination(org_id=fv_config.org_id), 
+                            fv_config=fv_config, 
+                            column_config=section, 
+                            primary_key_column="id")
+
+            project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
+
+            #project_list = [10598323]
+
+            form_etl.get_schema_of_model()
+
+            form_etl.flattend_map = form_etl.get_filtered_schema(form_etl.source_schema)
+
+            dest_col_format = form_etl.convert_schema_into_destination_format(form_etl.flattend_map)
+
             
+            count = 0
+            
+            for project in project_list[:100]:
+                form_data_list = form_etl.extract_data_from_source(project_list=[project])
+
+                if len(form_data_list) == 0:
+                    continue
+
+                form_df = form_etl.transform_data(record_list=form_data_list)
+                
+                form_etl.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+
+                count += 1
+
+                print("Total processed {}".format(count))
+
             break
 
 
 
-
 if __name__ == "__main__":
-    start_form_etl(18764, "intake")
+    #start_form_etl(18764, "intake")    
+    #start_collection_etl(18764, "negotiations")
+    #start_form_etl(18764, "intake")
+    start_contact_etl()

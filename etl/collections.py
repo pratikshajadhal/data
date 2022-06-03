@@ -6,7 +6,7 @@ from .datamodel import ETLDestination, ETLSource, RedshiftConfig
 from .modeletl import ModelETL
 from filevine import client
 
-class FormETL(ModelETL):
+class CollectionETL(ModelETL):
 
     def get_filtered_schema(self, source_schema:Dict) -> Dict:
         flattend_map = {}
@@ -16,36 +16,30 @@ class FormETL(ModelETL):
             if field_name in self.column_config.fields:
                 flattend_map[field_name] = {"type" : field_data_type}
 
-        flattend_map[self.key_column] = {"type" : "ProjectId"}
-
+        flattend_map[self.key_column] = {"type" : "Id"}
+        flattend_map["projectId"] = {"type" : "ProjectId"}
         
         unique_data_type = {}
         for key, value in flattend_map.items():
             unique_data_type[value["type"]] = ""
 
-    
-        #print(flattend_map)
-        #exit()
         return flattend_map
-
+    
     def get_schema_of_model(self) -> Dict:
         form_schema = self.fv_client.get_section_metadata(projectTypeId=self.project_type, section_name=self.model_name)
         
         distinct_data_type = {}
         for cf in form_schema["customFields"]:
             distinct_data_type[cf['customFieldType']] = ""
-            
-        #print(distinct_data_type)
-        #Contact ID Field
-        #contact_schema.append({"fieldName" : "Contact ID", "selector" : "personId", "value" : "object"})
-        
+
         self.source_schema = form_schema["customFields"]
 
         for field in self.source_schema:
+            #print(field)
             print(field["fieldSelector"])
 
         #exit()
-        
+
         self.persist_source_schema()
 
         return form_schema
@@ -59,16 +53,14 @@ class FormETL(ModelETL):
         section_data_list = []
         for index, project in enumerate(project_list):
             print(f"Getting contact for project {project} {index}")
-            section_data = self.fv_client.get_section_data(project_id=project, section_name=self.model_name)
-            section_data["projectId"] = project
+            section_data = self.fv_client.get_collections(project_id=project, collection_name=self.model_name)
             if not section_data:
                 continue
-            section_data_list = section_data_list + [section_data]
+            for section in section_data:
+                processed_section = section["dataObject"]
+                processed_section["projectId"] = project
+                processed_section["id"] = section["itemId"]["native"]
+                section_data_list.append(processed_section)
 
         return section_data_list
 
-    
-if __name__ == "__main__":
-    RedshiftConfig(table_name="fv_contact_raw", schema_name="pipeline_dev", dbname="dev")
-    ETLDestination(name="contact_model")
-    #ContactETL(source=ETLSource(end_point=""), )

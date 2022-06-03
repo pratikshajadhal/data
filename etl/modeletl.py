@@ -53,7 +53,8 @@ class ModelETL(object):
             if field_name in self.column_config.fields:
                 flattend_map[field_name] = {"type" : field_data_type}
 
-        flattend_map[self.key_column] = {"type" : "object"}
+        flattend_map[self.key_column] = {"type" : "Id"}
+        flattend_map["projectId"] = {"type" : "int"}
 
         return flattend_map
 
@@ -65,7 +66,7 @@ class ModelETL(object):
         for col, field_config in source_flattened_schema.items():
             print(f"{col}{field_config}")
 
-            if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "Doc":
+            if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "Doc" or field_config["type"] == "ReportFusion":
                     continue
                 
             dest_col_defn.append(ColumnDefn(name=col, data_type=column_mapper[field_config["type"]]))
@@ -76,12 +77,11 @@ class ModelETL(object):
     def transform_data(self, record_list:list):
         transformed_record_list = []
 
-        self.get_schema_of_model()
+        #self.get_schema_of_model()
 
-        self.flattend_map = self.get_filtered_schema(self.source_schema)
+        #self.flattend_map = self.get_filtered_schema(self.source_schema)
 
-        dest_col_format = self.convert_schema_into_destination_format(self.flattend_map)
-
+        
         for record in record_list:
             post_processed_record = {}
             for key, value in record.items():
@@ -89,7 +89,14 @@ class ModelETL(object):
                     #print(f"{key} not found in contact")
                     continue
                 field_config = self.flattend_map[key]
-                if field_config["type"] == "object":
+                if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "ReportFusion":
+                    continue
+                elif field_config["type"] == "Id":
+                    if isinstance(value, dict):
+                        field_value = value["native"]
+                    else:
+                        field_value = value
+                elif field_config["type"] == "object":
                     if isinstance(value, dict):
                         #TODO Flatten nested data
                         #for subkey, subvalue in value.items():
@@ -101,10 +108,18 @@ class ModelETL(object):
                 elif field_config["type"] == "PersonLink":
                     if value:
                         if isinstance(value, Dict):
-                            post_processed_record[key] = value["id"]
+                            field_value = value["id"]
+                    else:
+                        field_value = None
+                elif field_config["type"] == "PersonList":
+                    if value:
+                        field_value = '|'.join([str(person["id"]) for person in value]) 
+                    else:
+                        field_value = ""
                     
-                elif field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList":
-                    continue
+                
+                elif field_config["type"] == "StringList":
+                    field_value = '|'.join(value)
                 elif isinstance(value, list):
                     field_value = '|'.join(value)
                 
@@ -112,12 +127,13 @@ class ModelETL(object):
                     field_value = value
 
                 post_processed_record[key] = field_value
+            print(post_processed_record["personTypes"])
             transformed_record_list.append(post_processed_record)
 
-        return pd.DataFrame(transformed_record_list), dest_col_format
+        return pd.DataFrame(transformed_record_list)
 
 
-    def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn]) -> pd.DataFrame:
+    def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn], project:int) -> pd.DataFrame:
         dest = self.destination
 
         dest_map = {}
@@ -135,7 +151,8 @@ class ModelETL(object):
                         project_type=self.project_type, 
                         section=self.entity_type, 
                         entity=self.model_name,
-                        dtype=dest_map
+                        dtype=dest_map,
+                        project=project
                         )
 
         
