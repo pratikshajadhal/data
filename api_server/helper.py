@@ -91,3 +91,4 @@ def handle_wb_input(wb_input:FVWebhookInput):
     cls.load_data_to_destination(trans_df=entity_df, schema=dest_col_format, project=wb_input.project_id)
 
                 
+    #TODO - Handle delete event specifically for Collections
