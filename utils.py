@@ -16,6 +16,18 @@ def load_config(file_path: str) -> SelectedConfig:
         #print(data)
         return from_dict(data=data, data_class=SelectedConfig)
 
+def get_config_of_section(selected_config:SelectedConfig, section_name:str, project_type_id:int=None, is_core:bool=False):
+    if is_core:
+        for core_entity in selected_config.core:
+            if core_entity.name == section_name:
+                return core_entity
+
+    for project_type in selected_config.projectTypes:
+        if project_type.id == project_type_id:
+            for section in project_type.sections:
+                if section.name == section_name:
+                    return section
+
 
 def read_contact_metadata():
     with open("contacts-metadata.json") as f:
@@ -55,7 +67,9 @@ def get_chunks(it, size):
 if __name__ == "__main__":
 
     config = load_config(file_path="src.yaml")
-    print(config.projectTypes)
+    print(get_config_of_section(config, section_name="intake", project_type_id=18764))
+
+    #print(config.projectTypes)
     '''
     contact_map = read_contact_metadata()
     with open("contacts.json", "r") as f:

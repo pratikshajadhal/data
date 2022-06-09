@@ -61,6 +61,9 @@ class ModelETL(object):
     def convert_schema_into_destination_format(self, source_flattened_schema:Dict):
         dest_col_defn : list[ColumnDefn] = []
 
+        print(source_flattened_schema)
+        #exit()
+
         column_mapper = self.destination.get_column_mapper()
 
         for col, field_config in source_flattened_schema.items():
@@ -127,7 +130,7 @@ class ModelETL(object):
                     field_value = value
 
                 post_processed_record[key] = field_value
-            print(post_processed_record["personTypes"])
+            #print(post_processed_record["personTypes"])
             transformed_record_list.append(post_processed_record)
 
         return pd.DataFrame(transformed_record_list)

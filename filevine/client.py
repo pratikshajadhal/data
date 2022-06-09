@@ -46,6 +46,7 @@ class FileVineClient(object):
         print("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
                 "Authorization" : "Bearer {}".format(session_info["accessToken"])}
+        print(query_param)
         response = requests.get(url, headers=headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
@@ -104,7 +105,7 @@ class FileVineClient(object):
             return collection_data["items"]
         return None
 
-    def get_projects(self, requested_fields:list[str]=[]):
+    def get_projects(self, requested_fields:list[str]=['*']):
         return self.get_entity("core/projects", requested_fields=requested_fields)
         
 

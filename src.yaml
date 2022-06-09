@@ -21,6 +21,31 @@ core:
     - isMinor
     - uniqueId
     - searchNames
+  - name: project
+    fields:
+    - projectTypeCode
+    - rootDocFolderId
+    - phaseName
+    - clientName
+    - clientPictureURL
+    - clientPictureKey
+    - firstPrimaryName
+    - firstPrimaryUsername
+    - isArchived
+    - lastActivity
+    - uniqueKey
+    - projectOrClientName
+    - hashtags
+    - orgId
+    - projectEmailAddress
+    - projectUrl
+    - projectId
+    - projectTypeId
+    - clientId
+    - projectName
+    - phaseId
+    - incidentDate
+    - links
 projectTypes:
   - id: 18764
     sections:

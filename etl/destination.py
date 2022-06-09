@@ -65,11 +65,14 @@ class S3Destination(ETLDestination):
         
     def load_data(self, data_df: pd.DataFrame, **kwargs):
         file_name = "{}.parquet".format(kwargs['project'])
+        project_id = kwargs['project']
         
-        if kwargs["section"] == "core":
-            s3_key = f"{self.config['org_id']}/{kwargs['entity']}/{file_name}"
+        if kwargs["section"] == "core" and kwargs["entity"] == "contact":
+            s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
+        elif kwargs["section"] == "core" and kwargs["entity"] == "project":
+            s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
         else:
-            s3_key = f"{self.config['org_id']}/{kwargs['project_type']}/{kwargs['section']}/{kwargs['entity']}/{file_name}"
+            s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/{kwargs['section']}/{kwargs['entity']}.parquet"
 
         print(kwargs['dtype'])
         #data_df.to_csv("sample.csv")

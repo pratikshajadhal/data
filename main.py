@@ -7,11 +7,13 @@ from etl.contact import ContactETL
 from etl.datamodel import ETLSource, FileVineConfig
 from dotenv import load_dotenv
 import os
+import uvicorn
 
 from dacite import from_dict
 
 from etl.destination import RedShiftDestination, S3Destination
 from etl.form import FormETL
+from etl.project import ProjectETL
 from utils import load_config, get_chunks
 
 load_dotenv()
@@ -60,7 +62,49 @@ def start_contact_etl():
         break
 
 
+def start_project_etl():
+    selected_field_config = load_config(file_path="src.yaml")
+    print(selected_field_config.projectTypes[0])
+    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
+        #Handle Contact Entity
+    for model in selected_field_config.core:
+        if model.name == "project":
+            contact_etl = ProjectETL(model_name="project", 
+                                source=None, 
+                                entity_type="core",
+                                project_type=18764,
+                                destination=S3Destination(org_id=fv_config.org_id), 
+                                fv_config=fv_config, 
+                                column_config=model, 
+                                primary_key_column="projectId")
+
+            project_list = [10568297] #contact_etl.get_projects()
+
+            #project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
+
+                #project_list = [10598323]
+
+            contact_etl.get_schema_of_model()
+
+            contact_etl.flattend_map = contact_etl.get_filtered_schema(contact_etl.source_schema)
+
+            dest_col_format = contact_etl.convert_schema_into_destination_format(contact_etl.flattend_map)
+
+            count = 0
+            
+            contact_list = contact_etl.extract_data_from_source()
+
+            for contact in contact_list:
+                contact_df = contact_etl.transform_data(record_list=[contact])
+                projectId = contact_df["projectId"].tolist()[0]
+                contact_etl.load_data_to_destination(trans_df=contact_df, schema=dest_col_format, project=projectId)
+                
+            #count = count + 1
+
+            print("Total processed {}".format(count))
+
+            break
         
 
 def start_form_etl(project_type, form_name):
@@ -92,7 +136,7 @@ def start_form_etl(project_type, form_name):
 
             count = 0
             
-            for project in project_list[:30]:
+            for project in project_list[:100]:
                 form_data_list = form_etl.extract_data_from_source(project_list=[project])
 
                 form_df = form_etl.transform_data(record_list=form_data_list)
@@ -156,5 +200,8 @@ def start_collection_etl(project_type, section_name):
 if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
     #start_collection_etl(18764, "negotiations")
-    #start_form_etl(18764, "intake")
-    start_contact_etl()
+    #start_form_etl(18764, "casesummary")
+    #start_contact_etl()
+    #start_project_etl()
+    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+
