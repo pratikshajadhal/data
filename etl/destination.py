@@ -64,14 +64,18 @@ class S3Destination(ETLDestination):
         return column_mapper
         
     def load_data(self, data_df: pd.DataFrame, **kwargs):
-        file_name = "{}.parquet".format(kwargs['project'])
-        project_id = kwargs['project']
         
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
+        elif kwargs["section"] == 'leaddocket':
+            file_name = "{}.parquet".format(kwargs["push_id"])
+            s3_key = f"{kwargs['section']}/{kwargs['organization_identifier']}/{kwargs['model_name']}/{file_name}"
         else:
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/{kwargs['section']}/{kwargs['entity']}.parquet"
 
         print(kwargs['dtype'])
