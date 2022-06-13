@@ -3,8 +3,8 @@ import json
 
 from fastapi import FastAPI, Request
 
-from .config import FVWebhookInput
-from .helper import handle_wb_input
+from api_server.config import FVWebhookInput
+from api_server.helper import handle_wb_input
 from main import *
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 
@@ -126,4 +126,4 @@ async def listen_lead(request: Request):
 
 
 if __name__ == "__main__":
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
