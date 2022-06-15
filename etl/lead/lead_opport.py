@@ -44,7 +44,7 @@ class LeadOpportETL(LeadModelETL):
                 opport[key] = ",".join( map( str, custom_fields ))
 
             if key == "AssignedTo":
-                if isinstance(value, list):
+                if value:
                     name = opport[key][0].get("FirstName") + " " + opport[key][0].get("LastName")
                 else:
                     name = ""
