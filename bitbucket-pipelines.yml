@@ -1,0 +1,67 @@
+image: python:3.9.13-slim
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+        # - step:
+        #     name: Lint
+        #     script:
+        #       - pip3 install flake8
+        #       - flake8 .
+
+        - step:
+            name: Build and Test
+            script:
+              # install dependencies
+              - pip3 --timeout=300  install -r requirements.txt
+
+              # run unit tests
+              # TODO
+
+  branches:
+    development:
+      - parallel:
+        - step:
+            name: Security Scan
+            script:
+              # Run a security scan for sensitive data.
+              # See more security tools at https://bitbucket.org/product/features/pipelines/integrations?&category=security
+              - pipe: atlassian/git-secrets-scan:0.5.1
+
+        - step:
+            name: Build and Test
+            script:
+              # install dependencies
+              - pip3 --timeout=300  install -r requirements.txt
+
+              # lint code
+              # - flake8 .
+
+              # run unit tests
+              # TODO
+        
+      - step:
+          name: Build/Push Image
+          image: amazon/aws-cli:2.6.3
+          script:
+            - chmod +rx .infra/devops/deploy/bitbucket*
+            - sh .infra/devops/deploy/bitbucket/ecr_build_push.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" dev
+          services:
+            - docker
+
+      - step:
+          name: Deploy
+          image: amazon/aws-cli:2.6.3
+          script:
+            - chmod +rx .infra/devops/deploy/bitbucket*
+            - sh .infra/devops/deploy/bitbucket/deploy.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" $DEV_DNS_ALIAS_KEY dev
+      
+      - step:
+          name: Alert
+          image: sleavely/node-awscli:16.x
+          script:
+          # alert sent to MS Teams > Teams > SRE > Channels > Deployment Alerts
+            - npm i json-templates axios
+            - chmod +rx .infra/devops/deploy/bitbucket*
+            - sh .infra/devops/alerts/ms-teams-deploy/alert.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" dev
