@@ -1,0 +1,43 @@
+openapi: "3.0.0"
+info:
+  version: "41e2091a-cbe8-4c7a-bd7b-7e5690558dfe"
+  title: "Truve - Data REST API"
+  description: "Truve Data REST API Spec (OAS)"
+  termsOfService: "https://truve.io/terms"
+  contact:
+    email: "contact@truve.io"
+
+tags:
+- name: "Diag"
+  description: Actions related to server diagnostics
+
+servers:
+  - url: 'http://localhost:8000/{apiSelector}'
+    variables:
+      apiSelector:
+        enum:
+          - diag
+          - v1
+        default: diag
+
+paths:
+  /health:
+    get:
+      tags:
+      - "diag"
+      summary: "Server health check"
+      description: "Returns server status and current running version."
+      operationId: "diagHealthCheck"
+      responses:
+        200:
+          description: "Health OK"
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  version:
+                    type: string
+                    example: 0.1.2

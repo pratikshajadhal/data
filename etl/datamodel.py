@@ -1,8 +1,4 @@
-from ast import List
-from ctypes import Union
 from dataclasses import dataclass
-from enum import Enum
-import os
 from typing import Dict
 
 @dataclass
@@ -56,3 +52,22 @@ class SelectedConfig:
     org_id:int
     user_id:int
     core:list[ColumnConfig]
+
+@dataclass
+class LeadDocketConfig:
+    org_id: int
+    base_url: str
+
+@dataclass
+class LeadSelectedConfig:
+    org_id: int
+    base_url: str
+    table_leadstatuses:list[ColumnConfig]
+    table_leadsource:list[ColumnConfig]
+    table_casetype:list[ColumnConfig]
+    table_leadrow:list[ColumnConfig]
+    table_leaddetail:list[ColumnConfig]
+    table_contact:list[ColumnConfig]
+    table_opport:list[ColumnConfig]
+    table_referral:list[ColumnConfig]
+    table_users:list[ColumnConfig]

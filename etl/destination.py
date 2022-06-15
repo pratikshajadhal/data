@@ -28,10 +28,10 @@ class ETLDestination(object):
 class S3Destination(ETLDestination):
     def __init__(self, org_id:int, s3_bucket:str=None):
         self.config = {"org_id" : org_id,
-                    "bucket" : s3_bucket or os.environ["s3_bucket"]
+                    "bucket" : s3_bucket or os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"]
                     }
-        self.s3_session = boto3.Session(aws_access_key_id=os.environ["aws_access_key_id"],
-                        aws_secret_access_key=os.environ["aws_secret_access_key"])
+        self.s3_session = boto3.Session(aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
+                        aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"])
 
     def get_column_mapper(self):
         column_mapper = {"Text" : "string",
@@ -64,14 +64,18 @@ class S3Destination(ETLDestination):
         return column_mapper
         
     def load_data(self, data_df: pd.DataFrame, **kwargs):
-        file_name = "{}.parquet".format(kwargs['project'])
-        project_id = kwargs['project']
         
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
+        elif kwargs["section"] == 'leaddocket':
+            file_name = "{}.parquet".format(kwargs["push_id"])
+            s3_key = f"{kwargs['section']}/{kwargs['organization_identifier']}/{kwargs['model_name']}/{file_name}"
         else:
+            file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/{kwargs['section']}/{kwargs['entity']}.parquet"
 
         print(kwargs['dtype'])
@@ -88,16 +92,16 @@ class S3Destination(ETLDestination):
 class RedShiftDestination(ETLDestination):
 
     def get_default_config(self, **kwargs) -> Dict:
-        print(os.environ["host"])
+        print(os.environ["AWS_REDSHIFT_CONNECTION_HOST"])
         rs_config = RedshiftConfig(table_name=kwargs["table_name"], 
-                    schema_name=os.environ["schema_name"],
-                    host=os.environ["host"],
-                    port=os.environ["port"],
-                    user=os.environ["user"],
-                    dbname=os.environ["dbname"],
-                    password=os.environ["password"],
-                    s3_bucket=os.environ["s3_bucket"],
-                    s3_temp_dir=os.environ["s3_temp_dir"])
+                    schema_name=os.environ["AWS_REDSHIFT_CONNECTION_SCHEMA_NAME"],
+                    host=os.environ["AWS_REDSHIFT_CONNECTION_HOST"],
+                    port=os.environ["AWS_REDSHIFT_CONNECTION_PORT"],
+                    user=os.environ["AWS_REDSHIFT_CONNECTION_UNAME"],
+                    dbname=os.environ["AWS_REDSHIFT_CONNECTION_DBNAME"],
+                    password=os.environ["AWS_REDSHIFT_CONNECTION_PWORD"],
+                    s3_bucket=os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"],
+                    s3_temp_dir=os.environ["AWS_S3_BUCKET_NAME_TEMP_DIR"])
         self.config = rs_config
         return asdict(rs_config)
 
@@ -177,8 +181,8 @@ class RedShiftDestination(ETLDestination):
         pr.connect_to_s3(
                         bucket=rs_config.s3_bucket,
                         subdirectory=rs_config.s3_temp_dir,
-                        aws_access_key_id=os.environ["aws_access_key_id"],
-                        aws_secret_access_key=os.environ["aws_secret_access_key"]
+                        aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
+                        aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
                         )
 
         # Write the DataFrame to S3 and then to redshift
