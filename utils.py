@@ -5,7 +5,7 @@ from dacite import from_dict
 import pandas as pd
 import yaml
 
-from etl.datamodel import RedshiftConfig, SelectedConfig 
+from etl.datamodel import RedshiftConfig, SelectedConfig, LeadSelectedConfig
 
 standard_dtypes = ["string", "bool", "int", "decimal"]
 
@@ -62,7 +62,12 @@ def get_chunks(it, size):
     it = iter(it)
     return iter(lambda: tuple(islice(it, size)), ())
 
-        
+
+def load_lead_config(file_path:str) -> LeadSelectedConfig:
+    with open(file_path, "r") as stream:
+        data = yaml.safe_load(stream)
+        #print(data)
+        return from_dict(data=data, data_class=LeadSelectedConfig)
 
 if __name__ == "__main__":
 

@@ -1,11 +1,7 @@
-# These are some examples of commonly ignored file patterns.
-# You should customize this list as applicable to your project.
-# Learn more about .gitignore:
-#     https://www.atlassian.com/git/tutorials/saving-changes/gitignore
-
-# Node artifact files
-node_modules/
-dist/
+# Env
+.env
+.env.local
+.infra/devops/env/dotfiles
 
 # Compiled Java class files
 *.class
@@ -48,5 +44,13 @@ Thumbs.db
 *.mov
 *.wmv
 *.json
-.env
+
+# CSV data
 *.csv
+
+# Node artifact files
+node_modules/
+dist/
+
+# Unignore infra JSON
+!/.infra/**/*.json

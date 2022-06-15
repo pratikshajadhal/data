@@ -1,0 +1,49 @@
+{
+    "@context": "https://schema.org/extensions",
+    "@type": "MessageCard",
+    "themeColor": "0072C6",
+    "title": "{{bitbucketRepoName}}",
+    "text": "Env: **{{envName}}**",
+    "sections": [
+        {
+            "startGroup": true,
+            "text": "Version: **v{{imgTag}}**"
+        },
+        {
+            "summary": "action buttons",
+            "startGroup": true,
+            "potentialAction": [
+                {
+                    "@type": "OpenUri",
+                    "name": "Bitbucket Pipeline",
+                    "targets": [
+                        {
+                            "os": "default",
+                            "uri": "{{bitbucketPipelineUrl}}"
+                        }
+                    ]
+                },
+                {
+                    "@type": "OpenUri",
+                    "name": "AWS Image",
+                    "targets": [
+                        {
+                            "os": "default",
+                            "uri": "https://{{awsRegion}}.console.aws.amazon.com/ecr/repositories/private/{{awsAccountId}}/{{serviceEcrName}}/image/{{imgSha256}}/details/?region={{awsRegion}}"
+                        }
+                    ]
+                },
+                {
+                    "@type": "OpenUri",
+                    "name": "Health Check URL",
+                    "targets": [
+                        {
+                            "os": "default",
+                            "uri": "{{healthCheckUrl}}"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

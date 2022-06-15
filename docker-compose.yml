@@ -1,0 +1,71 @@
+version: "3.9"
+    
+services:
+  api:
+    build: .
+    image: data-api-local:latest
+    container_name: data-api
+    env_file: .env.local
+    ports:
+      - 8000:8000
+    depends_on:
+      - redshift
+    restart: on-failure
+    networks:
+      - backend
+
+  redshift:
+    image: postgres:12.6-alpine
+    container_name: truve-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: truveuser
+      POSTGRES_PASSWORD: truvepword
+      POSTGRES_DB: truve-local
+    ports:
+      - 5439:5432
+    volumes:
+      - redshift-vol:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  pgadmin:
+    # reachable at http://localhost:5050 by default
+    depends_on:
+      - postgres
+    image: dpage/pgadmin4
+    container_name: truve-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@truve.io}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+        - pga-vol:/var/lib/pgadmin
+    networks:
+      - backend
+
+  oas-editor:
+    image: swaggerapi/swagger-editor:v3.16.1
+    container_name: truve-oas
+    ports:
+      - 8080:8080
+    volumes:
+      - oas-vol:/tmp
+    environment:
+      SWAGGER_FILE: /tmp/oas.yml
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  redshift-vol:
+  pga-vol:
+  oas-vol:
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/api_server/swagger

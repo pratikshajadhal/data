@@ -1,0 +1,69 @@
+{
+	"$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+	"type": "AdaptiveCard",
+	"version": "1.0",
+	"body": [
+		{
+			"type": "ColumnSet",
+			"spacing": "large",
+			"separator": true,
+			"columns": [
+				{
+					"width": "stretch",
+					"items": [
+						{
+							"type": "TextBlock",
+							"text": "**{{bitbucketRepoName}}**"
+						},
+						{
+							"type": "TextBlock",
+							"spacing": "none",
+							"text": "v{{imgTag}}"
+						},
+                        {
+                            "type": "TextBlock",
+                            "spacing": "small",
+                            "color": "accent",
+                            "text": "Env: **{{envName}}**"
+                        }
+					]
+				}
+			]
+		},
+		{
+			"type": "Container",
+			"items": [
+				{
+					"type": "ColumnSet",
+					"columns": [
+						{
+							"width": "stretch",
+							"items": [
+								{
+									"type": "ActionSet",
+									"actions": [
+                                        {
+                                            "type": "Action.OpenUrl",
+                                            "title": "Bitbucket Pipeline",
+                                            "url": "{{bitbucketPipelineUrl}}"
+                                        },
+                                        {
+                                            "type": "Action.OpenUrl",
+                                            "title": "AWS Image",
+                                            "url": "https://{{awsRegion}}.console.aws.amazon.com/ecr/repositories/private/{{awsAccountId}}/{{serviceEcrName}}/image/{{imgSha256}}/details/?region={{awsRegion}}"
+                                        },
+                                        {
+                                            "type": "Action.OpenUrl",
+                                            "title": "Service URL",
+                                            "url": "{{serviceUrl}}"
+                                        }
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}
