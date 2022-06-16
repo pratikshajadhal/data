@@ -54,3 +54,6 @@ dist/
 
 # Unignore infra JSON
 !/.infra/**/*.json
+
+# Ignore folder
+/ignored/
