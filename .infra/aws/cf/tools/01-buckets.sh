@@ -6,7 +6,7 @@ set -e
 AWS_CLI_PROFILE_NAME=$1
 if [ -z "$1" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/01-buckets.sh <AWS_CLI_PROFILE_NAME> <optional:ENV_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/01-buckets.sh <AWS_CLI_PROFILE_NAME> <optional:ENV_NAME> <optional:STACK_NAME>"'
     exit 1
 fi
 
@@ -17,8 +17,8 @@ then
     ENV_NAME="dev"
 fi
 
-# Optional 3rd argument for CPU use percentage, after which autoscaling will occur
-STACK_NAME=3
+# Optional 3rd argument for this CloudFormation stack name
+STACK_NAME=$3
 if [ -z "$3" ]
 then
     STACK_NAME="$ENV_NAME-data-api-01-buckets"

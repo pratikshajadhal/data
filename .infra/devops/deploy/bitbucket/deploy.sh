@@ -154,11 +154,11 @@ SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN=$(aws acm list-certificates --query "Certific
 
 # Query Bucket Name for Truve Raw Data
 echo "Fetching Bucket Name for Truve Raw Data..."
-BUCKET_NAME_TRUVE_RAW_DATA=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketTruveRawDataBucketName`].OutputValue' --output text)
+BUCKET_NAME_TRUVE_RAW_DATA=$(aws cloudformation describe-stacks --stack-name $STACK_NAME_1 --query 'Stacks[0].Outputs[?OutputKey==`BucketNameTruveRawData`].OutputValue' --output text)
 
 # Query Bucket Name for Truve Temp Data
 echo "Fetching Bucket Name for Truve Temp Data..."
-BUCKET_NAME_TRUVE_TEMP_DATA=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketTruveTempDataBucketName`].OutputValue' --output text)
+BUCKET_NAME_TRUVE_TEMP_DATA=$(aws cloudformation describe-stacks --stack-name $STACK_NAME_1 --query 'Stacks[0].Outputs[?OutputKey==`BucketNameTruveTempData`].OutputValue' --output text)
 
 echo
 echo

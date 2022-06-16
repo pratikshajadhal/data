@@ -6,7 +6,7 @@ set -e
 AWS_CLI_PROFILE_NAME=$1
 if [ -z "$1" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
     exit 1
 fi
 
@@ -14,7 +14,7 @@ fi
 SERVICE_ECR_IMAGE_TAG=$2
 if [ -z "$2" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
     exit 1
 fi
 
@@ -76,9 +76,16 @@ then
     ECS_CLUSTER_STACK_NAME="$ENV_NAME-truve-devops-06-ecs-cluster"
 fi
 
-# Optional 12th argument for CPU use percentage, after which autoscaling will occur
-STACK_NAME=${12}
+# Optional 12th argument for buckets CloudFormation stack name
+BUCKETS_STACK_NAME=${12}
 if [ -z "${12}" ]
+then
+    BUCKETS_STACK_NAME="$ENV_NAME-data-api-01-buckets"
+fi
+
+# Optional 13th argument for this CloudFormation stack name
+STACK_NAME=${13}
+if [ -z "${13}" ]
 then
     STACK_NAME="$ENV_NAME-data-api-02-service"
 fi
@@ -117,11 +124,11 @@ SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN=$(aws acm list-certificates --query "Certific
 
 # Query Bucket Name for Truve Raw Data
 echo "Fetching Bucket Name for Truve Raw Data..."
-BUCKET_NAME_TRUVE_RAW_DATA=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketTruveRawDataBucketName`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
+BUCKET_NAME_TRUVE_RAW_DATA=$(aws cloudformation describe-stacks --stack-name $BUCKETS_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketNameTruveRawData`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
 
 # Query Bucket Name for Truve Temp Data
 echo "Fetching Bucket Name for Truve Temp Data..."
-BUCKET_NAME_TRUVE_TEMP_DATA=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketTruveTempDataBucketName`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
+BUCKET_NAME_TRUVE_TEMP_DATA=$(aws cloudformation describe-stacks --stack-name $BUCKETS_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`BucketNameTruveTempData`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
 
 # deploy stack
 aws cloudformation deploy --template-file=.infra/aws/cf/02-service.yml \

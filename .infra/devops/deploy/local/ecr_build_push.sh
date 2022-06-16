@@ -45,6 +45,19 @@ AWS_REGION=$(aws ec2 describe-availability-zones --query 'AvailabilityZones[0].[
 echo "Fetching ECR Name..."
 SERVICE_ECR_NAME=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ServiceDataApiEcrName`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
 
+# Check if tag already exists
+echo "Checking if image tag already exists in ECR..."
+set +e
+IMG_SHA_256=$(aws ecr describe-images --repository-name=$SERVICE_ECR_NAME --image-ids=imageTag=$SERVICE_ECR_IMAGE_TAG --query '(imageDetails | [0]).imageDigest' --output text --profile $AWS_CLI_PROFILE_NAME 2> /dev/null)
+set -e
+if [ -z "$IMG_SHA_256" ]
+then
+  echo "Image does not exist yet.  Proceeding..."
+else
+  echo "Image with tag $SERVICE_ECR_IMAGE_TAG already exists in ECR $SERVICE_ECR_NAME.  Aborting..."
+  exit 1
+fi
+
 # Docker login
 echo "ECR login..."
 aws ecr get-login-password --profile $AWS_CLI_PROFILE_NAME | docker login --username AWS --password-stdin \

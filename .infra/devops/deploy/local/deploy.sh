@@ -6,7 +6,7 @@ set -e
 AWS_CLI_PROFILE_NAME=$1
 if [ -z "$1" ]
 then
-    echo 'Usage: "sh .infra/devops/deploy/local/deploy.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME_2>"'
+    echo 'Usage: "sh .infra/devops/deploy/local/deploy.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME_1> <optional:STACK_NAME_2>"'
     exit 1
 fi
 
@@ -14,7 +14,7 @@ fi
 SERVICE_ECR_IMAGE_TAG=$2
 if [ -z "$2" ]
 then
-    echo 'Usage: "sh .infra/devops/deploy/local/deploy.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME_2>"'
+    echo 'Usage: "sh .infra/devops/deploy/local/deploy.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:STACK_NAME_1> <optional:STACK_NAME_2>"'
     exit 1
 fi
 
@@ -77,9 +77,16 @@ then
     ECS_CLUSTER_STACK_NAME="$ENV_NAME-truve-devops-06-ecs-cluster"
 fi
 
-# Optional 12th argument for CPU use percentage, after which autoscaling will occur
-STACK_NAME_2=${12}
+# Optional 12th argument for buckets CloudFormation stack name
+STACK_NAME_1=${12}
 if [ -z "${12}" ]
+then
+    STACK_NAME_1="$ENV_NAME-data-api-01-buckets"
+fi
+
+# Optional 13th argument for this CloudFormation stack name
+STACK_NAME_2=${13}
+if [ -z "${13}" ]
 then
     STACK_NAME_2="$ENV_NAME-data-api-02-service"
 fi
@@ -94,7 +101,7 @@ echo
 echo "Preparing to udpate buckets..."
 
 # Update CloudFormation stack 01-buckets
-sh .infra/aws/cf/tools/01-buckets.sh $AWS_CLI_PROFILE_NAME $ENV_NAME
+sh .infra/aws/cf/tools/01-buckets.sh $AWS_CLI_PROFILE_NAME $ENV_NAME $STACK_NAME_1
 
 echo
 echo
@@ -103,7 +110,7 @@ echo
 echo
 
 # Update CloudFormation stack 02-service
-sh .infra/aws/cf/tools/02-service.sh $AWS_CLI_PROFILE_NAME $SERVICE_ECR_IMAGE_TAG $SERVICE_DNS_ENV_ALIAS_KEY $ENV_NAME $SERVICE_DNS_HOSTED_ZONE_NAME $SERVICE_NAME $SERVICE_TASK_CONTAINER_PORT $SERVICE_TASK_MIN_CONTAINERS $SERVICE_TASK_MAX_CONTAINERS $SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT $ECS_CLUSTER_STACK_NAME $STACK_NAME_2
+sh .infra/aws/cf/tools/02-service.sh $AWS_CLI_PROFILE_NAME $SERVICE_ECR_IMAGE_TAG $SERVICE_DNS_ENV_ALIAS_KEY $ENV_NAME $SERVICE_DNS_HOSTED_ZONE_NAME $SERVICE_NAME $SERVICE_TASK_CONTAINER_PORT $SERVICE_TASK_MIN_CONTAINERS $SERVICE_TASK_MAX_CONTAINERS $SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT $ECS_CLUSTER_STACK_NAME $STACK_NAME_1 $STACK_NAME_2
 
 echo 
 echo 

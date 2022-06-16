@@ -14,8 +14,8 @@ Resources:
       AccessControl: Private
 
 Outputs:
-  BucketTruveRawDataBucketName:
+  BucketNameTruveRawData:
     Value: !Ref BucketTruveRawData
 
-  BucketTruveTempDataBucketName:
+  BucketNameTruveTempData:
     Value: !Ref BucketTruveTempData
