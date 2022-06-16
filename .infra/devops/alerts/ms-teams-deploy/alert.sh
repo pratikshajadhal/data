@@ -77,7 +77,6 @@ echo "Fetching Health Check Endpoint..."
 HEALTH_CHECK_ENDPOINT=$(aws cloudformation describe-stacks --stack-name $STACK_NAME_2 --query 'Stacks[0].Outputs[?OutputKey==`HealthCheckEndpoint`].OutputValue' --output text)
 
 # Default alert variables
-BITBUCKET_REPO_NAME=data-api
 BITBUCKET_PIPELINE_URL="$BITBUCKET_GIT_HTTP_ORIGIN/pipelines/results/$BITBUCKET_BUILD_NUMBER"
 MS_TEAMS_CHANNEL_WEBHOOK_URL=https://cerebrio.webhook.office.com/webhookb2/26d80bae-6989-4980-a8e8-0ea987ca3488@e0483662-9b22-4571-b42b-a67513759956/IncomingWebhook/06335a32943946f7ac7d2859f18d62f5/8eaf6546-2a09-4966-be76-0f078fdac527
 
@@ -85,7 +84,7 @@ MS_TEAMS_CHANNEL_WEBHOOK_URL=https://cerebrio.webhook.office.com/webhookb2/26d80
 MS_TEAMS_ALERT_PAYLOAD=$(node .infra/devops/alerts/ms-teams-deploy/payload/send.js \
     $MS_TEAMS_CHANNEL_WEBHOOK_URL \
     $ENV_NAME \
-    $BITBUCKET_REPO_NAME \
+    $BITBUCKET_REPO_SLUG \
     $BITBUCKET_PIPELINE_URL \
     $AWS_DEFAULT_REGION \
     $AWS_ACCOUNT_ID \
