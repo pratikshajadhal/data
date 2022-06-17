@@ -3,8 +3,9 @@ import json
 
 from fastapi import FastAPI, Request
 
-from .config import FVWebhookInput
-from .helper import handle_wb_input
+from api_server.config import FVWebhookInput
+from api_server.helper import handle_wb_input
+from main import *
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 
 APP_NAME = "webhook-listener"
@@ -80,5 +81,49 @@ async def fv_webhook_handler(request: Request):
         }
 
 
+@app.post("/lead", tags=["leaddocket-webhook-listener"])
+async def listen_lead(request: Request):
+    """
+        API endpoint to handle webhook incoming request.
+        Currently webhook was set for 5 different incomings.
+        - LeadEdited
+        - LeadCreated
+        - LeadStatusChanged
+        - Contact Added
+        - Opportunity Added.
+    """
+    incoming_json = await request.json()
+    event_type = incoming_json.get("EventType")
+
+    if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
+        # #Extract Metadata
+        lead_id = incoming_json.get("LeadId")
+
+        # Update Lead Detail
+        start_lead_detail_etl(lead_ids=[lead_id])
+
+
+    elif event_type == 'Contact Added':
+        # #Extract Metadata
+        contact_id = incoming_json.get("ContactId")
+
+        # Update Contact ETL
+        start_lead_contact_etl(contact_ids=[contact_id])
+
+    elif event_type == 'Opportunity Created':
+        # #Extract Metadata
+        opportunity_id = incoming_json.get("OpportunityId")
+
+        start_opport_etl(opport_ids=[opportunity_id])
+
+    else:
+        raise ValueError('Unexpected event_type {}'.format(event_type))
+        
+
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Success')}
+
+
 if __name__ == "__main__":
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
