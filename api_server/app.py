@@ -74,11 +74,11 @@ async def fv_webhook_handler(request: Request):
     except Exception as e:
         raise e
         
-    finally:
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Success')
-        }
+    #finally:
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Success')
+    }
 
 
 @app.post("/lead", tags=["leaddocket-webhook-listener"])

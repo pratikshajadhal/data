@@ -36,6 +36,8 @@ class ModelETL(object):
         
     def persist_source_schema(self):
         directory = os.getcwd()
+        if not os.path.exists(f"{directory}/schemas/"):
+            os.makedirs(f"{directory}/schemas/")
         with open(f"{directory}/schemas/{self.model_name}.json", "w") as f:
             f.write(json.dumps(self.source_schema))
 
