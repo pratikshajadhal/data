@@ -1,3 +1,4 @@
+import os
 from ast import List
 from typing import Dict
 from etl.datamodel import ColumnConfig, ColumnDefn, ETLDestination, ETLSource, FileVineConfig
@@ -34,7 +35,10 @@ class ModelETL(object):
             self.column_config.fields.append(self.key_column)
         
     def persist_source_schema(self):
-        with open(f"{settings.SCHEMA_DIR}/{self.model_name}.json", "w") as f:
+        directory = os.getcwd()
+        if not os.path.exists(f"{directory}/schemas/"):
+            os.makedirs(f"{directory}/schemas/")
+        with open(f"{directory}/schemas/{self.model_name}.json", "w") as f:
             f.write(json.dumps(self.source_schema))
 
     def get_schema_of_model(self)-> Dict:
@@ -61,13 +65,13 @@ class ModelETL(object):
     def convert_schema_into_destination_format(self, source_flattened_schema:Dict):
         dest_col_defn : list[ColumnDefn] = []
 
-        print(source_flattened_schema)
+        #print(source_flattened_schema)
         #exit()
 
         column_mapper = self.destination.get_column_mapper()
 
         for col, field_config in source_flattened_schema.items():
-            print(f"{col}{field_config}")
+            #print(f"{col}{field_config}")
 
             if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "Doc" or field_config["type"] == "ReportFusion":
                     continue

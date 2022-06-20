@@ -46,18 +46,32 @@ async def fv_webhook_handler(request: Request):
     'UserId': 26712, 
     'Other': {}}
 
+    Meds Event Data
+
 
     '''
     event_json = await request.json()
     
     #Extract Metadata
-    project_type_id = event_json["ObjectId"]["ProjectTypeId"]
-    org_id = event_json["OrgId"]
-    project_id = event_json["ProjectId"]
     entity = event_json["Object"]
-    section = event_json["ObjectId"].get("SectionSelector")
-    event_name = event_json["Event"]
-    event_time = event_json["Timestamp"]
+    
+    if entity == "Project":
+        #In case of project webhook, Handling will be different
+        project_type_id = None
+        org_id = event_json["OrgId"]
+        project_id = event_json["ObjectId"]["ProjectId"]
+        entity = event_json["Object"]
+        section = "core"
+        event_name = event_json["Event"]
+        event_time = event_json["Timestamp"]
+    else:
+        project_type_id = event_json["ObjectId"]["ProjectTypeId"]
+        org_id = event_json["OrgId"]
+        project_id = event_json["ProjectId"]
+        entity = event_json["Object"]
+        section = event_json["ObjectId"].get("SectionSelector")
+        event_name = event_json["Event"]
+        event_time = event_json["Timestamp"]
 
     wh_input = FVWebhookInput(project_type_id=project_type_id,
                 org_id=org_id,
@@ -74,11 +88,11 @@ async def fv_webhook_handler(request: Request):
     except Exception as e:
         raise e
         
-    finally:
-        return {
-            'statusCode': 200,
-            'body': json.dumps('Success')
-        }
+    #finally:
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Success')
+    }
 
 
 @app.post("/lead", tags=["leaddocket-webhook-listener"])
