@@ -105,8 +105,11 @@ class FileVineClient(object):
             return collection_data["items"]
         return None
 
-    def get_projects(self, requested_fields:list[str]=['*']):
-        return self.get_entity("core/projects", requested_fields=requested_fields)
+    def get_projects(self, project_list=[], requested_fields:list[str]=['*']):
+        if len(project_list) == 1:
+            return [self.make_request(f"core/projects/{project_list[0]}")]
+        else:
+            return self.get_entity("core/projects", requested_fields=requested_fields)
         
 
 if __name__ == "__main__":

@@ -23,12 +23,23 @@ class ProjectETL(ModelETL):
 
     def extract_data_from_source(self, project_list:list[int]=[]):
         final_contact_list = []
-        project_list = self.fv_client.get_projects()
+        project_list = self.fv_client.get_projects(project_list)
+        
+        if len(project_list) > 1:
+            raise Exception("More than 1 project_list is not supported in this entity")
+        
         for project in project_list:
-            if project["projectTypeId"]["native"] == self.project_type:
+            if self.project_type is not None and project["projectTypeId"]["native"] == self.project_type:
                 project["projectId"] = project["projectId"]["native"]
                 final_contact_list.append(project)
-        print(len(final_contact_list))
+            else:
+                project["projectId"] = project["projectId"]["native"]
+                
+                #VERY IMP. It is initialized only for Webhook as in WEbhook we do not get ProjectTypeID
+                self.project_type = project["projectTypeId"]["native"] 
+
+                final_contact_list.append(project)
+        
         return final_contact_list
 
     

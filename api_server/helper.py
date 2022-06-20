@@ -9,9 +9,10 @@ from utils import load_config, get_config_of_section
 def handle_project_object(wb_input:FVWebhookInput, selected_field_config:SelectedConfig):
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
+    print(wb_input)
 
     selected_column_config = get_config_of_section(selected_config=selected_field_config, 
-                                                section_name=wb_input.section, 
+                                                section_name=wb_input.entity.lower(), 
                                                 project_type_id=wb_input.project_type_id,
                                                 is_core=True)
 
