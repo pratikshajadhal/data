@@ -1,3 +1,4 @@
+import os
 from ast import List
 from typing import Dict
 from etl.datamodel import ColumnConfig, ColumnDefn, ETLDestination, ETLSource, FileVineConfig
@@ -34,7 +35,8 @@ class ModelETL(object):
             self.column_config.fields.append(self.key_column)
         
     def persist_source_schema(self):
-        with open(f"{settings.SCHEMA_DIR}/{self.model_name}.json", "w") as f:
+        directory = os.getcwd()
+        with open(f"{directory}/schemas/{self.model_name}.json", "w") as f:
             f.write(json.dumps(self.source_schema))
 
     def get_schema_of_model(self)-> Dict:
