@@ -29,6 +29,7 @@ class FormETL(ModelETL):
         return flattend_map
 
     def get_schema_of_model(self) -> Dict:
+        print(f"Getting Schema of model {self.model_name}")
         form_schema = self.fv_client.get_section_metadata(projectTypeId=self.project_type, section_name=self.model_name)
         
         distinct_data_type = {}
@@ -41,9 +42,10 @@ class FormETL(ModelETL):
         
         self.source_schema = form_schema["customFields"]
 
+        '''
         for field in self.source_schema:
             print(field["fieldSelector"])
-
+        '''
         #exit()
         
         self.persist_source_schema()
