@@ -9,8 +9,6 @@ from utils import load_config, get_config_of_section
 def handle_project_object(wb_input:FVWebhookInput, selected_field_config:SelectedConfig):
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
-    print(wb_input)
-
     selected_column_config = get_config_of_section(selected_config=selected_field_config, 
                                                 section_name=wb_input.entity.lower(), 
                                                 project_type_id=wb_input.project_type_id,
@@ -71,11 +69,20 @@ def handle_wb_input(wb_input:FVWebhookInput):
     
 
     if wb_input.entity == "Project":
-        cls = handle_project_object(wb_input, selected_field_config)
+        if wb_input.event_name == "PhaseChanged":
+            s3_dest = S3Destination(org_id=wb_input.org_id)
+            key = f"filevine/{wb_input.org_id}/{wb_input.project_type_id}/{wb_input.project_id}/phases/{wb_input.event_timestamp}.parquet"
+            print(f"PhaseChanged event {key}")
+            phase_name = wb_input.webhook_body["Other"]["PhaseName"]
+            s3_dest.save_project_phase(s3_key=key, project_id=wb_input.project_id, phase_name=phase_name)
+            return
+        else:    
+            cls = handle_project_object(wb_input, selected_field_config)
     elif wb_input.entity == "Form":
         cls = handle_form_object(wb_input, selected_field_config)
     elif wb_input.entity == "CollectionItem":
         cls = handle_collection_object(wb_input, selected_field_config)
+    
     else:
         return None
     

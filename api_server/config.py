@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Dict
 
 EVENT_TYPES = ["PhaseChanged", "Created", "Updated", "Deleted"]
 ENTITY_TYPES = ["Project", "Form", "CollectionItem"]
@@ -14,3 +15,4 @@ class FVWebhookInput:
     project_id:int
     section:str
     user_id:int
+    webhook_body:Dict
