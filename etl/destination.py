@@ -1,3 +1,4 @@
+from cmath import phase
 from ctypes import Union
 from dataclasses import asdict, dataclass
 from typing import Dict
@@ -62,10 +63,8 @@ class S3Destination(ETLDestination):
 
         #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}
         return column_mapper
-        
-    def load_data(self, data_df: pd.DataFrame, **kwargs):
 
-        
+    def get_key(self, **kwargs):
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
@@ -79,6 +78,24 @@ class S3Destination(ETLDestination):
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/{kwargs['section']}/{kwargs['entity']}.parquet"
 
+        return s3_key
+
+    def save_project_phase(self, s3_key, project_id, phase_name):
+        phase_df = pd.DataFrame([{"project_id" : project_id, "phase" : phase_name}])
+        
+        s3_path = f"s3://{self.config['bucket']}/{s3_key}"
+        print(s3_path)
+
+        wr.s3.to_parquet(
+                df=phase_df,
+                path=f"{s3_path}",
+                boto3_session=self.s3_session
+        )
+
+    def load_data(self, data_df: pd.DataFrame, **kwargs):
+
+        s3_key = self.get_key(kwargs=kwargs)
+        
         print(f"Uploading data to destination in following {s3_key}")
 
         #print(kwargs['dtype'])

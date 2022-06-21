@@ -57,13 +57,25 @@ async def fv_webhook_handler(request: Request):
     
     if entity == "Project":
         #In case of project webhook, Handling will be different
-        project_type_id = None
-        org_id = event_json["OrgId"]
-        project_id = event_json["ObjectId"]["ProjectId"]
-        entity = event_json["Object"]
-        section = "core"
+        
         event_name = event_json["Event"]
-        event_time = event_json["Timestamp"]
+        
+        if event_name != "PhaseChanged":
+            project_type_id = None
+            org_id = event_json["OrgId"]
+            project_id = event_json["ObjectId"]["ProjectId"]
+            entity = event_json["Object"]
+            section = "core"
+            event_name = event_json["Event"]
+            event_time = event_json["Timestamp"]
+        else:
+            project_type_id = event_json["ObjectId"]["ProjectTypeId"]
+            org_id = event_json["OrgId"]
+            project_id = event_json["ProjectId"]
+            entity = event_json["Object"]
+            section = None
+            event_name = event_json["Event"]
+            event_time = event_json["Timestamp"]
     else:
         project_type_id = event_json["ObjectId"]["ProjectTypeId"]
         org_id = event_json["OrgId"]
@@ -80,7 +92,8 @@ async def fv_webhook_handler(request: Request):
                 event_name=event_name,
                 event_timestamp=event_time,
                 user_id=None,
-                section=section
+                section=section,
+                webhook_body=event_json
                 )
 
     try:
