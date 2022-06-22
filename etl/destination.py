@@ -8,12 +8,16 @@ import os
 import psycopg2
 from dacite import from_dict
 import datetime
+import logging
         
 import boto3
 import pandas_redshift as pr
 import awswrangler as wr
 
+from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
+
+logger = get_logger(__name__)
 
 class ETLDestination(object):
 
@@ -84,30 +88,32 @@ class S3Destination(ETLDestination):
         phase_df = pd.DataFrame([{"project_id" : project_id, "phase" : phase_name}])
         
         s3_path = f"s3://{self.config['bucket']}/{s3_key}"
-        print(s3_path)
-
+        
         wr.s3.to_parquet(
                 df=phase_df,
                 path=f"{s3_path}",
                 boto3_session=self.s3_session
         )
 
+        logger.info(f"S3 Upload successful for {s3_path}")
+
     def load_data(self, data_df: pd.DataFrame, **kwargs):
 
         s3_key = self.get_key(kwargs=kwargs)
         
-        print(f"Uploading data to destination in following {s3_key}")
+        logger.info(f"Uploading data to destination in following {s3_key}")
 
-        #print(kwargs['dtype'])
-        #data_df.to_csv("sample.csv")
-
-        
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",
                 boto3_session=self.s3_session,
                 dtype=kwargs["dtype"]
         )
+
+        logger.info(f"S3 upload successful for {s3_key}")
+
+        return 0
+
 
 class RedShiftDestination(ETLDestination):
 
