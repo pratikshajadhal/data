@@ -31,7 +31,8 @@ class CoreETL(LeadModelETL):
                             model_name=self.model_name,
                             dtype = final_dtypes,
                             push_id = push_id,
-                            organization_identifier = (self.base_url.split(".")[0]).split("//")[1])
+                            organization_identifier = (self.base_url.split(".")[0]).split("//")[1],
+                            entity= "lead")
 
 
 
