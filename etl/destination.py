@@ -64,14 +64,14 @@ class S3Destination(ETLDestination):
         #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}
         return column_mapper
 
-    def get_key(self, **kwargs):
+    def get_key(self, kwargs):
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
-        elif kwargs["section"] == 'leaddocket':
+        elif kwargs["section"] == "leaddocket":
             file_name = "{}.parquet".format(kwargs["push_id"])
             s3_key = f"{kwargs['section']}/{kwargs['organization_identifier']}/{kwargs['model_name']}/{file_name}"
         else:
