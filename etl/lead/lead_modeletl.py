@@ -6,7 +6,9 @@ from etl.datamodel import ColumnDefn
 from etl.destination import ETLDestination, S3Destination
 import pandas as pd
 from abc import abstractmethod
+from utils import get_logger
 
+logger = get_logger(__name__)
 
 class LeadModelETL(object):
     
@@ -51,7 +53,7 @@ class LeadModelETL(object):
     def eliminate_nonyaml(self, lead_df:pd.DataFrame):
         for each_field in  lead_df.columns.values.tolist():
             if each_field not in  self.column_config.fields:
-                print(f"Field: {each_field} is eliminating. Not in yaml file.")
+                logger.debug(f"Field: {each_field} is eliminating. Not in yaml file.")
                 lead_df.drop([each_field], axis = 1, inplace = True)
 
         return lead_df

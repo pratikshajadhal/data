@@ -6,7 +6,9 @@ import logging
 import pandas as pd
 import yaml
 from dacite import from_dict
+from utils import get_logger
 
+logger = get_logger(__name__)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -24,7 +26,7 @@ class LeadDocketClient(object):
 
     def make_request(self, end_point:str, query_param:Dict={}):
         url = f"{self.base_url}{end_point}"
-        print("Hitting URL {}".format(url))
+        logger.info("Hitting URL {}".format(url))
         response = requests.get(url, headers=self.headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
@@ -47,8 +49,6 @@ class LeadDocketClient(object):
         if (incoming_page) > page :
             output_list += (output["Records"])
             for i in range(page+1, incoming_page+1):
-                print("Hitting again : Total page {} incoming page {} ".format(incoming_page, i, incoming_page))
-                
                 query_param = {"status": status,
                                 "page": i}
                 output = self.make_request(endpoint, query_param)
@@ -60,7 +60,7 @@ class LeadDocketClient(object):
     def get_lookups(self, lookup_type:str):
         endpoint = f"/api/lookups"
         query_param = {"type": lookup_type}
-        print(f"Given Param is: {query_param}")
+        logger.info(f"Given Param is: {query_param}")
         return self.make_request(end_point = endpoint, query_param=query_param)
 
 
@@ -81,8 +81,6 @@ class LeadDocketClient(object):
             outy = self.get_row_lead_iteratively(endpoint, status)
             if outy:
                 records += outy
-            else:
-                print("empty skipping!")
 
         return records
 

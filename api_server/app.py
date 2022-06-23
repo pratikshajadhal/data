@@ -123,6 +123,8 @@ async def listen_lead(request: Request):
         - Contact Added
         - Opportunity Added.
     """
+    logger.info(f"Got LeadDocket Webhook Request {event_json}")
+
     incoming_json = await request.json()
     event_type = incoming_json.get("EventType")
 
