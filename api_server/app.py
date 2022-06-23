@@ -123,9 +123,9 @@ async def listen_lead(request: Request):
         - Contact Added
         - Opportunity Added.
     """
+    incoming_json = await request.json()
     logger.info(f"Got LeadDocket Webhook Request {incoming_json}")
 
-    incoming_json = await request.json()
     event_type = incoming_json.get("EventType")
 
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
