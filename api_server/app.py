@@ -6,7 +6,9 @@ from fastapi import FastAPI, Request
 from api_server.config import FVWebhookInput
 from api_server.helper import handle_wb_input
 from main import *
+from utils import get_logger
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+logger = get_logger(__name__)
 
 APP_NAME = "webhook-listener"
 app = FastAPI(
@@ -51,6 +53,8 @@ async def fv_webhook_handler(request: Request):
 
     '''
     event_json = await request.json()
+
+    logger.info(f"Got FV Webhook Request {event_json}")
     
     #Extract Metadata
     entity = event_json["Object"]

@@ -1,7 +1,8 @@
 from itertools import islice
 import json
 from dacite import from_dict
-
+import logging
+    
 import pandas as pd
 import yaml
 
@@ -68,6 +69,26 @@ def load_lead_config(file_path:str) -> LeadSelectedConfig:
         data = yaml.safe_load(stream)
         #print(data)
         return from_dict(data=data, data_class=LeadSelectedConfig)
+
+def get_logger(__name__):
+    logger = logging.getLogger(__name__)
+    
+    if len(logger.handlers) > 0:
+        return logger
+
+    logger.setLevel(logging.DEBUG)
+    
+    # create console handler with a higher log level
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+    
+    # create formatter and add it to the handler
+    formatter = logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s')
+    handler.setFormatter(formatter)
+    # add the handler to the logger
+    logger.addHandler(handler)
+
+    return logger
 
 if __name__ == "__main__":
 

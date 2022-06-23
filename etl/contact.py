@@ -27,24 +27,10 @@ class ContactETL(ModelETL):
     def get_schema_of_model(self) -> Dict:
         contact_schema = self.fv_client.get_contact_metadata()
         
-        print(contact_schema)
-
         distinct_data_type = {}
-        
-        #for cf in contact_schema:
-        #    distinct_data_type[cf['customFieldType']] = ""
-            
-        #print(distinct_data_type)
-        #Contact ID Field
-        #contact_schema.append({"fieldName" : "Contact ID", "selector" : "personId", "value" : "object"})
         
         self.source_schema = contact_schema
 
-        for field in self.source_schema:
-            print(field["selector"])
-
-        #exit()
-        
         self.persist_source_schema()
 
         return contact_schema

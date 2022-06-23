@@ -5,6 +5,9 @@ import json
 import logging
 
 from dotenv import load_dotenv
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -36,17 +39,16 @@ class FileVineClient(object):
 		}
         response = requests.post(url, headers={"Content-Type" : "application/json"}, data=json.dumps(data))
         if response.status_code != 200:
-            logging.error("Unable to generate tokens")
+            logger.error("Unable to generate tokens")
             raise Exception("Token genreation error")
         return json.loads(response.text)
 
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
         url = f"{self.base_url}{end_point}"
-        print("Hitting URL {}".format(url))
+        logger.debug("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
                 "Authorization" : "Bearer {}".format(session_info["accessToken"])}
-        print(query_param)
         response = requests.get(url, headers=headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)

@@ -1,10 +1,14 @@
+import logging 
+
 from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
 from .config import FVWebhookInput
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
-from utils import load_config, get_config_of_section
+from utils import load_config, get_config_of_section, get_logger
+
+logger = get_logger(__name__)
 
 def handle_project_object(wb_input:FVWebhookInput, selected_field_config:SelectedConfig):
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
@@ -65,6 +69,8 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
 
 
 def handle_wb_input(wb_input:FVWebhookInput):
+    logger.debug("inside handle_wb_input()")
+
     selected_field_config = load_config(file_path="src.yaml")
     
 
@@ -72,7 +78,7 @@ def handle_wb_input(wb_input:FVWebhookInput):
         if wb_input.event_name == "PhaseChanged":
             s3_dest = S3Destination(org_id=wb_input.org_id)
             key = f"filevine/{wb_input.org_id}/{wb_input.project_type_id}/{wb_input.project_id}/phases/{wb_input.event_timestamp}.parquet"
-            print(f"PhaseChanged event {key}")
+            logger.info(f"PhaseChanged event {key}")
             phase_name = wb_input.webhook_body["Other"]["PhaseName"]
             s3_dest.save_project_phase(s3_key=key, project_id=wb_input.project_id, phase_name=phase_name)
             return
