@@ -6,7 +6,7 @@ set -e
 AWS_CLI_PROFILE_NAME=$1
 if [ -z "$1" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
     exit 1
 fi
 
@@ -14,12 +14,16 @@ fi
 SERVICE_ECR_IMAGE_TAG=$2
 if [ -z "$2" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
     exit 1
 fi
 
 # Optional 3rd argument for environment DNS alias key (non-prod)
 SERVICE_DNS_ENV_ALIAS_KEY=$3
+if [ -z "$3" ]
+then
+    ENV_NAME="prod"
+fi
 
 # Optional 4th argument for environment name (resource name prefix)
 ENV_NAME=$4
@@ -62,6 +66,7 @@ if [ -z "$9" ]
 then
     SERVICE_TASK_MAX_CONTAINERS=5
 fi
+
 # Optional 10th argument for CPU use percentage, after which autoscaling will occur
 SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT=${10}
 if [ -z "${10}" ]
@@ -70,22 +75,29 @@ then
 fi
 
 # Optional 11th argument for CPU use percentage, after which autoscaling will occur
-ECS_CLUSTER_STACK_NAME=${11}
+ALB_SSL_CERT_STACK_NAME=${11}
 if [ -z "${11}" ]
+then
+    ALB_SSL_CERT_STACK_NAME="all-truve-devops-00-ssl-alb"
+fi
+
+# Optional 12th argument for CPU use percentage, after which autoscaling will occur
+ECS_CLUSTER_STACK_NAME=${12}
+if [ -z "${12}" ]
 then
     ECS_CLUSTER_STACK_NAME="$ENV_NAME-truve-devops-06-ecs-cluster"
 fi
 
-# Optional 12th argument for buckets CloudFormation stack name
-BUCKETS_STACK_NAME=${12}
-if [ -z "${12}" ]
+# Optional 13th argument for buckets CloudFormation stack name
+BUCKETS_STACK_NAME=${13}
+if [ -z "${13}" ]
 then
     BUCKETS_STACK_NAME="$ENV_NAME-data-api-01-buckets"
 fi
 
-# Optional 13th argument for this CloudFormation stack name
-STACK_NAME=${13}
-if [ -z "${13}" ]
+# Optional 14th argument for this CloudFormation stack name
+STACK_NAME=${14}
+if [ -z "${14}" ]
 then
     STACK_NAME="$ENV_NAME-data-api-02-service"
 fi
@@ -120,7 +132,7 @@ SERVICE_ALB_HOSTED_ZONE_ID=$(aws cloudformation describe-stacks --stack-name $EC
 
 # Query SSL cert ARN
 echo "Fetching SSL Certificate ARN..."
-SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN=$(aws acm list-certificates --query "CertificateSummaryList[?DomainName=='*.$SERVICE_DNS_HOSTED_ZONE_NAME'].CertificateArn | [0]" --output text --profile $AWS_CLI_PROFILE_NAME)
+SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN=$(aws cloudformation describe-stacks --stack-name $ALB_SSL_CERT_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`SslCertArn`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
 
 # Query Bucket Name for Truve Raw Data
 echo "Fetching Bucket Name for Truve Raw Data..."
