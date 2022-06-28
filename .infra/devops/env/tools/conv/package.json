@@ -1,0 +1,8 @@
+{
+  "name": "env-conv",
+  "version": "1.0.0",
+  "description": "scripts to convert from/to .env file format to/from JSON",
+  "dependencies": {
+    "dotenv": "^16.0.1"
+  }
+}

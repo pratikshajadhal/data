@@ -1,0 +1,430 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: ECS Service and Task definition, autoscaling and DNS for ALB
+
+Parameters:
+  ServiceEcrImageTag:
+    Type: String
+    Description: Service ECR image tag to deploy in task
+
+  ServiceDnsEnvAliasKey:
+    Description: A unique string used to obfuscate non-prod environment aliases
+    Type: String
+    Default: ""
+
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+    Default: dev
+
+  ServiceName:
+    Type: String
+    Default: data-api
+
+  ServiceDnsHostedZoneName:
+    Description: Hosted zone name
+    Type: String
+    Default: truve.ai
+
+  ServiceTaskContainerPort:
+    Description: Port number on container to associate with ALB
+    Type: String
+    Default: 8080
+  
+  ServiceTaskMinContainers:
+    Type: Number
+    Default: 1
+
+  ServiceTaskMaxContainers:
+    Type: Number
+    Default: 5
+
+  ServiceAutoscalingTargetTaskCpuPct:
+    Type: Number
+    Default: 50
+
+  # ---
+  # Remaining parameters are queried from other stacks/resources
+  # ---
+
+  EcsClusterName:
+    Type: String
+  
+  EcsClusterAutoscalingRoleArn:
+    Type: String
+
+  ServiceEcrName:
+    Type: String
+  
+  ServiceAlbArn:
+    Type: String
+
+  ServiceAlbSecurityGroupId:
+    Type: String
+
+  ServiceAlbDnsName:
+    Type: String
+
+  ServiceAlbDnsHostedZoneId:
+    Type: String
+
+  ServiceDnsSslCertArn:
+    Description: ARN of SSL cert for service HTTPS listener
+    Type: String
+
+  BucketNameTruveRawData:
+    Type: String
+
+  BucketNameTruveTempData:
+    Type: String
+
+Conditions:
+  IsProd:
+    !Equals [!Ref EnvironmentName, prod]
+  IsDev:
+    !Equals [!Ref EnvironmentName, dev]
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/data-api/${EnvironmentName}'
+  
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - ListenerHTTPS
+    Properties: 
+      ServiceName: !Sub '${EnvironmentName}-svc-${ServiceName}'
+      Cluster: !Ref EcsClusterName
+      TaskDefinition: !Ref TaskDefinition
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      DesiredCount: 1
+      # This may need to be adjusted if the container takes a while to start up
+      HealthCheckGracePeriodSeconds: 30
+      LaunchType: FARGATE
+      NetworkConfiguration: 
+        AwsvpcConfiguration:
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}-vpc-main-private-subnet1-id
+            - Fn::ImportValue: !Sub ${EnvironmentName}-vpc-main-private-subnet2-id
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          # change to DISABLED if you're using private subnets that have access to a NAT gateway
+          AssignPublicIp: DISABLED
+      LoadBalancers:
+        - ContainerName: !Sub ${EnvironmentName}-svc-${ServiceName}
+          ContainerPort: !Ref ServiceTaskContainerPort
+          TargetGroupArn: !Ref TargetGroup
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      # Name of the task definition. Subsequent versions of the task definition are grouped together under this name.
+      Family: !Sub ${EnvironmentName}-svc-${ServiceName}-fargate-task
+      # awsvpc is required for Fargate
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      # 256 (.25 vCPU) - Available memory values: 0.5GB, 1GB, 2GB
+      # 512 (.5 vCPU) - Available memory values: 1GB, 2GB, 3GB, 4GB
+      # 1024 (1 vCPU) - Available memory values: 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB
+      # 2048 (2 vCPU) - Available memory values: Between 4GB and 16GB in 1GB increments
+      # 4096 (4 vCPU) - Available memory values: Between 8GB and 30GB in 1GB increments
+      Cpu: 512
+      # 0.5GB, 1GB, 2GB - Available cpu values: 256 (.25 vCPU)
+      # 1GB, 2GB, 3GB, 4GB - Available cpu values: 512 (.5 vCPU)
+      # 2GB, 3GB, 4GB, 5GB, 6GB, 7GB, 8GB - Available cpu values: 1024 (1 vCPU)
+      # Between 4GB and 16GB in 1GB increments - Available cpu values: 2048 (2 vCPU)
+      # Between 8GB and 30GB in 1GB increments - Available cpu values: 4096 (4 vCPU)
+      Memory: 1GB
+      # A role needed by ECS.
+      # "The ARN of the task execution role that containers in this task can assume. All containers in this task are granted the permissions that are specified in this role."
+      # "There is an optional task execution IAM role that you can specify with Fargate to allow your Fargate tasks to make API calls to Amazon ECR."
+      ExecutionRoleArn: !GetAtt TaskExecutionRole.Arn
+      # "The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM) role that grants containers in the task permission to call AWS APIs on your behalf."
+      TaskRoleArn: !Ref TaskRole
+      ContainerDefinitions:
+        - Name: !Sub ${EnvironmentName}-svc-${ServiceName}
+          Image: !Sub
+            - '${AccountId}.dkr.ecr.${Region}.amazonaws.com/${ServiceEcrName}:${ImageTag}'
+            - AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+              ServiceEcrName: !Ref ServiceEcrName
+              ImageTag: !Ref ServiceEcrImageTag
+          PortMappings:
+            - ContainerPort: !Ref ServiceTaskContainerPort
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - !Sub 'curl -f http://localhost:${ServiceTaskContainerPort}/diag/health'
+            Interval: 60
+            Retries: 1
+            StartPeriod: 30
+          # Send logs to CloudWatch Logs
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: /ecs
+          Environment:
+            # OS Timezone
+            - Name: TZ
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:TZ}}'
+
+            # Server
+            - Name: SERVER_ENV
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:SERVER_ENV}}'
+            - Name: SERVER_PORT
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:SERVER_PORT}}'
+
+            # AWS - Redshift
+            - Name: AWS_REDSHIFT_CONNECTION_UNAME
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_UNAME}}'
+            - Name: AWS_REDSHIFT_CONNECTION_PWORD
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_PWORD}}'
+            - Name: AWS_REDSHIFT_CONNECTION_HOST
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_HOST}}'
+            - Name: AWS_REDSHIFT_CONNECTION_PORT
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_PORT}}'
+            - Name: AWS_REDSHIFT_CONNECTION_DBNAME
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_DBNAME}}'
+            - Name: AWS_REDSHIFT_CONNECTION_SCHEMA_NAME
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_CONNECTION_SCHEMA_NAME}}'
+            - Name: AWS_REDSHIFT_SCRIPT_CREATE_TABLES
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_SCRIPT_CREATE_TABLES}}'
+            - Name: AWS_REDSHIFT_SCRIPTS
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_SCRIPTS}}'
+
+            # AWS - S3
+            - Name: AWS_S3_BUCKET_NAME_RAW_DATA
+              Value: !Ref BucketNameTruveRawData   # NOTE: This value comes from this stack, not the env secret
+            - Name: AWS_S3_BUCKET_NAME_TEMP_DIR
+              Value: !Ref BucketNameTruveTempData  # NOTE: This value comes from this stack, not the env secret
+
+            ## Local - TPA - API Keys
+            - Name: LOCAL_TPA_API_KEY_FILEVINE
+              Value: ''
+            - Name: LOCAL_TPA_API_KEY_LEADDOCKET
+              Value: ''
+
+  # Role used to execute task (i.e. start/stop/scale)
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-svc-${ServiceName}-role-task-exec'
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+              - ecs-tasks.amazonaws.com
+          Action:
+            - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Sub CF-${EnvironmentName}-DataApi-TaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+            - Effect: Allow
+              Action:
+                # Allow download images from ECR
+                - ecr:GetAuthorizationToken
+                - ecr:BatchCheckLayerAvailability
+                - ecr:GetDownloadUrlForLayer
+                - ecr:BatchGetImage
+
+                # Allow upload logs to CloudWatch
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: '*'
+
+  # Role used by task while running (i.e. to read from S3)
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${EnvironmentName}-svc-${ServiceName}-role-task'
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: 'sts:AssumeRole'
+
+  TaskRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub CF-${EnvironmentName}-DataApi-TaskRolePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Action:
+            - s3:ListBucketMultipartUploads
+            - s3:GetBucketTagging
+            - s3:DeleteObjectVersion
+            - s3:GetObjectVersionTagging
+            - s3:ListBucketVersions
+            - s3:GetObjectAttributes
+            - s3:ListBucket
+            - s3:GetBucketVersioning
+            - s3:GetBucketAcl
+            - s3:GetObjectVersionAttributes
+            - s3:ListMultipartUploadParts
+            - s3:PutObject
+            - s3:GetObjectAcl
+            - s3:GetObject
+            - s3:GetBucketCORS
+            - s3:GetObjectVersionAcl
+            - s3:GetObjectTagging
+            - s3:DeleteObject
+            - s3:PutObjectAcl
+            - s3:GetObjectVersion
+          Resource:
+            - !Sub arn:aws:s3:::${BucketNameTruveRawData}*
+            - !Sub arn:aws:s3:::${BucketNameTruveTempData}*
+      Roles:
+        - !Ref TaskRole
+      # Users:
+      #   - 
+      #     !If
+      #       - IsDev
+      #       - ServiceAccountDataApiDev
+      #       - ServiceAccountDataApiProd
+
+  ServiceAccountPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub CF-${EnvironmentName}-DataApi-ServiceAccounts
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "iam:PassRole"
+            Resource:
+             - !GetAtt TaskExecutionRole.Arn
+             - !GetAtt TaskRole.Arn
+      Groups:
+        - 
+          !If
+            - IsProd
+            - ServiceAccountsProd
+            - !If
+              - IsDev
+              - ServiceAccountsDev
+              - !Ref AWS::NoValue
+
+  ContainerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${EnvironmentName} service ${ServiceName} container security group
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}-vpc-main-id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ServiceTaskContainerPort
+          ToPort: !Ref ServiceTaskContainerPort
+          SourceSecurityGroupId: !Ref ServiceAlbSecurityGroupId
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      # will look for a 200 status code by default unless specified otherwise
+      HealthCheckPath: /diag/health
+      HealthCheckTimeoutSeconds: 5
+      UnhealthyThresholdCount: 2
+      HealthyThresholdCount: 2
+      Name: !Sub ${EnvironmentName}-svc-${ServiceName}-target-group
+      Port: !Ref ServiceTaskContainerPort
+      Protocol: HTTP
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60 # default is 300
+      TargetType: ip
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}-vpc-main-id
+
+  ListenerHTTPS:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ServiceAlbArn
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref ServiceDnsSslCertArn
+
+  AutoScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: !Ref ServiceTaskMinContainers
+      MaxCapacity: !Ref ServiceTaskMaxContainers
+      ResourceId: !Join ['/', [service, !Ref EcsClusterName, !GetAtt Service.Name]]
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+      RoleARN: !Ref EcsClusterAutoscalingRoleArn
+
+  AutoScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub 'CF-${EnvironmentName}-DataApi-svc-${ServiceName}-autoscaling-policy'
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref AutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 10
+        ScaleOutCooldown: 10
+        TargetValue: !Ref ServiceAutoscalingTargetTaskCpuPct
+
+  # actual redirect to ALB
+  SubdomainAliasIPv4Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub '${ServiceDnsHostedZoneName}.'
+      Name:
+        !If
+          - IsProd
+          - !Sub 'data.${ServiceDnsHostedZoneName}.'
+          - !If
+            - IsDev
+            - !Sub '${EnvironmentName}-${ServiceDnsEnvAliasKey}-data.${ServiceDnsHostedZoneName}.'
+            - !Ref AWS::NoValue
+      Type: A
+      AliasTarget:
+        DNSName: !Ref ServiceAlbDnsName
+        HostedZoneId: !Ref ServiceAlbDnsHostedZoneId
+
+  # actual redirect to ALB
+  SubdomainAliasIPv6Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: !Sub '${ServiceDnsHostedZoneName}.'
+      Name:
+        !If
+          - IsProd
+          - !Sub 'data.${ServiceDnsHostedZoneName}.'
+          - !If
+            - IsDev
+            - !Sub '${EnvironmentName}-${ServiceDnsEnvAliasKey}-data.${ServiceDnsHostedZoneName}.'
+            - !Ref AWS::NoValue
+      Type: AAAA
+      AliasTarget:
+        DNSName: !Ref ServiceAlbDnsName
+        HostedZoneId: !Ref ServiceAlbDnsHostedZoneId
+
+Outputs:
+  HealthCheckEndpoint:
+    Description: Health Check Endpoint
+    Value: !Sub 'https://${SubdomainAliasIPv4Record}/diag/health'
