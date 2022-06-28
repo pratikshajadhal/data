@@ -112,7 +112,22 @@ class FileVineClient(object):
             return [self.make_request(f"core/projects/{project_list[0]}")]
         else:
             return self.get_entity("core/projects", requested_fields=requested_fields)
-        
+
+
+    def make_post_request(self, end_point:str, body:dict):
+        session_info = self.generate_session()
+        url = f"{self.base_url}{end_point}"
+        logger.debug("Hitting URL {}".format(url))
+        headers = {"x-fv-sessionid" : session_info["refreshToken"], 
+                "Authorization" : "Bearer {}".format(session_info["accessToken"])}
+        response = requests.post(url, headers=headers, json=body)
+        return response.json()
+
+    
+    def make_webhook_connection(self, paylaod: dict):
+        end_point = "subscriptions"
+        return self.make_post_request(end_point=end_point, body=paylaod)
+
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
