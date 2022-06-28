@@ -18,6 +18,7 @@ from etl.destination import RedShiftDestination, S3Destination
 from etl.form import FormETL
 from etl.project import ProjectETL
 from utils import load_config, get_chunks, load_lead_config
+from tasks import subscriptions
 
 load_dotenv()
 
@@ -393,5 +394,7 @@ if __name__ == "__main__":
     # start_opport_etl()
     # start_referrals_etl()
     # start_users_etl()
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+    # uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
 
+    # Wh subscription for filevine
+    subscriptions.make_fv_subscription()
