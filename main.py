@@ -397,4 +397,7 @@ if __name__ == "__main__":
     # uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
 
     # Wh subscription for filevine
-    subscriptions.make_fv_subscription()
+    subscriptions.make_fv_subscription(
+        s3_conf_file_path="s3://dev-data-api-01-buckets-buckettruverawdata-8d0qeyh8pnrf/confs/filevine/config_6586.yaml", 
+        endpoint_to_subscribe="http://ec2-18-196-103-238.eu-central-1.compute.amazonaws.com:8000/master_webhook_handler"
+        )
