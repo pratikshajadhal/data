@@ -12,14 +12,11 @@ logger = get_logger(__name__)
 load_dotenv()
 
 
-def make_fv_subscription(s3_conf_file_path: str = "s3://dev-data-api-01-buckets-buckettruverawdata-8d0qeyh8pnrf/confs/filevine/config_6586.yaml",
-                        endpoint_to_subscribe: str = "http://ec2-18-196-103-238.eu-central-1.compute.amazonaws.com:8000/master_webhook_handler"):
+def make_fv_subscription(s3_conf_file_path: str,
+                        endpoint_to_subscribe: str):
     # -- Read conf file from s3
-    s3 = auth_s3()
 
-    # -- Read yaml
-    download_s3_file(s3_client=s3,
-                    s3_path=s3_conf_file_path,
+    download_s3_file(s3_path=s3_conf_file_path,
                     download_path=f"{os.getcwd()}/tasks/src.yaml")
 
     # -- Read yaml file
@@ -72,5 +69,3 @@ def make_fv_subscription(s3_conf_file_path: str = "s3://dev-data-api-01-buckets-
 def make_ld_subscription():
     # Currently skipping!.
     pass
-
-
