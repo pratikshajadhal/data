@@ -59,6 +59,29 @@ class FormETL(ModelETL):
 
         return section_data_list
 
+    def start_etl(self):
+        project_list = self.get_projects() #[10568297] #contact_etl.get_projects()
+
+        self.get_schema_of_model()
+
+        self.flattend_map = self.get_filtered_schema(self.source_schema)
+
+        dest_col_format = self.convert_schema_into_destination_format(self.flattend_map)
+
+        count = 0
+            
+        for project in project_list:
+            form_data_list = self.extract_data_from_source(project_list=[project])
+
+            form_df = self.transform_data(record_list=form_data_list)
+                
+            self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+
+            count = count + 1
+
+            print("Total processed {}".format(count))
+
+
     
 if __name__ == "__main__":
     RedshiftConfig(table_name="fv_contact_raw", schema_name="pipeline_dev", dbname="dev")

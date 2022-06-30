@@ -3,8 +3,8 @@ import json
 
 from fastapi import FastAPI, Request
 
-from api_server.config import FVWebhookInput
-from api_server.helper import handle_wb_input
+from api_server.config import FVHistoricalInput, FVWebhookInput
+from api_server.helper import handle_historical_fv_sync, handle_wb_input
 from main import *
 from utils import get_logger
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
@@ -22,6 +22,29 @@ app = FastAPI(
 @app.get("/")
 async def home():
     return {"message": "V1.0"}
+
+
+@app.post("/trigger_historical_fv_sync", tags=["fv_historical_sync"])
+async def start_historical_fv_sync(request: Request):
+    '''
+    Sample Format
+
+    {"section" : "projects"}
+    
+    '''
+    input_params = await request.json()
+
+    fv_hist_input = FVHistoricalInput(config_location=input_params["config_file"], 
+                                    section=input_params["section"], 
+                                    project_type_id=input_params["project_type_id"],
+                                    section_type=input_params["section_type"]
+                                    )
+
+    logger.info(f"Got FV Historical Request {input_params}")
+
+    handle_historical_fv_sync(fv_hist_input)
+
+
 
 
 

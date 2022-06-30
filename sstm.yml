@@ -1,0 +1,67 @@
+org_id: 6586
+user_id: 31958
+projectTypes:
+  - id: 18764
+    sections:
+    - name: casesummary
+      fields:
+      - projectId:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Case_ID
+          dest_data_type: int
+      - caseType:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Case_Type_ID
+          dest_data_type: int
+      - dateOfIncident:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Date_of_Incident
+          dest_data_type: date
+      - primaryattorney:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Attorney_ID
+          dest_data_type: date
+      - initialParalegal:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Prelitigation_Paralegal_ID
+          dest_data_type: int
+      - paralegal:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Litigation_Paralegal_ID
+          dest_data_type: int
+      - cocounsel:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Cocounsel_ID
+          dest_data_type: int
+      - insuranceInfo:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Insurance_ID
+          dest_data_type: int  
+      - referralSource:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Case_Marketing_Source
+          dest_data_type: str
+      - attorneysFeesAmount:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Attorney_Fee_Percentage
+          dest_data_type: float
+      - projectedsettlementdate:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Projected_Settlement_Date
+          dest_data_type: date
+      - projectsettlemtamount:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Projected_Settlement_Amount
+          dest_data_type: float
+      - actualsettlementdate:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Actual_Settlement_Date
+          dest_data_type: date
+      - actualsettlemtamount:
+        - tsm_table_name: CaseSummary
+          dest_col_name: Actual_Settlement_Amount
+          dest_data_type: float
+      - vIPCase:
+        - tsm_table_name: CaseSummary
+          dest_col_name: If_VIP_Case
+          dest_data_type: string

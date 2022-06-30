@@ -1,8 +1,9 @@
+from ast import Dict
 import logging 
 
 from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
-from .config import FVWebhookInput
+from .config import FVHistoricalInput, FVWebhookInput
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
@@ -66,6 +67,44 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
                                 column_config=selected_column_config, 
                                 primary_key_column="projectId")
     return collection_etl
+
+def handle_historical_fv_sync(input_params:FVHistoricalInput):
+    selected_field_config = load_config(file_path=input_params.config_location)
+    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
+
+    logger.debug(input_params)
+
+    if input_params.section_type == "core":
+        selected_column_config = get_config_of_section(selected_config=selected_field_config, 
+                                                section_name=input_params.section, 
+                                                project_type_id=input_params.project_type_id,
+                                                is_core=True)
+
+        model_etl = ProjectETL(model_name="project", 
+                                source=None, 
+                                entity_type="core",
+                                project_type=input_params.project_type_id,
+                                destination=S3Destination(org_id=fv_config.org_id), 
+                                fv_config=fv_config, 
+                                column_config=selected_column_config,
+                                primary_key_column="projectId")
+    elif input_params.section_type == "form":
+        selected_column_config = get_config_of_section(selected_config=selected_field_config, 
+                                                section_name=input_params.section, 
+                                                project_type_id=input_params.project_type_id,
+                                                is_core=False)
+
+        model_etl = FormETL(model_name=input_params.section, 
+                            source=None, 
+                            entity_type=input_params.section_type,
+                            project_type=input_params.project_type_id,
+                            destination=S3Destination(org_id=fv_config.org_id), 
+                            fv_config=fv_config, 
+                            column_config=selected_column_config, 
+                            primary_key_column="projectId")
+
+
+    model_etl.start_etl()
 
 
 def handle_wb_input(wb_input:FVWebhookInput):
