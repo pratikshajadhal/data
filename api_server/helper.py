@@ -68,6 +68,8 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
     return collection_etl
 
 
+        
+
 def handle_wb_input(wb_input:FVWebhookInput):
     logger.debug("inside handle_wb_input()")
 
