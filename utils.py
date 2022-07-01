@@ -17,6 +17,9 @@ def load_config(file_path: str) -> SelectedConfig:
         #print(data)
         return from_dict(data=data, data_class=SelectedConfig)
 
+def get_yaml_of_org(org_id: int) -> SelectedConfig:
+    return load_config("src.yaml")
+
 def get_config_of_section(selected_config:SelectedConfig, section_name:str, project_type_id:int=None, is_core:bool=False):
     if is_core:
         for core_entity in selected_config.core:

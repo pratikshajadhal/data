@@ -5,8 +5,9 @@ from fastapi import FastAPI, Request
 
 from api_server.config import FVWebhookInput
 from api_server.helper import handle_wb_input
+from etl.helper import get_fv_etl_object
 from main import *
-from utils import get_logger
+from utils import get_logger, get_yaml_of_org
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
 
@@ -23,7 +24,13 @@ app = FastAPI(
 async def home():
     return {"message": "V1.0"}
 
-
+@app.get("/fv/{org}/snapshots", tags=["fv_snapshots"])
+async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
+    logger.debug(f"{org} {project_type_id} {entity_name} {entity_type}")
+    org_config = get_yaml_of_org(org)
+    etl_object = get_fv_etl_object(org_config, entity_type=entity_type, entity_name=entity_name, project_type_id=project_type_id)
+    return {"project_type_id" : project_type_id,
+            "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
 
 @app.post("/master_webhook_handler", tags=["fv_webhook_listener"])
 async def fv_webhook_handler(request: Request):
