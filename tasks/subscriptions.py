@@ -1,11 +1,10 @@
 
-# from task.helper import auth_s3
 import os
 from datetime import datetime
 from dotenv import load_dotenv
 
 from filevine.client import FileVineClient
-from tasks.helper import auth_s3, download_s3_file
+from tasks.helper import  download_s3_file
 from utils import load_config, get_logger
 
 logger = get_logger(__name__)
