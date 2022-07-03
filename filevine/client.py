@@ -80,6 +80,10 @@ class FileVineClient(object):
         section_metadata = self.make_request(end_point)
         return section_metadata
 
+    def get_sections(self, projectTypeId):
+        end_point = f"core/projecttypes/{projectTypeId}/sections"
+        section_metadata = self.make_request(end_point)
+        return section_metadata
 
     def get_contact_metadata(self):
         contact_metadata = self.make_request("core/custom-contacts-meta")
