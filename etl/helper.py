@@ -71,5 +71,6 @@ def get_fv_etl_object(org_config:SelectedConfig, entity_type, entity_name, proje
         cls = handle_form_object(org_config, entity=entity_name, project_type_id=project_type_id)
     elif entity_type.lower() == "collections":
         cls = handle_collection_object(org_config, entity=entity_name, project_type_id=project_type_id)
-
+    else:
+        raise Exception("Unknown entity type")
     return cls    
