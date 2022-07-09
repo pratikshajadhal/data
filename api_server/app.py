@@ -2,8 +2,9 @@ import uvicorn
 import json
 
 from fastapi import FastAPI, File, Request
+from dacite import from_dict
 
-from api_server.config import FVWebhookInput
+from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object
 from filevine.client import FileVineClient
@@ -34,7 +35,7 @@ async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
             "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
 
 @app.get("/fv/{org}/sections", tags=["fv_sections"])
-async def fv_get_snapshot(org:int, project_type_id:int):
+async def fv_get_sections(org:int, project_type_id:int):
     logger.debug(f"{org} {project_type_id}")
     org_config = get_yaml_of_org(org)
     fv_client = FileVineClient(org_id=org, user_id=org_config.user_id)
@@ -46,6 +47,16 @@ async def fv_get_snapshot(org:int, project_type_id:int):
     return {"project_type_id" : project_type_id,
             "data" : items}
 
+@app.post("/tasks/add", tags=["add_tasks"])
+async def add_tasks(request: Request):
+    logger.debug(f"Adding task")
+    task_json = await request.json()
+
+    task_type = from_dict(data=task_json, data_class=TruveDataTask)
+
+    logger.debug(task_type)
+
+    return {"status" : "success", "message" : "Task added successfully"}
 
 @app.post("/master_webhook_handler", tags=["fv_webhook_listener"])
 async def fv_webhook_handler(request: Request):
