@@ -7,37 +7,185 @@ info:
   contact:
     email: "contact@truve.io"
 
-tags:
-- name: "Diag"
-  description: Actions related to server diagnostics
-
 servers:
-  - url: 'http://localhost:8000/{apiSelector}'
-    variables:
-      apiSelector:
-        enum:
-          - diag
-          - v1
-        default: diag
-
+- url: /
 paths:
-  /health:
+  /:
+    get:
+      summary: Home
+      operationId: home__get
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /fv/{org}/snapshots:
     get:
       tags:
-      - "diag"
-      summary: "Server health check"
-      description: "Returns server status and current running version."
-      operationId: "diagHealthCheck"
+      - fv_snapshots
+      summary: Fv Get Snapshot
+      operationId: fv_get_snapshot_fv__org__snapshots_get
+      parameters:
+      - name: org
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          title: Org
+      - name: project_type_id
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          title: Project Type Id
+          type: integer
+      - name: entity_type
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          title: Entity Type
+      - name: entity_name
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          title: Entity Name
       responses:
-        200:
-          description: "Health OK"
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
           content:
             application/json:
               schema:
-                properties:
-                  status:
-                    type: string
-                    example: OK
-                  version:
-                    type: string
-                    example: 0.1.2
+                $ref: '#/components/schemas/HTTPValidationError'
+  /fv/{org}/sections:
+    get:
+      tags:
+      - fv_sections
+      summary: Fv Get Sections
+      operationId: fv_get_sections_fv__org__sections_get
+      parameters:
+      - name: org
+        in: path
+        required: true
+        style: simple
+        explode: false
+        schema:
+          title: Org
+          type: integer
+      - name: project_type_id
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          title: Project Type Id
+          type: integer
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        "422":
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /tasks/add:
+    post:
+      tags:
+      - add_tasks
+      summary: Add Tasks
+      operationId: add_tasks_tasks_add_post
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /master_webhook_handler:
+    post:
+      tags:
+      - fv_webhook_listener
+      summary: Fv Webhook Handler
+      description: "Sample Payload \nProject initial event data:  {'Timestamp': 1654733926323,\
+        \ \n                    'Object': 'Project', \n                    'Event':\
+        \ 'PhaseChanged', \n                    'ObjectId': {'ProjectTypeId': 18764,\
+        \ 'PhaseId': 176616}, \n                    'OrgId': 6586, \n            \
+        \        'ProjectId': 10146521, \n                    'UserId': 48697, \n\
+        \                    'Other': {'PhaseName': 'Demand Pending'}}\n\nForm Event\
+        \ data:\n{'Timestamp': 1654741352640, \n'Object': 'Form', \n'Event': 'Updated',\
+        \ \n'ObjectId': {'ProjectTypeId': 18764, 'SectionSelector': 'intake'}, \n\
+        'OrgId': 6586, \n'ProjectId': 10561086, \n'UserId': 26712, \n'Other': {}}\n\
+        \nMeds Event Data"
+      operationId: fv_webhook_handler_master_webhook_handler_post
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /lead:
+    post:
+      tags:
+      - leaddocket-webhook-listener
+      summary: Listen Lead
+      description: |-
+        API endpoint to handle webhook incoming request.
+        Currently webhook was set for 5 different incomings.
+        - LeadEdited
+        - LeadCreated
+        - LeadStatusChanged
+        - Contact Added
+        - Opportunity Added.
+      operationId: listen_lead_lead_post
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
