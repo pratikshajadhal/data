@@ -3,19 +3,11 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Data API service buckets
 
 Resources:
-  BucketTruveRawData:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-
-  BucketTruveTempData:
+  BucketTempData:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
 
 Outputs:
-  BucketNameTruveRawData:
-    Value: !Ref BucketTruveRawData
-
-  BucketNameTruveTempData:
-    Value: !Ref BucketTruveTempData
+  BucketNameTempData:
+    Value: !Ref BucketTempData

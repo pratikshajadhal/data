@@ -76,10 +76,10 @@ Parameters:
     Description: ARN of SSL cert for service HTTPS listener
     Type: String
 
-  BucketNameTruveRawData:
+  BucketNameTempData:
     Type: String
 
-  BucketNameTruveTempData:
+  BucketNameEtlRawData:
     Type: String
 
 Conditions:
@@ -204,10 +204,10 @@ Resources:
               Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:AWS_REDSHIFT_SCRIPTS}}'
 
             # AWS - S3
-            - Name: AWS_S3_BUCKET_NAME_RAW_DATA
-              Value: !Ref BucketNameTruveRawData   # NOTE: This value comes from this stack, not the env secret
-            - Name: AWS_S3_BUCKET_NAME_TEMP_DIR
-              Value: !Ref BucketNameTruveTempData  # NOTE: This value comes from this stack, not the env secret
+            - Name: AWS_S3_BUCKET_NAME_ETL_RAW_DATA
+              Value: !Ref BucketNameEtlRawData   # NOTE: This value comes from this stack, not the env secret
+            - Name: AWS_S3_BUCKET_NAME_TEMP_DATA
+              Value: !Ref BucketNameTempData  # NOTE: This value comes from this stack, not the env secret
 
             ## Local - TPA - API Keys
             - Name: LOCAL_TPA_API_KEY_FILEVINE
@@ -288,8 +288,8 @@ Resources:
             - s3:PutObjectAcl
             - s3:GetObjectVersion
           Resource:
-            - !Sub arn:aws:s3:::${BucketNameTruveRawData}*
-            - !Sub arn:aws:s3:::${BucketNameTruveTempData}*
+            - !Sub arn:aws:s3:::${BucketNameEtlRawData}*
+            - !Sub arn:aws:s3:::${BucketNameTempData}*
       Roles:
         - !Ref TaskRole
       # Users:
