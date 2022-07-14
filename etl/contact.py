@@ -40,10 +40,26 @@ class ContactETL(ModelETL):
         project_list = [project_data["projectId"]["native"] for project_data in project_data_list]
         return project_list
 
-    def extract_data_from_source(self, project_list:list[int]=[]):
+    def extract_data_from_source(self, project_list:list[int]=[], bring_one:bool=False):
         final_contact_list = []
-        contact_list = self.fv_client.get_contacts()
+        if not bring_one:
+            contact_list = self.fv_client.get_contacts()
+        else:
+            contact_list = self.fv_client.get_single_contact()
         return contact_list
+
+
+    def get_snapshot(self, project_type_id):
+        # No need to get projects. TODO: Delete line when you sure about endpoint.
+        # **core/contacts** or **core/projects/{project_id}/contacts** ?
+
+        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        for project in project_list:
+            if project["projectTypeId"]["native"] == project_type_id:
+                snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]], bring_one=True)
+                if len(snapshot_data) != 0:
+                    return snapshot_data[0]                    
+        return {}
 
     
 if __name__ == "__main__":
