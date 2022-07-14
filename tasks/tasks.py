@@ -4,21 +4,23 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from filevine.client import FileVineClient
-from tasks.helper import  download_s3_file
-from utils import load_config, get_logger
+from utils import load_config, get_logger, find_yaml
 
 logger = get_logger(__name__)
 load_dotenv()
 
+# - SUBS - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 def make_fv_subscription(s3_conf_file_path: str,
                         endpoint_to_subscribe: str):
     # -- Read conf file from s3
-
-    download_s3_file(s3_path=s3_conf_file_path,
+    find_yaml(s3_path=s3_conf_file_path,
                     download_path=f"{os.getcwd()}/tasks/src.yaml")
 
     # -- Read yaml file
+    # Since conf file in s3 is deleted, currently we are using base yaml
+
+    # selected_field_config = load_config(file_path="tasks/src.yaml")
     selected_field_config = load_config(file_path="src.yaml")
 
     # -- Get org_id, user_id from yaml
@@ -47,14 +49,11 @@ def make_fv_subscription(s3_conf_file_path: str,
     sub_description = f"OrgId: {org_id} -\
                         Automatic filevine webhook integration.\
                         Successfully connected at {now_str}"
+
+                        
     # Payload to create subscriptionId from filevine.
-    payload= {
-        "keyId": os.environ["FILEVINE_API_KEY"],
-        "eventIds": subscriptions_events,
-        "description": sub_description,
-        "endpoint": endpoint_to_subscribe,
-        "name": sub_name
-    }
+    payload= fv_client.generate_subscription_payload(subscriptions_events, sub_description, endpoint_to_subscribe, sub_name)
+
     try:
         subscription_id = fv_client.make_webhook_connection(payload)
     except Exception as e:
@@ -68,3 +67,6 @@ def make_fv_subscription(s3_conf_file_path: str,
 def make_ld_subscription():
     # Currently skipping!.
     pass
+
+
+# - HISTORICAL - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
