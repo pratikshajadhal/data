@@ -43,6 +43,19 @@ class FileVineClient(object):
             raise Exception("Token genreation error")
         return json.loads(response.text)
 
+
+    def generate_subscription_payload(self, subscriptions_events:list, sub_description:str, endpoint_to_subscribe:str, sub_name:str):
+        """
+            Function to create subscription payload for filevine webhooks.
+        """
+        return  {
+            "keyId": os.environ["FILEVINE_API_KEY"],
+            "eventIds": subscriptions_events,
+            "description": sub_description,
+            "endpoint": endpoint_to_subscribe,
+            "name": sub_name
+            }
+
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
         url = f"{self.base_url}{end_point}"
