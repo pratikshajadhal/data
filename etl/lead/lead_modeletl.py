@@ -31,7 +31,7 @@ class LeadModelETL(object):
                             "bool": "boolean",
                             "float64":"float"}
 
-    def load_data(self, trans_df:pd.DataFrame):
+    def load_data(self, trans_df:pd.DataFrame, client_id:str=None):
         dest = self.destination
 
         dtypes = trans_df.dtypes.to_dict()
@@ -40,13 +40,19 @@ class LeadModelETL(object):
             final_dtypes[key] = self.key_mapper[str(value)]
 
         push_id = trans_df["Id"].values[0]
+        
+        # If there is no client id parse clientId from url
+        if client_id:
+            organization_identifier = client_id
+        else:
+            organization_identifier = (self.base_url.split(".")[0]).split("//")[1]
         if isinstance(dest, S3Destination):
-            dest.load_data( data_df= trans_df,
+            dest.load_data(data_df= trans_df,
                             section="leaddocket",
                             model_name=self.model_name,
                             dtype = final_dtypes,
                             push_id = push_id,
-                            organization_identifier = (self.base_url.split(".")[0]).split("//")[1],
+                            organization_identifier = organization_identifier,
                             entity= "lead")
                             
 
