@@ -389,8 +389,8 @@ if __name__ == "__main__":
     # start_lead_row_etl()
     # start_lead_detail_etl()
     # start_lead_contact_etl()
-    start_opport_etl()
+    # start_opport_etl()
     # start_referrals_etl()
     # start_users_etl()
-    # uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
 
