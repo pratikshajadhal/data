@@ -55,11 +55,16 @@ def start_contact_etl():
         
         contact_list = contact_etl.extract_data_from_source()
 
+        transformed_data = contact_etl.transform_data(contact_list)
+
+        contact_etl.load_data_to_destination(trans_df=transformed_data, schema=dest_col_format, project=None)
+
+        '''
         for contact in contact_list:
             contact_df = contact_etl.transform_data(record_list=[contact])
             personId = contact_df["personId"].tolist()[0]
             contact_etl.load_data_to_destination(trans_df=contact_df, schema=dest_col_format, project=personId)
-
+        '''
         #count = count + 1
 
         print("Total processed {}".format(count))
@@ -204,7 +209,8 @@ if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
     #start_collection_etl(18764, "negotiations")
     #start_form_etl(18764, "casesummary")
-    #start_contact_etl()
+    start_contact_etl()
+    exit()
     #start_project_etl()
 
     # - - - - 

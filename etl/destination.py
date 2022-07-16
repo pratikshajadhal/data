@@ -76,8 +76,8 @@ class S3Destination(ETLDestination):
 
     def get_key(self, kwargs):
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
-            file_name = "{}.parquet".format(kwargs['project'])
-            s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
+            #file_name = "{}.parquet".format(kwargs['project'])
+            s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/historical_contacts.parquet"
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"

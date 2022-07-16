@@ -1,0 +1,32 @@
+org_id: 6586
+tsm:
+  - name: PeopleType
+    fields:
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: int
+      transform:
+        source: etl
+        type: org_id
+    - name: People_Type_ID
+      data_type: int
+    - name: People_Type
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: contact
+        source_field: personTypes
+        type: data
+    - name: People_Sub_Type
+      data_type: string
+    - name: Custom1
+      data_type: string
+    - name: Custom2
+      data_type: string
+    - name: Custom3
+      data_type: string
