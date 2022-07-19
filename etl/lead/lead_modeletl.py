@@ -68,3 +68,7 @@ class LeadModelETL(object):
     @abstractmethod
     def transform(self):
         pass
+
+
+    def get_snapshot(self):
+        return self.extract_data_from_source()[0]

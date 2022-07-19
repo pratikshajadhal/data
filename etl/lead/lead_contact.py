@@ -49,5 +49,23 @@ class LeadContactETL(LeadModelETL):
         return pd.DataFrame([contact])
 
 
+    def get_snapshot(self):
+        statuses = self.ld_client.get_statuses()
+        for statuse in statuses:
+            leads = self.ld_client.get_lead_row([statuse])
+            if leads:
+                break
+
+        lead_ids = [lead["Id"] for lead in leads]
+        for lead_id in lead_ids:
+            contact_id = self.ld_client.get_lead_details(lead_id, field="Contact")
+            if contact_id is not None:
+                contact_data = self.extract_data_from_source(contact_id)
+                if contact_data:
+                    return contact_data
+
+        return {}
+
+
 
 
