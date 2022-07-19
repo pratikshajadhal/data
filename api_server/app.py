@@ -1,12 +1,12 @@
 import uvicorn
 import json
 
-from fastapi import FastAPI, File, Request
+from fastapi import FastAPI, File, HTTPException, Request
 from dacite import from_dict
 
 from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
-from etl.helper import get_fv_etl_object
+from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from main import *
 from utils import get_logger, get_yaml_of_org
@@ -33,6 +33,15 @@ async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
     etl_object = get_fv_etl_object(org_config, entity_type=entity_type, entity_name=entity_name, project_type_id=project_type_id)
     return {"project_type_id" : project_type_id,
             "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
+
+@app.get("/ld/{org}/snapshots", tags=["ld_snapshots"])
+async def ld_get_snapshot(org, entity_name):
+    logger.debug(f"{org} {entity_name}")
+    org_config = get_yaml_of_org(org, client='ld')
+    etl_object = get_ld_etl_object(org_config, entity_name=entity_name)
+    if not etl_object:
+        raise HTTPException(status_code=422, detail="Unprocessable Entity")
+    return {"data" : etl_object.get_snapshot()}
 
 @app.get("/fv/{org}/sections", tags=["fv_sections"])
 async def fv_get_sections(org:int, project_type_id:int):
