@@ -1,5 +1,6 @@
 from itertools import islice
 import json
+from unicodedata import name
 from dacite import from_dict
 import logging
     
@@ -9,6 +10,17 @@ import yaml
 from etl.datamodel import RedshiftConfig, SelectedConfig, LeadSelectedConfig
 
 standard_dtypes = ["string", "bool", "int", "decimal"]
+name_yaml_maps = {
+    "statuses":"table_leadstatuses",
+    "leadsource":"table_leadsource",
+    "casetype":"table_casetype",
+    "leadrow":"table_leadrow",
+    "leaddetail":"table_leaddetail",
+    "contact":"table_contact",
+    "opportunities":"table_opport",
+    "referrals":"table_referral",
+    "users":"table_users",
+}
 
 def load_config(file_path: str) -> SelectedConfig:
     """Loads devenv.yaml from the given file path."""
@@ -17,8 +29,16 @@ def load_config(file_path: str) -> SelectedConfig:
         #print(data)
         return from_dict(data=data, data_class=SelectedConfig)
 
-def get_yaml_of_org(org_id: int) -> SelectedConfig:
-    return load_config("src.yaml")
+# def get_yaml_of_org(org_id: int) -> SelectedConfig:
+#     return load_config("src.yaml")
+def get_yaml_of_org(org_id, client='fv'):
+    """
+        This is a temp function. It will change soon!
+    """
+    if client == 'fv':
+        return load_config("src.yaml")
+    elif client == 'ld':
+        return load_lead_config("src-lead.yaml")
 
 def get_config_of_section(selected_config:SelectedConfig, section_name:str, project_type_id:int=None, is_core:bool=False):
     if is_core:
@@ -32,6 +52,11 @@ def get_config_of_section(selected_config:SelectedConfig, section_name:str, proj
                 if section.name == section_name:
                     return section
 
+
+def get_config_of_lead_section(selected_config:LeadSelectedConfig, section_name:str):
+    conf_name = name_yaml_maps[section_name]
+    #selected.config.confname equals getattr... 
+    return getattr(selected_config, conf_name)
 
 def read_contact_metadata():
     with open("contacts-metadata.json") as f:
