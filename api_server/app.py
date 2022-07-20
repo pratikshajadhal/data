@@ -28,7 +28,7 @@ async def home():
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
 
-@app.get("/fv/{org}/snapshots", tags=["fv_snapshots"])
+@app.get("/fv/{org}/snapshots", tags=["filevine"])
 async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
     """
         Function to return snapshot of given entity.
@@ -59,7 +59,7 @@ async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
             "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
 
 
-@app.get("/fv/{org}/sections", tags=["fv_sections"])
+@app.get("/fv/{org}/sections", tags=["filevine"])
 async def fv_get_sections(org:int, project_type_id:int):
     """
         Function to return sections(entity names)
@@ -100,7 +100,7 @@ async def fv_get_sections(org:int, project_type_id:int):
             "data" : items}
 
 
-@app.post("/master_webhook_handler", tags=["fv_webhook_listener"])
+@app.post("/master_webhook_handler", tags=["filevine"])
 async def fv_webhook_handler(request: Request):
     '''
     Function to handle webhooks for filevine
@@ -191,7 +191,7 @@ async def fv_webhook_handler(request: Request):
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - LEADDOCKET - - - - - - - - - 
 
-@app.get("/ld/{org}/snapshots", tags=["ld_snapshots"])
+@app.get("/ld/{org}/snapshots", tags=["leaddocket"])
 async def ld_get_snapshot(org, entity_name):
     """
         Function to return snapshot of given entity for leaddocket.
@@ -225,7 +225,7 @@ async def ld_get_snapshot(org, entity_name):
 
 
 # In lead docket the tables are static hence table names needs to be served manually!.
-@app.get("/ld/sections", tags=["fv_sections"])
+@app.get("/ld/sections", tags=["leaddocket"])
 async def lg_get_sections():
     """
         Function to return entity names-table-names for leaddocket
@@ -234,7 +234,7 @@ async def lg_get_sections():
     return {"section_names" : table_list}
 
 
-@app.post("/lead_webhook_handler", tags=["ld_webhook_   listener"])
+@app.post("/lead_webhook_handler", tags=["leaddocket"])
 async def lead_webhook_handler(request: Request, clientId:str):
     """
      Function to handle webhooks for filevine
@@ -282,7 +282,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - SOCIAL MEDIA and TASKS- - - - - - - - - - 
-@app.post("/tasks/add", tags=["add_tasks"])
+@app.post("/tasks/add", tags=["tasks"])
 async def add_tasks(request: Request):
     """
         Function to add tasks as a background job.
@@ -297,7 +297,7 @@ async def add_tasks(request: Request):
     return {"status" : "success", "message" : "Task added successfully"}
 
 
-@app.post("/social/{integration_name}/integrations", tags=["social_media_TASK"])
+@app.post("/social/{integration_name}/integrations", tags=["tasks"])
 async def social_run(integration_name:str, org_id:str, dimension:str):
     logger.debug(f"Social media {integration_name}, {org_id}, {dimension}")
 
