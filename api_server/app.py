@@ -26,25 +26,68 @@ app = FastAPI(
 async def home():
     return {"message": "V1.0"}
 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
+
 @app.get("/fv/{org}/snapshots", tags=["fv_snapshots"])
 async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
+    """
+        Function to return snapshot of given entity.
+        Parameters:
+            org: organization_id = 6586
+            project_type_id= 18764
+            entity_type: Types of entity fv includes
+                - Form
+                - Collection
+                - Projects
+                - .
+
+        Request example:
+            GET http://127.0.0.1:8000/fv/6586/snapshots?project_type_id=18764&entity_type=form&entity_name=casesummary
+
+        Response example:
+            "project_type_id": 18764,
+            "data": {
+                "courtinfo": null,
+                "keydates": null,
+                ...}
+
+    """
     logger.debug(f"{org} {project_type_id} {entity_name} {entity_type}")
     org_config = get_yaml_of_org(org)
     etl_object = get_fv_etl_object(org_config, entity_type=entity_type, entity_name=entity_name, project_type_id=project_type_id)
     return {"project_type_id" : project_type_id,
             "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
 
-@app.get("/ld/{org}/snapshots", tags=["ld_snapshots"])
-async def ld_get_snapshot(org, entity_name):
-    logger.debug(f"{org} {entity_name}")
-    org_config = get_yaml_of_org(org, client='ld')
-    etl_object = get_ld_etl_object(org_config, entity_name=entity_name)
-    if not etl_object:
-        raise HTTPException(status_code=422, detail="Unprocessable Entity")
-    return {"data" : etl_object.get_snapshot()}
 
 @app.get("/fv/{org}/sections", tags=["fv_sections"])
 async def fv_get_sections(org:int, project_type_id:int):
+    """
+        Function to return sections(entity names)
+        Parameters:
+            org: organization_id = 6586
+            project_type_id= 18764
+
+        Request example:
+            GET http://127.0.0.1:8000/fv/6586/sections?project_type_id=18764
+        Response example:
+            {
+            "project_type_id": 18764,
+            "data": [
+                {
+                    "id": "casesummary",
+                    "name": "Case Summary",
+                    "isCollection": false
+                },
+                {
+                    "id": "parties",
+                    "name": "Service of Process",
+                    "isCollection": true
+                },
+                ...
+            }
+
+    """
+    
     logger.debug(f"{org} {project_type_id}")
     org_config = get_yaml_of_org(org)
     fv_client = FileVineClient(org_id=org, user_id=org_config.user_id)
@@ -56,20 +99,12 @@ async def fv_get_sections(org:int, project_type_id:int):
     return {"project_type_id" : project_type_id,
             "data" : items}
 
-@app.post("/tasks/add", tags=["add_tasks"])
-async def add_tasks(request: Request):
-    logger.debug(f"Adding task")
-    task_json = await request.json()
-
-    task_type = from_dict(data=task_json, data_class=TruveDataTask)
-
-    logger.debug(task_type)
-
-    return {"status" : "success", "message" : "Task added successfully"}
 
 @app.post("/master_webhook_handler", tags=["fv_webhook_listener"])
 async def fv_webhook_handler(request: Request):
     '''
+    Function to handle webhooks for filevine
+
     Sample Payload 
     Project initial event data:  {'Timestamp': 1654733926323, 
                         'Object': 'Project', 
@@ -154,9 +189,56 @@ async def fv_webhook_handler(request: Request):
     }
 
 
-@app.post("/lead", tags=["leaddocket-webhook-listener"])
-async def listen_lead(request: Request, clientId:str):
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - LEADDOCKET - - - - - - - - - 
+
+@app.get("/ld/{org}/snapshots", tags=["ld_snapshots"])
+async def ld_get_snapshot(org, entity_name):
     """
+        Function to return snapshot of given entity for leaddocket.
+        Parameters:
+            org: organization_name = "aliawadlaw". One caveat, organization_id for lead docket is a bit different than filevine.
+            entity_name: entity,table name
+
+        Request example:
+            GET http://127.0.0.1:8000/fv/6586/snapshots?project_type_id=18764&entity_type=form&entity_name=casesummary
+
+        Response example:
+            {
+            "data": {
+                "Id": 10587,
+                "Summary": "No contact yet \r\n\r\nMe\r\n\r\nNun\r\n",
+                "InjuryInformation": null,
+                "Status": "Chase",
+                "SubStatus": "Second Attempt",
+                "SeverityLevel": "Unlikely Case - No Injuries",
+                "Code": null,
+                ...
+            }
+
+    """
+    logger.debug(f"{org} {entity_name}")
+    org_config = get_yaml_of_org(org, client='ld')
+    etl_object = get_ld_etl_object(org_config, entity_name=entity_name)
+    if not etl_object:
+        raise HTTPException(status_code=422, detail="Unprocessable Entity")
+    return {"data" : etl_object.get_snapshot()}
+
+
+# In lead docket the tables are static hence table names needs to be served manually!.
+@app.get("/ld/sections", tags=["fv_sections"])
+async def lg_get_sections():
+    """
+        Function to return entity names-table-names for leaddocket
+    """
+    table_list = ["statuses","leadsource","casetype", "leadrow","leaddetail","contact","opportunities","referrals","users"]
+    return {"section_names" : table_list}
+
+
+@app.post("/lead_webhook_handler", tags=["ld_webhook_   listener"])
+async def lead_webhook_handler(request: Request, clientId:str):
+    """
+     Function to handle webhooks for filevine
+
         API endpoint to handle webhook incoming request.
         Currently webhook was set for 5 different incomings.
         - LeadEdited
@@ -197,6 +279,29 @@ async def listen_lead(request: Request, clientId:str):
     return {
         'statusCode': 200,
         'body': json.dumps('Success')}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - SOCIAL MEDIA and TASKS- - - - - - - - - - 
+@app.post("/tasks/add", tags=["add_tasks"])
+async def add_tasks(request: Request):
+    """
+        Function to add tasks as a background job.
+    """
+    logger.debug(f"Adding task")
+    task_json = await request.json()
+
+    task_type = from_dict(data=task_json, data_class=TruveDataTask)
+
+    logger.debug(task_type)
+
+    return {"status" : "success", "message" : "Task added successfully"}
+
+
+@app.post("/social/{integration_name}/integrations", tags=["social_media_TASK"])
+async def social_run(integration_name:str, org_id:str, dimension:str):
+    logger.debug(f"Social media {integration_name}, {org_id}, {dimension}")
+
+    return {"status" : "success", "message" : "Task added successfully"}
 
 
 if __name__ == "__main__":
