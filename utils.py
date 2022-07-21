@@ -1,9 +1,10 @@
 from itertools import islice
+import boto3, botocore
 import json
 from dacite import from_dict
 import logging
-    
 import pandas as pd
+import os
 import yaml
 import boto3
 import os
@@ -118,10 +119,9 @@ def find_yaml(s3_path: str, download_path: str):
         s3_client.download_file(bucket_name, key_name, download_path)
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
-            raise("Unable to download yaml file. The object does not exist.")
+            raise("Unable to download yaml file. The conf file does not exist.")
         else:
             raise
-
 
 def split_s3_bucket_key(s3_path:str):
     if s3_path.startswith('s3://'):
