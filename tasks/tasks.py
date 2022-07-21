@@ -55,13 +55,7 @@ def make_fv_subscription(s3_conf_file_path: str,
 
                         
     # Payload to create subscriptionId from filevine.
-    payload= fv_client.generate_subscription_payload(subscriptions_events, sub_description, endpoint_to_subscribe, sub_name)
-
-    try:
-        subscription_id = fv_client.make_webhook_connection(payload)
-    except Exception as e:
-        logger.warning("(-) Something went wrong in webhook connection")
-        logger.error(e)
+    subscription_id = fv_client.create_subscription(subscriptions_events, sub_description, endpoint_to_subscribe, sub_name)
 
     logger.info(f"subscription_id:{subscription_id} has been successfully created!")
     return subscription_id

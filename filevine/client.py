@@ -44,17 +44,27 @@ class FileVineClient(object):
         return json.loads(response.text)
 
 
-    def generate_subscription_payload(self, subscriptions_events:list, sub_description:str, endpoint_to_subscribe:str, sub_name:str):
+    def create_subscription(self, subscriptions_events:list, sub_description:str, endpoint_to_subscribe:str, sub_name:str):
         """
             Function to create subscription payload for filevine webhooks.
         """
-        return  {
+        # Create payload
+        payload =   {
             "keyId": os.environ["FILEVINE_API_KEY"],
             "eventIds": subscriptions_events,
             "description": sub_description,
             "endpoint": endpoint_to_subscribe,
             "name": sub_name
             }
+
+        try:
+            subscription_id = fv_client.make_webhook_connection(payload)
+        except Exception as e:
+            logger.warning("(-) Something went wrong in webhook connection")
+            logger.error(e)
+
+        return subscription_id
+        
 
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
