@@ -42,6 +42,15 @@ class ProjectETL(ModelETL):
         
         return final_contact_list
 
+
+    def get_snapshot(self, project_type_id):
+        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        for project in project_list:
+            print(project)
+            if project["projectTypeId"]["native"] == project_type_id:
+                snapshot_data = self.fv_client.get_projects(project_list=[project["projectId"]["native"]])
+                return snapshot_data[0]
+        return {}
     
 if __name__ == "__main__":
     RedshiftConfig(table_name="fv_contact_raw", schema_name="pipeline_dev", dbname="dev")
