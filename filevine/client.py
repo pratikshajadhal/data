@@ -99,6 +99,11 @@ class FileVineClient(object):
         contact_list = raw_contact_items
         return contact_list
 
+    def get_single_contact(self):
+        contact_metadata = self.make_request("core/contacts")
+        
+        return contact_metadata["items"]
+
     def get_section_data(self, project_id:int, section_name:str):
         end_point = f"core/projects/{project_id}/forms/{section_name}"
         section_data = self.make_request(end_point)
