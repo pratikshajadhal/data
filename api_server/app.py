@@ -146,7 +146,7 @@ async def fv_webhook_handler(request: Request):
 
 
 @app.post("/lead", tags=["leaddocket-webhook-listener"])
-async def listen_lead(request: Request):
+async def listen_lead(request: Request, clientId:str):
     """
         API endpoint to handle webhook incoming request.
         Currently webhook was set for 5 different incomings.
@@ -160,13 +160,12 @@ async def listen_lead(request: Request):
     logger.info(f"Got LeadDocket Webhook Request {incoming_json}")
 
     event_type = incoming_json.get("EventType")
-
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
         # #Extract Metadata
         lead_id = incoming_json.get("LeadId")
 
         # Update Lead Detail
-        start_lead_detail_etl(lead_ids=[lead_id])
+        start_lead_detail_etl(lead_ids=[lead_id], client_id=clientId)
 
 
     elif event_type == 'Contact Added':
@@ -174,13 +173,13 @@ async def listen_lead(request: Request):
         contact_id = incoming_json.get("ContactId")
 
         # Update Contact ETL
-        start_lead_contact_etl(contact_ids=[contact_id])
+        start_lead_contact_etl(contact_ids=[contact_id], client_id=clientId)
 
     elif event_type == 'Opportunity Created':
         # #Extract Metadata
         opportunity_id = incoming_json.get("OpportunityId")
 
-        start_opport_etl(opport_ids=[opportunity_id])
+        start_opport_etl(opport_ids=[opportunity_id], client_id=clientId)
 
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))

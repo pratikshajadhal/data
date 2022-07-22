@@ -269,7 +269,7 @@ def start_lead_row_etl():
         lead_row.load_data(trans_df=df)
 
 
-def start_lead_detail_etl(lead_ids:list = None):
+def start_lead_detail_etl(lead_ids:list = None, client_id = None):
     """
         Function to fill detail table. Runs for the given lead_ids.
         If ids is not given, then it will run as historical.
@@ -287,7 +287,6 @@ def start_lead_detail_etl(lead_ids:list = None):
     if lead_ids is None:
         lead_ids = lead_detail.extract_lead_metadata()
 
-
     # lead_ids = [9964]
     for idx, lead_id in enumerate(lead_ids):
         # if idx == 100:
@@ -295,10 +294,10 @@ def start_lead_detail_etl(lead_ids:list = None):
         lead = lead_detail.extract_data_from_source(lead_id)
         lead_detail_df = lead_detail.transform(lead)
         transformed_detail_df = lead_detail.eliminate_nonyaml(lead_detail_df)
-        lead_detail.load_data(trans_df=transformed_detail_df)
+        lead_detail.load_data(trans_df=transformed_detail_df, client_id=client_id)
     
 
-def start_lead_contact_etl(contact_ids:list = None):
+def start_lead_contact_etl(contact_ids:list = None, client_id = None):
     selected_field_config = load_lead_config(file_path="src-lead.yaml")
     ld_config = LeadDocketConfig(selected_field_config.org_id, selected_field_config.base_url)
 
@@ -316,10 +315,10 @@ def start_lead_contact_etl(contact_ids:list = None):
         extracted = contact_etl.extract_data_from_source(contact_id)
         contact_df = contact_etl.transform(extracted)
         transformed = contact_etl.eliminate_nonyaml(contact_df)
-        contact_etl.load_data(trans_df=transformed)
+        contact_etl.load_data(trans_df=transformed, client_id=client_id)
 
 
-def start_opport_etl(opport_ids:list = None):
+def start_opport_etl(opport_ids:list = None, client_id = None):
     selected_field_config = load_lead_config(file_path="src-lead.yaml")
     ld_config = LeadDocketConfig(selected_field_config.org_id, selected_field_config.base_url)
 
@@ -338,7 +337,7 @@ def start_opport_etl(opport_ids:list = None):
         extracted = opport_etl.extract_data_from_source(opport_id)
         opport_df = opport_etl.transform(extracted)
         transformed = opport_etl.eliminate_nonyaml(opport_df)
-        opport_etl.load_data(trans_df=transformed)
+        opport_etl.load_data(trans_df=transformed, client_id=client_id)
 
 
 def start_referrals_etl():
