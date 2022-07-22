@@ -43,6 +43,29 @@ class FileVineClient(object):
             raise Exception("Token genreation error")
         return json.loads(response.text)
 
+
+    def create_subscription(self, subscriptions_events:list, sub_description:str, endpoint_to_subscribe:str, sub_name:str):
+        """
+            Function to create subscription payload for filevine webhooks.
+        """
+        # Create payload
+        payload =   {
+            "keyId": os.environ["FILEVINE_API_KEY"],
+            "eventIds": subscriptions_events,
+            "description": sub_description,
+            "endpoint": endpoint_to_subscribe,
+            "name": sub_name
+            }
+
+        try:
+            subscription_id = fv_client.make_webhook_connection(payload)
+        except Exception as e:
+            logger.warning("(-) Something went wrong in webhook connection")
+            logger.error(e)
+
+        return subscription_id
+        
+
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
         url = f"{self.base_url}{end_point}"
@@ -121,7 +144,22 @@ class FileVineClient(object):
             return [self.make_request(f"core/projects/{project_list[0]}")]
         else:
             return self.get_entity("core/projects", requested_fields=requested_fields)
-        
+
+
+    def make_post_request(self, end_point:str, body:dict):
+        session_info = self.generate_session()
+        url = f"{self.base_url}{end_point}"
+        logger.debug("Hitting URL {}".format(url))
+        headers = {"x-fv-sessionid" : session_info["refreshToken"], 
+                "Authorization" : "Bearer {}".format(session_info["accessToken"])}
+        response = requests.post(url, headers=headers, json=body)
+        return response.json()
+
+    
+    def make_webhook_connection(self, paylaod: dict):
+        end_point = "subscriptions"
+        return self.make_post_request(end_point=end_point, body=paylaod)
+
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")

@@ -25,7 +25,7 @@ class LeadOpportETL(LeadModelETL):
         
         # Get ooport_id using leads.
         opport_ids = list()
-        for lead_id in lead_ids[:10]:
+        for lead_id in lead_ids:
             opport_ids.append(self.ld_client.get_lead_details(lead_id, field="Opportunity"))
 
         # opport_ids = [2483, 2482, None, 2469, None, 2417, 2436, 2362, 2432, None]
