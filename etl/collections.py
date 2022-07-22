@@ -61,3 +61,13 @@ class CollectionETL(ModelETL):
 
         return section_data_list
 
+
+    def get_snapshot(self, project_type_id):
+        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        for project in project_list:
+            if project["projectTypeId"]["native"] == project_type_id:
+                snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]])
+                # snapshot_data = self.extract_data_from_source(project_list=[9708629])
+                if len(snapshot_data) != 0:
+                    return snapshot_data[0]                    
+        return {}

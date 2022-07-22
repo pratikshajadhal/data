@@ -1,9 +1,12 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Literal
 
 EVENT_TYPES = ["PhaseChanged", "Created", "Updated", "Deleted"]
 ENTITY_TYPES = ["Project", "Form", "CollectionItem"]
 SECTION_TYPES = ["intake", "casesummary", "meds", "negotiations"]
+
+source_type = Literal["FILEVINE", "LEADDOCKET"]
+task_type = Literal["HISTORICAL_LOAD", "SUBSCRIPTION"]
 
 @dataclass
 class FVWebhookInput:
@@ -16,3 +19,9 @@ class FVWebhookInput:
     section:str
     user_id:int
     webhook_body:Dict
+
+@dataclass
+class TruveDataTask:
+    source: source_type
+    task_type: task_type
+    task_params: Dict
