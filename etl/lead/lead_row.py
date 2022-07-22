@@ -21,4 +21,15 @@ class LeadRowETL(LeadModelETL):
         return pd.DataFrame([lead])
 
 
+    def get_snapshot(self):
+        statuses = self.ld_client.get_statuses()
+        for statuse in statuses:
+            leads = self.extract_data_from_source([statuse])
+            if leads:
+                return leads[0]
+
+        return {}
+
+
+
 

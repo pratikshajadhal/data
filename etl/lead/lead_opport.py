@@ -63,5 +63,21 @@ class LeadOpportETL(LeadModelETL):
         return pd.DataFrame([opport])
 
 
+    def get_snapshot(self):
+        statuses = self.ld_client.get_statuses()
+        for statuse in statuses:
+            leads = self.ld_client.get_lead_row([statuse])
+            if leads:
+                break
+
+        lead_ids = [lead["Id"] for lead in leads]
+        for lead_id in lead_ids:
+            opport_id = self.ld_client.get_lead_details(lead_id, field="Opportunity")
+            if opport_id is not None:
+                opport_data = self.extract_data_from_source(opport_id)
+                if opport_data:
+                    return opport_data
+
+        return {}
 
 
