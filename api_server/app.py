@@ -8,7 +8,7 @@ from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
-from main import *
+from tasks.hist_helper import *
 from utils import get_logger, get_yaml_of_org
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
@@ -248,6 +248,8 @@ async def lead_webhook_handler(request: Request, clientId:str):
     """
     incoming_json = await request.json()
     logger.info(f"Got LeadDocket Webhook Request {incoming_json}")
+    #TODO: Find appropriate yaml file based on clientId(org_name)
+    s3_conf_file_path = "src-lead.yaml" 
 
     event_type = incoming_json.get("EventType")
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
@@ -255,7 +257,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
         lead_id = incoming_json.get("LeadId")
 
         # Update Lead Detail
-        start_lead_detail_etl(lead_ids=[lead_id], client_id=clientId)
+        start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
 
 
     elif event_type == 'Contact Added':
@@ -263,13 +265,13 @@ async def lead_webhook_handler(request: Request, clientId:str):
         contact_id = incoming_json.get("ContactId")
 
         # Update Contact ETL
-        start_lead_contact_etl(contact_ids=[contact_id], client_id=clientId)
+        start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
 
     elif event_type == 'Opportunity Created':
         # #Extract Metadata
         opportunity_id = incoming_json.get("OpportunityId")
 
-        start_opport_etl(opport_ids=[opportunity_id], client_id=clientId)
+        start_opport_etl(s3_conf_file_path= s3_conf_file_path, opport_ids=[opportunity_id], client_id=clientId)
 
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))
@@ -285,18 +287,23 @@ async def lead_webhook_handler(request: Request, clientId:str):
 async def add_tasks(request: Request):
     """
         Function to add tasks as a background job.
+        TODO: This is test func it will be parsed and smth. Plz ignore current function.
     """
     logger.debug(f"Adding task")
     task_json = await request.json()
 
-    task_type = from_dict(data=task_json, data_class=TruveDataTask)
+    from tasks.tasks import run_lead_historical
+    # TODO:
+    parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
+    run_lead_historical(s3_conf_file_path=parsed_conf_path, entity_name='referrals')
+    # task_type = from_dict(data=task_json, data_class=TruveDataTask)
 
-    logger.debug(task_type)
+    # logger.debug(task_type)
 
     return {"status" : "success", "message" : "Task added successfully"}
 
 
-# TODO:It will be TASK. 
+# TODO:It will be TASK. PLZ DO NOT DELETE!
 # @app.post("/social/{integration_name}/integrations", tags=["tasks"])
 # async def social_run(integration_name:str, org_id:str, dimension:str):
 #     logger.debug(f"Social media {integration_name}, {org_id}, {dimension}")
