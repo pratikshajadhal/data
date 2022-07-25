@@ -68,7 +68,9 @@ def make_ld_subscription():
 
 # - HISTORICAL - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Skip currently
-# def run_lead_historical(organization_identifier_url: str, entity_name: str, s3_conf_file_path: str):
+def run_lead_historical(organization_identifier_url: str, entity_name: str, s3_conf_file_path: str):
+    #TODO
+    pass
 #     """
 #     Args:
 #         organization_identifier_url (str): Static organization url needs to be filled from client. 
@@ -109,3 +111,12 @@ def make_ld_subscription():
 #         raise ValueError('Unexpected Entity {}'.format(entity_name))
 
     
+def run_fv_historical():
+    # TODO:
+    pass
+
+
+
+def run_social_historical():
+    # TODO:
+    pass
