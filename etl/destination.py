@@ -31,7 +31,7 @@ class ETLDestination(object):
         return 0 
 
 class S3Destination(ETLDestination):
-    def __init__(self, org_id:int, s3_bucket:str=None):
+    def __init__(self, org_id, s3_bucket:str=None):
         self.config = {"org_id" : org_id,
                     "bucket" : s3_bucket or os.environ["s3_bucket"]
                     }

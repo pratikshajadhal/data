@@ -4,8 +4,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from filevine.client import FileVineClient
-from utils import find_yaml
-from utils import load_config, get_logger
+from utils import load_config, get_logger, find_yaml
+from tasks.hist_helper import *
 
 logger = get_logger(__name__)
 load_dotenv()
@@ -68,47 +68,30 @@ def make_ld_subscription():
 
 # - HISTORICAL - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Skip currently
-def run_lead_historical(organization_identifier_url: str, entity_name: str, s3_conf_file_path: str):
-    #TODO
-    pass
-#     """
-#     Args:
-#         organization_identifier_url (str): Static organization url needs to be filled from client. 
-#         entity_name (str): entity name for historical runs. 
-#         s3_conf_file_path (str): yaml location.
+def run_lead_historical(s3_conf_file_path: str):
+    """
+    Args:
+        s3_conf_file_path (str): yaml location.
+        entity_name (str): entity name for historical runs. 
         
-#     Normally org_id is int in filevine side however there is no organization identifier for leaddocket site. 
-#     So the unique thing in lead-docket is URL -> https://aliawadlaw.leaddocket.com/api/leads.
-#     'aliawadlaw' needs to be extracted from this url as an organization identifier.
-#     """
-#     # Get data from s3
-#     conf_path = f"{os.getcwd()}/tasks/lead-src.yaml"
-#     find_yaml(s3_path=s3_conf_file_path,
-#                             download_path=conf_path)
+    Normally org_id is int in filevine side however there is no organization identifier for leaddocket site. 
+    So the unique thing in lead-docket is URL -> https://aliawadlaw.leaddocket.com/api/leads.
+    'aliawadlaw' needs to be extracted from this url as an organization identifier.
+    """
+    # Get data from s3
+    conf_path = s3_conf_file_path
+    # find_yaml(s3_path=s3_conf_file_path,
+    #                         download_path=conf_path)
 
-#     org_id = (organization_identifier_url.split(".")[0]).split("//")[1]
-#     logger.info(f"{entity_name} historical's running!")
-#     if entity_name == 'statuses':
-#         start_statuses_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'lead_source':
-#         start_leadsource_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'case_type':
-#         start_case_type_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'lead_row':
-#         start_lead_row_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'lead_detail':
-#         start_lead_detail_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'contact':
-#         start_lead_contact_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'opport':
-#         start_opport_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'referrals':
-#         start_referrals_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     elif entity_name == 'users':
-#         start_users_etl(org_id=org_id, base_url=organization_identifier_url, conf_file_path=conf_path)
-#     else:
-#         logger.warning("Entity type is unknown")
-#         raise ValueError('Unexpected Entity {}'.format(entity_name))
+    start_statuses_etl(s3_conf_file_path= s3_conf_file_path)
+    start_leadsource_etl(s3_conf_file_path= s3_conf_file_path)
+    start_case_type_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_row_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path)
+    start_opport_etl(s3_conf_file_path= s3_conf_file_path)
+    start_referrals_etl(s3_conf_file_path= s3_conf_file_path)
+    start_users_etl(s3_conf_file_path= s3_conf_file_path)
 
     
 def run_fv_historical():
