@@ -58,8 +58,9 @@ class FileVineClient(object):
             }
 
         try:
-            subscription_id = fv_client.make_webhook_connection(payload)
+            subscription_id = self.make_webhook_connection(payload)
         except Exception as e:
+            subscription_id = None
             logger.warning("(-) Something went wrong in webhook connection")
             logger.error(e)
 
