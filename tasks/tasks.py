@@ -68,7 +68,7 @@ def make_ld_subscription():
 
 # - HISTORICAL - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # Skip currently
-def run_lead_historical(s3_conf_file_path: str, entity_name: str):
+def run_lead_historical(s3_conf_file_path: str):
     """
     Args:
         s3_conf_file_path (str): yaml location.
@@ -83,28 +83,15 @@ def run_lead_historical(s3_conf_file_path: str, entity_name: str):
     # find_yaml(s3_path=s3_conf_file_path,
     #                         download_path=conf_path)
 
-    logger.info(f"{entity_name} historical's running!")
-    if entity_name == 'statuses':
-        start_statuses_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'lead_source':
-        start_leadsource_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'case_type':
-        start_case_type_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'lead_row':
-        start_lead_row_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'lead_detail':
-        start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'contact':
-        start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'opport':
-        start_opport_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'referrals':
-        start_referrals_etl(s3_conf_file_path= s3_conf_file_path)
-    elif entity_name == 'users':
-        start_users_etl(s3_conf_file_path= s3_conf_file_path)
-    else:
-        logger.warning("Entity type is unknown")
-        raise ValueError('Unexpected Entity {}'.format(entity_name))
+    start_statuses_etl(s3_conf_file_path= s3_conf_file_path)
+    start_leadsource_etl(s3_conf_file_path= s3_conf_file_path)
+    start_case_type_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_row_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path)
+    start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path)
+    start_opport_etl(s3_conf_file_path= s3_conf_file_path)
+    start_referrals_etl(s3_conf_file_path= s3_conf_file_path)
+    start_users_etl(s3_conf_file_path= s3_conf_file_path)
 
     
 def run_fv_historical():

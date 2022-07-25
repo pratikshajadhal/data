@@ -295,7 +295,7 @@ async def add_tasks(request: Request):
     from tasks.tasks import run_lead_historical
     # TODO:
     parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
-    run_lead_historical(s3_conf_file_path=parsed_conf_path, entity_name='referrals')
+    run_lead_historical(s3_conf_file_path=parsed_conf_path)
     # task_type = from_dict(data=task_json, data_class=TruveDataTask)
 
     # logger.debug(task_type)
