@@ -122,3 +122,8 @@ class LeadDocketClient(object):
     def get_users(self):
         endpoint = "/api/users"
         return self.make_request(end_point=endpoint)
+
+
+    def get_custom_fields(self):
+        endpoint = "/api/customfields/list"
+        return self.make_request(endpoint)
