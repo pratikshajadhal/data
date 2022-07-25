@@ -127,7 +127,6 @@ async def fv_webhook_handler(request: Request):
 
     Meds Event Data
 
-
     '''
     event_json = await request.json()
 
@@ -200,7 +199,7 @@ async def ld_get_snapshot(org, entity_name):
             entity_name: entity,table name
 
         Request example:
-            GET http://127.0.0.1:8000/fv/6586/snapshots?project_type_id=18764&entity_type=form&entity_name=casesummary
+            GET http://127.0.0.1:8000/ld/aliawadlaw/snapshots?entity_name=leaddetail
 
         Response example:
             {
@@ -297,11 +296,12 @@ async def add_tasks(request: Request):
     return {"status" : "success", "message" : "Task added successfully"}
 
 
-@app.post("/social/{integration_name}/integrations", tags=["tasks"])
-async def social_run(integration_name:str, org_id:str, dimension:str):
-    logger.debug(f"Social media {integration_name}, {org_id}, {dimension}")
+# TODO:It will be TASK. 
+# @app.post("/social/{integration_name}/integrations", tags=["tasks"])
+# async def social_run(integration_name:str, org_id:str, dimension:str):
+#     logger.debug(f"Social media {integration_name}, {org_id}, {dimension}")
 
-    return {"status" : "success", "message" : "Task added successfully"}
+#     return {"status" : "success", "message" : "Task added successfully"}
 
 
 if __name__ == "__main__":
