@@ -1,4 +1,4 @@
-org_id: 6586
+org_name: aliawadlaw
 base_url: https://aliawadlaw.leaddocket.com
 table_leadstatuses:
   - name: statuses
@@ -205,6 +205,7 @@ table_referral:
     - Name
     - Type
     - Code
+    - Outgoing
 
 
 table_users:
