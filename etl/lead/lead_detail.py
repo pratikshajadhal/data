@@ -10,6 +10,7 @@ from .lead_modeletl import LeadModelETL
 class LeadDetailETL(LeadModelETL):
 
     def extract_data_from_source(self, lead_ids):
+        lead_ids=10759
         lead_details = self.ld_client.get_lead_details(lead_ids)
         return lead_details
 
@@ -35,7 +36,9 @@ class LeadDetailETL(LeadModelETL):
                 for each_custom_field in value:
                     custom_fields.append(each_custom_field["CustomFieldId"])
 
-                leads[key] = ",".join( map( str, custom_fields ))
+
+                leads[key] = value
+                # leads[key] = ",".join( map( str, custom_fields ))
 
             elif isinstance(value, list):
                 ids = list()
