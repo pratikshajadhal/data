@@ -51,6 +51,7 @@ def handle_form_object(selected_field_config:SelectedConfig, project_type_id:int
                                 primary_key_column="projectId")
     return form_etl
 
+
 def handle_collection_object(selected_field_config:SelectedConfig, project_type_id:int, entity:str):
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -89,6 +90,7 @@ def handle_contact_object(selected_field_config:SelectedConfig, project_type_id:
                                 primary_key_column="projectId")
     return contact_etl
 
+
 def get_fv_etl_object(org_config:SelectedConfig, entity_type, entity_name, project_type_id=None):
     cls = None
     if entity_type.lower() == "project":
@@ -114,7 +116,7 @@ def get_ld_etl_object(org_config: LeadSelectedConfig, entity_name:str):
 
 
 def ld_handle_object(selected_field_config:LeadSelectedConfig, entity:str):
-    ld_config = LeadDocketConfig(selected_field_config.org_id, selected_field_config.base_url)
+    ld_config = LeadDocketConfig(selected_field_config.org_name, selected_field_config.base_url)
 
 
     if entity == "statuses" or entity == 'leadsource' or entity == 'casetype':
@@ -176,13 +178,3 @@ def ld_handle_object(selected_field_config:LeadSelectedConfig, entity:str):
     else:
         return 0
     return etl_object
-
-    # collection_etl = CollectionETL(model_name=entity.lower(), 
-    #                             source=None, 
-    #                             entity_type="collection",
-    #                             project_type=project_type_id,
-    #                             destination=None, 
-    #                             fv_config=fv_config, 
-    #                             column_config=selected_column_config, 
-    #                             primary_key_column="projectId")
-    # return collection_etl
