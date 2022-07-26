@@ -10,7 +10,6 @@ from .lead_modeletl import LeadModelETL
 class LeadDetailETL(LeadModelETL):
 
     def extract_data_from_source(self, lead_ids):
-        lead_ids=10759
         lead_details = self.ld_client.get_lead_details(lead_ids)
         return lead_details
 
