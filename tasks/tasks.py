@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+from numpy import void
 
 from filevine.client import FileVineClient
 from utils import load_config, get_logger, find_yaml
@@ -67,7 +68,6 @@ def make_ld_subscription():
 
 
 # - HISTORICAL - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-# Skip currently
 def run_lead_historical(s3_conf_file_path: str):
     """
     Args:
@@ -78,7 +78,8 @@ def run_lead_historical(s3_conf_file_path: str):
     So the unique thing in lead-docket is URL -> https://aliawadlaw.leaddocket.com/api/leads.
     'aliawadlaw' needs to be extracted from this url as an organization identifier.
     """
-    # Get data from s3
+    logger.info(f"(H) Historical Lead started!")
+    # Get data from s3 #TODO:
     conf_path = s3_conf_file_path
     # find_yaml(s3_path=s3_conf_file_path,
     #                         download_path=conf_path)
@@ -94,9 +95,25 @@ def run_lead_historical(s3_conf_file_path: str):
     start_users_etl(s3_conf_file_path= s3_conf_file_path)
 
     
-def run_fv_historical():
-    # TODO:
-    pass
+def run_fv_historical(conf_file: str):
+    """
+    Args:
+        s3_conf_file_path (str): yaml location.
+        
+    """
+    logger.info(f"(H) Historical Filevine started!")
+     # Get data from s3 # TODO:
+    conf_path = conf_file
+    # find_yaml(s3_path=s3_conf_file_path,
+    #                         download_path=conf_path
+    # start_contact_etl(conf_path)
+    start_project_etl(conf_path)
+    start_form_etl(conf_path)    
+    start_collection_etl(conf_path)
+    start_form_etl(conf_path)
+    # start_form_etl(18764, "intake")    
+    # start_collection_etl(18764, "negotiations")
+    # start_form_etl(18764, "casesummary")
 
 
 
