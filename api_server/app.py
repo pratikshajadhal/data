@@ -8,6 +8,7 @@ from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
+from leaddocket.client import LeadDocketClient
 from tasks.hist_helper import *
 from utils import get_logger, get_yaml_of_org
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
@@ -231,6 +232,24 @@ async def lg_get_sections():
     """
     table_list = ["statuses","leadsource","casetype", "leadrow","leaddetail","contact","opportunities","referrals","users"]
     return {"section_names" : table_list}
+
+
+@app.get("/ld/customfields/list", tags=["leaddocket"])
+async def lg_get(org_name):
+    """
+        Function to return customfields list for leaddocket
+    """
+
+    # Find yaml based on organization identifier. TODO: Currently ignoring
+    logger.debug(f" {org_name}")
+    org_config = get_yaml_of_org(org_name, "ld")
+    ld_client = LeadDocketClient(org_config.base_url)
+
+    custom_fields = ld_client.get_custom_fields()
+    return {
+        "status":"success",
+        "data": custom_fields
+    }
 
 
 @app.post("/lead_webhook_handler", tags=["leaddocket"])

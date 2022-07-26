@@ -35,7 +35,9 @@ class LeadDetailETL(LeadModelETL):
                 for each_custom_field in value:
                     custom_fields.append(each_custom_field["CustomFieldId"])
 
-                leads[key] = ",".join( map( str, custom_fields ))
+
+                leads[key] = value
+                # leads[key] = ",".join( map( str, custom_fields ))
 
             elif isinstance(value, list):
                 ids = list()

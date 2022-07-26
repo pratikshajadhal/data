@@ -38,7 +38,7 @@ def load_config(file_path: str) -> SelectedConfig:
 #     return load_config("src.yaml")
 def get_yaml_of_org(org_id, client='fv'):
     """
-        This is a temp function. It will change soon!
+        This is a temp function. It will change soon! TODO:
     """
     if client == 'fv':
         return load_config("src.yaml")
