@@ -55,12 +55,12 @@ class SelectedConfig:
 
 @dataclass
 class LeadDocketConfig:
-    org_id: int
+    org_name: str
     base_url: str
 
 @dataclass
 class LeadSelectedConfig:
-    org_id: int
+    org_name: str
     base_url: str
     table_leadstatuses:list[ColumnConfig]
     table_leadsource:list[ColumnConfig]

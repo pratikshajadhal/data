@@ -18,7 +18,7 @@ class LeadDetailETL(LeadModelETL):
         # Get all lead id 
         # Get all status
         statuses = self.ld_client.get_statuses()
-        # Using this statuses get all lead row table.
+        # Using this statuses get all  row table.
         leads = self.ld_client.get_lead_row(statuses)
 
         lead_ids = [lead["Id"] for lead in leads]
@@ -35,7 +35,9 @@ class LeadDetailETL(LeadModelETL):
                 for each_custom_field in value:
                     custom_fields.append(each_custom_field["CustomFieldId"])
 
-                leads[key] = ",".join( map( str, custom_fields ))
+
+                leads[key] = value
+                # leads[key] = ",".join( map( str, custom_fields ))
 
             elif isinstance(value, list):
                 ids = list()
@@ -52,6 +54,22 @@ class LeadDetailETL(LeadModelETL):
 
         
         return pd.DataFrame([leads])
+
+
+    def get_snapshot(self):
+        statuses = self.ld_client.get_statuses()
+        for statuse in statuses:
+            leads = self.ld_client.get_lead_row([statuse])
+            if leads:
+                break
+
+        lead_ids = [lead["Id"] for lead in leads]
+        for lead_id in lead_ids:
+            data = self.extract_data_from_source(lead_id)
+            if data is not None:
+                return data
+        
+        return {}
 
 
 

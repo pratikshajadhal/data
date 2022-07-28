@@ -6,7 +6,9 @@ import logging
 import pandas as pd
 import yaml
 from dacite import from_dict
+from utils import get_logger
 
+logger = get_logger(__name__)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -21,10 +23,9 @@ class LeadDocketClient(object):
                         'api_key': self.api_key
                         }
 
-
     def make_request(self, end_point:str, query_param:Dict={}):
         url = f"{self.base_url}{end_point}"
-        print("Hitting URL {}".format(url))
+        logger.info("Hitting URL {}".format(url))
         response = requests.get(url, headers=self.headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
@@ -47,8 +48,6 @@ class LeadDocketClient(object):
         if (incoming_page) > page :
             output_list += (output["Records"])
             for i in range(page+1, incoming_page+1):
-                print("Hitting again : Total page {} incoming page {} ".format(incoming_page, i, incoming_page))
-                
                 query_param = {"status": status,
                                 "page": i}
                 output = self.make_request(endpoint, query_param)
@@ -60,9 +59,8 @@ class LeadDocketClient(object):
     def get_lookups(self, lookup_type:str):
         endpoint = f"/api/lookups"
         query_param = {"type": lookup_type}
-        print(f"Given Param is: {query_param}")
+        logger.info(f"Given Param is: {query_param}")
         return self.make_request(end_point = endpoint, query_param=query_param)
-
 
     def get_statuses(self):
         lookup_type = "Statuses"
@@ -71,7 +69,6 @@ class LeadDocketClient(object):
         status_list = [status.get("Status") for status in statuses]
         return status_list
     
-
     def get_lead_row(self, statuses:List):
         endpoint = f"/api/leads"
 
@@ -81,11 +78,8 @@ class LeadDocketClient(object):
             outy = self.get_row_lead_iteratively(endpoint, status)
             if outy:
                 records += outy
-            else:
-                print("empty skipping!")
 
         return records
-
 
     def get_lead(self, lead_id:int, field=None):
         endpoint = f"/api/leads/{lead_id}"
@@ -99,28 +93,27 @@ class LeadDocketClient(object):
 
         return out
 
-
     def get_lead_details(self, lead_id:int, field=None):
         
         return self.get_lead(lead_id, field)
 
-
     def get_contact(self, contact_id: int):
         endpoint = f"/api/contacts/{contact_id}"
         return self.make_request(endpoint)
-
     
     def get_opport(self, opport_id: int):
 
         endpoint = f"/api/opportunities/{opport_id}"
         return self.make_request(endpoint)
 
-
     def get_referrals(self):
         endpoint = "/api/referrals/list"
         return self.make_request(end_point=endpoint)
 
-
     def get_users(self):
         endpoint = "/api/users"
         return self.make_request(end_point=endpoint)
+
+    def get_custom_fields(self):
+        endpoint = "/api/customfields/list"
+        return self.make_request(endpoint)

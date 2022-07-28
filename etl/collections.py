@@ -5,6 +5,9 @@ import pandas as pd
 from .datamodel import ETLDestination, ETLSource, RedshiftConfig
 from .modeletl import ModelETL
 from filevine import client
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 class CollectionETL(ModelETL):
 
@@ -34,12 +37,6 @@ class CollectionETL(ModelETL):
 
         self.source_schema = form_schema["customFields"]
 
-        for field in self.source_schema:
-            #print(field)
-            print(field["fieldSelector"])
-
-        #exit()
-
         self.persist_source_schema()
 
         return form_schema
@@ -52,7 +49,7 @@ class CollectionETL(ModelETL):
     def extract_data_from_source(self, project_list:list[int]=[]):
         section_data_list = []
         for index, project in enumerate(project_list):
-            print(f"Getting contact for project {project} {index}")
+            logger.debug(f"Getting {self.entity_type} for project {project} {index}")
             section_data = self.fv_client.get_collections(project_id=project, collection_name=self.model_name)
             if not section_data:
                 continue
@@ -64,3 +61,13 @@ class CollectionETL(ModelETL):
 
         return section_data_list
 
+
+    def get_snapshot(self, project_type_id):
+        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        for project in project_list:
+            if project["projectTypeId"]["native"] == project_type_id:
+                snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]])
+                # snapshot_data = self.extract_data_from_source(project_list=[9708629])
+                if len(snapshot_data) != 0:
+                    return snapshot_data[0]                    
+        return {}

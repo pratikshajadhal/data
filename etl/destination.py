@@ -1,3 +1,4 @@
+from cmath import phase
 from ctypes import Union
 from dataclasses import asdict, dataclass
 from typing import Dict
@@ -7,12 +8,16 @@ import os
 import psycopg2
 from dacite import from_dict
 import datetime
+import logging
         
 import boto3
 import pandas_redshift as pr
 import awswrangler as wr
 
+from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
+
+logger = get_logger(__name__)
 
 class ETLDestination(object):
 
@@ -26,12 +31,18 @@ class ETLDestination(object):
         return 0 
 
 class S3Destination(ETLDestination):
-    def __init__(self, org_id:int, s3_bucket:str=None):
+    def __init__(self, org_id, s3_bucket:str=None):
         self.config = {"org_id" : org_id,
                     "bucket" : s3_bucket or os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"]
                     }
-        self.s3_session = boto3.Session(aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
-                        aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"])
+
+        server_env = os.environ["SERVER_ENV"]
+
+        if server_env == "LOCAL":
+            self.s3_session = boto3.Session(aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
+                            aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"])
+        else:
+            self.s3_session = boto3.Session()
 
     def get_column_mapper(self):
         column_mapper = {"Text" : "string",
@@ -62,32 +73,53 @@ class S3Destination(ETLDestination):
 
         #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}
         return column_mapper
-        
-    def load_data(self, data_df: pd.DataFrame, **kwargs):
-        
+
+    def get_key(self, kwargs):
         if kwargs["section"] == "core" and kwargs["entity"] == "contact":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/{file_name}"
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
-        elif kwargs["section"] == 'leaddocket':
+        elif kwargs["section"] == "leaddocket":
             file_name = "{}.parquet".format(kwargs["push_id"])
             s3_key = f"{kwargs['section']}/{kwargs['organization_identifier']}/{kwargs['model_name']}/{file_name}"
         else:
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/{kwargs['section']}/{kwargs['entity']}.parquet"
 
-        print(kwargs['dtype'])
-        #data_df.to_csv("sample.csv")
+        return s3_key
 
+    def save_project_phase(self, s3_key, project_id, phase_name):
+        phase_df = pd.DataFrame([{"project_id" : project_id, "phase" : phase_name}])
         
+        s3_path = f"s3://{self.config['bucket']}/{s3_key}"
+        
+        wr.s3.to_parquet(
+                df=phase_df,
+                path=f"{s3_path}",
+                boto3_session=self.s3_session
+        )
+
+        logger.info(f"S3 Upload successful for {s3_path}")
+
+    def load_data(self, data_df: pd.DataFrame, **kwargs):
+
+        s3_key = self.get_key(kwargs=kwargs)
+        
+        logger.info(f"Uploading data to destination in following {s3_key}")
+
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",
                 boto3_session=self.s3_session,
                 dtype=kwargs["dtype"]
         )
+
+        logger.info(f"S3 upload successful for {s3_key}")
+
+        return 0
+
 
 class RedShiftDestination(ETLDestination):
 
@@ -178,12 +210,31 @@ class RedShiftDestination(ETLDestination):
                                 user=rs_config.user,
                                 password=rs_config.password)
 
-        pr.connect_to_s3(
-                        bucket=rs_config.s3_bucket,
-                        subdirectory=rs_config.s3_temp_dir,
-                        aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
-                        aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
-                        )
+        server_env = os.environ["SERVER_ENV"]
+        if server_env == "LOCAL":
+            pr.connect_to_s3(
+                    bucket=rs_config.s3_bucket,
+                    subdirectory=rs_config.s3_temp_dir,
+                    aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
+                    aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
+            )
+        else:
+            # Fetch credentials from task role
+            credentials = self.s3_session.get_credentials()
+
+            # Credentials are refreshable, so accessing your access key / secret key
+            # separately can lead to a race condition. Use this to get an actual matched
+            # set.
+            credentials = credentials.get_frozen_credentials()
+            access_key = credentials.access_key
+            secret_key = credentials.secret_key
+            
+            pr.connect_to_s3(
+                    bucket=rs_config.s3_bucket,
+                    subdirectory=rs_config.s3_temp_dir,
+                    aws_access_key_id=access_key,
+                    aws_secret_access_key=secret_key
+            )
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)

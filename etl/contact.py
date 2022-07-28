@@ -27,24 +27,10 @@ class ContactETL(ModelETL):
     def get_schema_of_model(self) -> Dict:
         contact_schema = self.fv_client.get_contact_metadata()
         
-        print(contact_schema)
-
         distinct_data_type = {}
-        
-        #for cf in contact_schema:
-        #    distinct_data_type[cf['customFieldType']] = ""
-            
-        #print(distinct_data_type)
-        #Contact ID Field
-        #contact_schema.append({"fieldName" : "Contact ID", "selector" : "personId", "value" : "object"})
         
         self.source_schema = contact_schema
 
-        for field in self.source_schema:
-            print(field["selector"])
-
-        #exit()
-        
         self.persist_source_schema()
 
         return contact_schema
@@ -54,10 +40,28 @@ class ContactETL(ModelETL):
         project_list = [project_data["projectId"]["native"] for project_data in project_data_list]
         return project_list
 
-    def extract_data_from_source(self, project_list:list[int]=[]):
+    def extract_data_from_source(self, project_list:list[int]=[], bring_one:bool=False):
         final_contact_list = []
-        contact_list = self.fv_client.get_contacts()
+        if not bring_one:
+            contact_list = self.fv_client.get_contacts()
+        else:
+            contact_list = self.fv_client.get_single_contact()
         return contact_list
+
+
+    def get_snapshot(self, project_type_id):
+        # No need to get projects. TODO: Delete line when you sure about endpoint.
+        # **core/contacts** or **core/projects/{project_id}/contacts** ?
+
+        # One caveat, when we get snapshot for contacts response may change. It may cause some conflict.Check this
+
+        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        for project in project_list:
+            if project["projectTypeId"]["native"] == project_type_id:
+                snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]], bring_one=True)
+                if len(snapshot_data) != 0:
+                    return snapshot_data[0]                    
+        return {}
 
     
 if __name__ == "__main__":

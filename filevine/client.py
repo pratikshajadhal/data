@@ -5,6 +5,9 @@ import json
 import logging
 
 from dotenv import load_dotenv
+from utils import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv()
 
@@ -36,17 +39,40 @@ class FileVineClient(object):
 		}
         response = requests.post(url, headers={"Content-Type" : "application/json"}, data=json.dumps(data))
         if response.status_code != 200:
-            logging.error("Unable to generate tokens")
+            logger.error("Unable to generate tokens")
             raise Exception("Token genreation error")
         return json.loads(response.text)
+
+
+    def create_subscription(self, subscriptions_events:list, sub_description:str, endpoint_to_subscribe:str, sub_name:str):
+        """
+            Function to create subscription payload for filevine webhooks.
+        """
+        # Create payload
+        payload =   {
+            "keyId": os.environ["LOCAL_TPA_API_KEY_FILEVINE"],
+            "eventIds": subscriptions_events,
+            "description": sub_description,
+            "endpoint": endpoint_to_subscribe,
+            "name": sub_name
+            }
+
+        try:
+            subscription_id = self.make_webhook_connection(payload)
+        except Exception as e:
+            subscription_id = None
+            logger.warning("(-) Something went wrong in webhook connection")
+            logger.error(e)
+
+        return subscription_id
+        
 
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
         url = f"{self.base_url}{end_point}"
-        print("Hitting URL {}".format(url))
+        logger.debug("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
                 "Authorization" : "Bearer {}".format(session_info["accessToken"])}
-        print(query_param)
         response = requests.get(url, headers=headers, params=query_param)
         if response.status_code != 200:
             logging.error(response.text)
@@ -78,6 +104,10 @@ class FileVineClient(object):
         section_metadata = self.make_request(end_point)
         return section_metadata
 
+    def get_sections(self, projectTypeId):
+        end_point = f"core/projecttypes/{projectTypeId}/sections"
+        section_metadata = self.make_request(end_point)
+        return section_metadata
 
     def get_contact_metadata(self):
         contact_metadata = self.make_request("core/custom-contacts-meta")
@@ -93,6 +123,11 @@ class FileVineClient(object):
         contact_list = raw_contact_items
         return contact_list
 
+    def get_single_contact(self):
+        contact_metadata = self.make_request("core/contacts")
+        
+        return contact_metadata["items"]
+
     def get_section_data(self, project_id:int, section_name:str):
         end_point = f"core/projects/{project_id}/forms/{section_name}"
         section_data = self.make_request(end_point)
@@ -105,9 +140,27 @@ class FileVineClient(object):
             return collection_data["items"]
         return None
 
-    def get_projects(self, requested_fields:list[str]=['*']):
-        return self.get_entity("core/projects", requested_fields=requested_fields)
-        
+    def get_projects(self, project_list=[], requested_fields:list[str]=['*']):
+        if len(project_list) == 1:
+            return [self.make_request(f"core/projects/{project_list[0]}")]
+        else:
+            return self.get_entity("core/projects", requested_fields=requested_fields)
+
+
+    def make_post_request(self, end_point:str, body:dict):
+        session_info = self.generate_session()
+        url = f"{self.base_url}{end_point}"
+        logger.debug("Hitting URL {}".format(url))
+        headers = {"x-fv-sessionid" : session_info["refreshToken"], 
+                "Authorization" : "Bearer {}".format(session_info["accessToken"])}
+        response = requests.post(url, headers=headers, json=body)
+        return response.json()
+
+    
+    def make_webhook_connection(self, paylaod: dict):
+        end_point = "subscriptions"
+        return self.make_post_request(end_point=end_point, body=paylaod)
+
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")

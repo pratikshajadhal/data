@@ -53,6 +53,7 @@ pipelines:
       - step:
           name: Deploy
           image: amazon/aws-cli:2.6.3
+          max-time: 15
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
             - sh .infra/devops/deploy/bitbucket/deploy.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" $DEV_DNS_ALIAS_KEY dev

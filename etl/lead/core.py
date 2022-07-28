@@ -16,7 +16,8 @@ class CoreETL(LeadModelETL):
         return pd.DataFrame(core)
 
     # Override
-    def load_data(self, trans_df:pd.DataFrame):
+    
+    def load_data(self, trans_df:pd.DataFrame, client_id:str=None):
         dest = self.destination
 
         dtypes = trans_df.dtypes.to_dict()
@@ -25,13 +26,20 @@ class CoreETL(LeadModelETL):
             final_dtypes[key] = self.key_mapper[str(value)]
 
         push_id = f"bulk_{self.model_name}"
+
+        # If there is no client id parse clientId from url
+        if client_id:
+            organization_identifier = client_id
+        else:
+            organization_identifier = (self.base_url.split(".")[0]).split("//")[1]
         if isinstance(dest, S3Destination):
             dest.load_data(data_df= trans_df,
                             section="leaddocket",
                             model_name=self.model_name,
                             dtype = final_dtypes,
                             push_id = push_id,
-                            organization_identifier = (self.base_url.split(".")[0]).split("//")[1])
+                            organization_identifier = organization_identifier,
+                            entity= "lead")
 
 
 

@@ -25,7 +25,7 @@ class LeadOpportETL(LeadModelETL):
         
         # Get ooport_id using leads.
         opport_ids = list()
-        for lead_id in lead_ids[:10]:
+        for lead_id in lead_ids:
             opport_ids.append(self.ld_client.get_lead_details(lead_id, field="Opportunity"))
 
         # opport_ids = [2483, 2482, None, 2469, None, 2417, 2436, 2362, 2432, None]
@@ -44,7 +44,7 @@ class LeadOpportETL(LeadModelETL):
                 opport[key] = ",".join( map( str, custom_fields ))
 
             if key == "AssignedTo":
-                if isinstance(value, list):
+                if value:
                     name = opport[key][0].get("FirstName") + " " + opport[key][0].get("LastName")
                 else:
                     name = ""
@@ -63,5 +63,21 @@ class LeadOpportETL(LeadModelETL):
         return pd.DataFrame([opport])
 
 
+    def get_snapshot(self):
+        statuses = self.ld_client.get_statuses()
+        for statuse in statuses:
+            leads = self.ld_client.get_lead_row([statuse])
+            if leads:
+                break
+
+        lead_ids = [lead["Id"] for lead in leads]
+        for lead_id in lead_ids:
+            opport_id = self.ld_client.get_lead_details(lead_id, field="Opportunity")
+            if opport_id is not None:
+                opport_data = self.extract_data_from_source(opport_id)
+                if opport_data:
+                    return opport_data
+
+        return {}
 
 
