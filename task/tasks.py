@@ -131,15 +131,8 @@ def create_cli(source:str, type:str) -> str:
   return f'python {os.getcwd()}/task/tasks.py --source={source} --task_type={type}'
 
 def handle_task(incoming_data:TruveDataTask):
-    # Parse incoming data
-
-    # Creates appropriate python command line code to run task.py
-
-    command = create_cli(incoming_data.source, incoming_data.task_type)
-
-
-    # os.system(command)
-    # If you want it could be ran.
+    # TODO:
+    pass
 
 if __name__ == '__main__':
     # Arg parser
