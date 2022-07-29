@@ -40,13 +40,27 @@ pipelines:
 
               # run unit tests
               # TODO
-        
+
+      - step:
+          name: ChangeLog
+          image: sleavely/node-awscli:16.x
+          script:
+            - chmod +rx .infra/devops/deploy/bitbucket*
+            
+            # configure remote URL to use service bot username and app password
+            - git remote set-url origin "https://${TRUVE_BOT_USERNAME}:${TRUVE_BOT_APP_PASSWORD}@bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+
+            # create/update and push changelog file to branch
+            - npm i mustache
+            - sh .infra/devops/deploy/bitbucket/changelog/push.sh
+
       - step:
           name: Build/Push Image
           image: amazon/aws-cli:2.6.3
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
             - sh .infra/devops/deploy/bitbucket/ecr_build_push.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" dev
+            
           services:
             - docker
 
@@ -96,7 +110,7 @@ pipelines:
             - sh .infra/devops/deploy/bitbucket/ecr_build_push.sh $PROD_AWS_ACCESS_KEY_ID $PROD_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" prod
           services:
             - docker
-
+            
       - step:
           name: Deploy
           image: amazon/aws-cli:2.6.3

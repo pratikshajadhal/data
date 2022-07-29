@@ -1,0 +1,6 @@
+## Changelog
+
+<br/>
+
+# {{appVersion}}
+{{content}}
