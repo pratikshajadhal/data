@@ -26,7 +26,7 @@ echo "Committing Changelog to current branch..."
 git add CHANGELOG.md
 
 # Commit tracked file with message [skip ci] so that pipeline won't be triggered
-git commit -m "[skip ci] update changelog for v$PACKAGE_VERSION"
+git commit -m "[skip ci] update changelog for v$API_VERSION"
 
 # Push committed change to the current repo.
 git push origin

@@ -42,7 +42,7 @@ pipelines:
               # TODO
 
       - step:
-          name: ChangeLog
+          name: Push Changelog
           image: sleavely/node-awscli:16.x
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
