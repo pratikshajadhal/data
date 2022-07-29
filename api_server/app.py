@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dacite import from_dict
 
 from api_server.config import FVWebhookInput, TruveDataTask
-from api_server.helper import handle_wb_input
+from api_server.helper import handle_wb_input, send_message_to_queue
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
@@ -335,17 +335,32 @@ async def add_tasks(request: Request):
         Function to add tasks as a background job.
         TODO: This is test func it will be parsed and smth. Plz ignore current function.
     """
+    # Step by step
+
     logger.debug(f"Adding task")
     task_json = await request.json()
-    parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
-    task_type = from_dict(data=task_json, data_class=TruveDataTask)
+    task_object = from_dict(data=task_json, data_class=TruveDataTask)
 
-    handle_task(task_type)
-    
-    # logger.debug(task_type)
+    # Find conf file. based on org_id or org_name. Skipping currently
+    org_id = task_object.task_params["org_id"]
 
-    return {"status" : "success", "message" : "Task added successfully"}
+    # What will be the content of this message?
+    # # SQS---
+    queue_name = 'data-dev-queue'
+    message = {
+            "FUNC_PARAMS": {
+                "source": task_object.source,
+                "type": task_object.task_type
+            },
+            "org_name": org_id,
+            "task_state": "DELIVERED"
+            }
+    send_message_to_queue(queue_name, message)
+    return {"status" : "success", "message" : "Task added to queue successfully"}
 
+
+
+# x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x x 
 
 # TODO:It will be TASK. PLZ DO NOT DELETE!
 # @app.post("/social/{integration_name}/integrations", tags=["tasks"])
