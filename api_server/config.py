@@ -5,7 +5,7 @@ EVENT_TYPES = ["PhaseChanged", "Created", "Updated", "Deleted"]
 ENTITY_TYPES = ["Project", "Form", "CollectionItem"]
 SECTION_TYPES = ["intake", "casesummary", "meds", "negotiations"]
 
-source_type = Literal["FILEVINE", "LEADDOCKET"]
+source_type = Literal["FILEVINE", "LEADDOCKET", "SOCIAL"]
 task_type = Literal["HISTORICAL_LOAD", "SUBSCRIPTION"]
 
 @dataclass

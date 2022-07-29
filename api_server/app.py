@@ -9,7 +9,8 @@ from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
-from tasks.hist_helper import *
+from task.hist_helper import *
+from task.tasks import handle_task
 from utils import get_logger, get_yaml_of_org
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
@@ -310,13 +311,11 @@ async def add_tasks(request: Request):
     """
     logger.debug(f"Adding task")
     task_json = await request.json()
-
-    from tasks.tasks import run_lead_historical
-    # TODO:
     parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
-    run_lead_historical(s3_conf_file_path=parsed_conf_path)
-    # task_type = from_dict(data=task_json, data_class=TruveDataTask)
+    task_type = from_dict(data=task_json, data_class=TruveDataTask)
 
+    handle_task(task_type)
+    
     # logger.debug(task_type)
 
     return {"status" : "success", "message" : "Task added successfully"}

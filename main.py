@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 import uvicorn
-from tasks.tasks import run_fv_historical
+from task.tasks import run_fv_historical
 
 load_dotenv()
 
@@ -13,8 +13,8 @@ if __name__ == "__main__":
     #start_project_etl()
 
     # - - - - 
-    run_fv_historical("src.yaml")
-    # uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+    # run_fv_historical("src.yaml")
+    uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
 
     # # Wh subscription for filevine
     # make_fv_subscription(

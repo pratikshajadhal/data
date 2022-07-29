@@ -1,8 +1,8 @@
-import logging 
+import argparse
 
 from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
-from .config import FVWebhookInput
+from .config import FVWebhookInput, TruveDataTask
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
@@ -68,8 +68,6 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
     return collection_etl
 
 
-        
-
 def handle_wb_input(wb_input:FVWebhookInput):
     logger.debug("inside handle_wb_input()")
 
@@ -108,3 +106,6 @@ def handle_wb_input(wb_input:FVWebhookInput):
 
                 
     #TODO - Handle delete event specifically for Collections
+
+
+
