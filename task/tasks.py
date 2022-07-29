@@ -1,12 +1,18 @@
 
+# Ugly way to import parent folders, Please fix it Mert.#TODO:
+import sys
 import os
+sys.path.append('..')
+
+import argparse
+import fire
 from datetime import datetime
 from dotenv import load_dotenv
-from numpy import void
 
+from api_server.config import TruveDataTask
 from filevine.client import FileVineClient
 from utils import load_config, get_logger, find_yaml
-from tasks.hist_helper import *
+from task.hist_helper import *
 
 logger = get_logger(__name__)
 load_dotenv()
@@ -120,3 +126,54 @@ def run_fv_historical(conf_file: str):
 def run_social_historical():
     # TODO:
     pass
+
+def create_cli(source:str, type:str) -> str:
+  return f'python {os.getcwd()}/task/tasks.py --source={source} --task_type={type}'
+
+def handle_task(incoming_data:TruveDataTask):
+    # Parse incoming data
+
+    # Creates appropriate python command line code to run task.py
+
+    command = create_cli(incoming_data.source, incoming_data.task_type)
+
+
+    # os.system(command)
+    # If you want it could be ran.
+
+if __name__ == '__main__':
+    # Arg parser
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--source", required=True, help="Please enter the type. Filevine, leaddocket, instagram etc.")
+    arg_parser.add_argument("--task_type", required=True, help="Please enter the task_name. historical, wh_subscription etc.")
+    args = arg_parser.parse_args()
+
+    task_run_option = args.source
+    type_run_option = args.task_type
+
+    if task_run_option == 'LEADDOCKET':
+        if  type_run_option == 'HISTORICAL_LOAD':
+            print("(+) LEADDOCKET historical ")
+            # run_lead_historical()
+            # call handle_task
+        elif type_run_option == 'SUBSCRIPTION':
+            print(" (+) LEADDOCKET subscription")
+    elif task_run_option == 'FILEVINE':
+        if  type_run_option == 'HISTORICAL_LOAD':
+            print("(+) FILEVINE historical ")
+            # run_lead_historical()
+            # call handle_task
+        elif type_run_option == 'SUBSCRIPTION':
+            print("(+) FILEVINE subscription")
+    elif task_run_option == 'SOCIAL':
+        if  type_run_option == 'HISTORICAL_LOAD':
+            print("(+) SOCIAL historical ")
+            # run_lead_historical()
+            # call handle_task
+        elif type_run_option == 'SUBSCRIPTION':
+            # TODO:
+            print("(+) SOCIAL subscription")
+    else:
+        raise ValueError("Unknown task source")
+            
+
