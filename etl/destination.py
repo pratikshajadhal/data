@@ -1,18 +1,13 @@
-from cmath import phase
-from ctypes import Union
 from dataclasses import asdict, dataclass
 from typing import Dict
-from numpy import dtype
 import pandas as pd
 import os
 import psycopg2
-from dacite import from_dict
-import datetime
-import logging
-        
 import boto3
+import json        
 import pandas_redshift as pr
 import awswrangler as wr
+from dacite import from_dict
 
 from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
@@ -238,3 +233,48 @@ class RedShiftDestination(ETLDestination):
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)
+
+
+class SqsDestination(ETLDestination):
+    def __init__(self):
+        self.client = boto3.client("sqs", 
+                aws_access_key_id=os.environ["aws_access_key_id"],
+                aws_secret_access_key=os.environ["aws_secret_access_key"])
+
+
+    def get_queue_url(self, queue_name: str):
+        response = self.client.get_queue_url(
+            QueueName= queue_name,
+        )
+        return response["QueueUrl"]
+
+    def send_message(self, queue_url: str, message: dict):
+        response = self.client.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps(message)
+        )
+        print(response)
+
+
+    def receive_message(self, queue_url: str):
+        response = self.client.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=10,
+        )
+
+        print(f"Number of messages received: {len(response.get('Messages', []))}")
+
+        for message in response.get("Messages", []):
+            message_body = message["Body"]
+            print(f"Message body: {json.loads(message_body)}")
+            print(f"Receipt Handle: {message['ReceiptHandle']}")
+
+
+    def delete_message(self, queue_url: str, receipt_handle):
+        response = self.client.delete_message(
+            QueueUrl=queue_url,
+            ReceiptHandle=receipt_handle,
+        )
+        print(response)
+    
