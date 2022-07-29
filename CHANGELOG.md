@@ -2,16 +2,32 @@
 
 <br/>
 
-# 0.1.3
+# 0.1.4
 
-Original Commit ID: bd3c436
+Original Commit ID: 5fbb3a9
 
 ## Changes
-Merged in data-api-changelog (pull request #24)
+- data-api changelog updates
 
-Data api changelog
+- minor change in comments
 
-- data-api changelog changes
+- package installation without package.json for data-api repo
+
+- feedback changes
+
+- feedback incorporated: changelog specific commit calculation
+
+- minor change in changelog.md template file and enabling changelog create&#x2F;update for production branch as well
+
+- Merge branch &#39;development&#39; into data-api-changelog
+
+- update changelog tools per truve-api
+
+- test change
+
+- more testery
+
+- bump patch version
 
 - minor change in comments
 
@@ -35,4 +51,5 @@ Data api changelog
 
 - update pipeline
 
-Approved-by: Tyler
+- fix changelog commit msg version
+
