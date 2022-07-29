@@ -1,11 +1,14 @@
 import argparse
-
+import queue
+import boto3
+import json
 from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
 from .config import FVWebhookInput, TruveDataTask
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
+from etl.destination import SqsDestination
 from utils import load_config, get_config_of_section, get_logger
 
 logger = get_logger(__name__)
@@ -108,4 +111,16 @@ def handle_wb_input(wb_input:FVWebhookInput):
     #TODO - Handle delete event specifically for Collections
 
 
+# -- - - - - - - - - - - - - - - - - - - - - - - - - - -  SQS HELPER
+
+def send_message_to_queue(queue_name: str, message: dict):
+    dest = SqsDestination()
+
+    try:
+        queue_url = dest.get_queue_url(queue_name=queue_name)
+        dest.send_message(queue_url=queue_url, message=message)
+    except Exception as e:
+        logger.warning(e)
+    else:
+        logger.debug("(+) Task message is succesfully pushed to SQS")
 
