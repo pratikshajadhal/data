@@ -1,16 +1,21 @@
 from dataclasses import dataclass
-from typing import List, Literal, Optional
+from typing import List, Optional
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
 
-TRANSFORM_TYPES = Literal["key", "org_id", "data"]
-SOURCE_TYPES = Literal["internal", "etl"]
-DATA_TYPES = Literal["int", "string"]
+TRANSFORM_TYPES = str #Literal["key", "org_id", "data"]
+SOURCE_TYPES = str #Literal["internal", "etl"]
+DATA_TYPES = str #Literal["int", "string"]
 
-TSM_TABLES = Literal["PeopleType"]
+TSM_TABLES = str #Literal["PeopleType", "PeopleMaster"]
 
 @dataclass
 class TransformationETL:
-    source: Literal["internal"]
+    source: str #Literal["internal"]
     type: str    
 
 @dataclass

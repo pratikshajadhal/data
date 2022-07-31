@@ -1,5 +1,5 @@
 from pandas import DataFrame
-from transformation.tsm_builder import TSMInterface
+from sstm_transformation.tsm_builder import TSMInterface
 
 class AliAwadTransformer(TSMInterface):
     def __init__(self, config_yaml) -> None:
