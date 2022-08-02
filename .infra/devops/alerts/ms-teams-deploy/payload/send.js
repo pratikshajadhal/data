@@ -13,13 +13,14 @@ const templateParams = {
     webhookUrl: process.argv[2],
     envName: process.argv[3],
     bitbucketRepoName: process.argv[4],
-    bitbucketPipelineUrl: process.argv[5],
-    awsRegion: process.argv[6],
-    awsAccountId: process.argv[7],
-    serviceEcrName: process.argv[8],
-    imgSha256: process.argv[9],
-    imgTag: process.argv[10],
-    healthCheckUrl: process.argv[11],
+    bitbucketBranch: process.argv[5],
+    bitbucketPipelineUrl: process.argv[6],
+    awsRegion: process.argv[7],
+    awsAccountId: process.argv[8],
+    serviceEcrName: process.argv[9],
+    imgSha256: process.argv[10],
+    imgTag: process.argv[11],
+    healthCheckUrl: process.argv[12],
 };
 // console.error('params: ', templateParams);
 

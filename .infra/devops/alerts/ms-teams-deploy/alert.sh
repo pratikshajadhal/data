@@ -85,6 +85,7 @@ MS_TEAMS_ALERT_PAYLOAD=$(node .infra/devops/alerts/ms-teams-deploy/payload/send.
     $MS_TEAMS_CHANNEL_WEBHOOK_URL \
     $ENV_NAME \
     $BITBUCKET_REPO_SLUG \
+    $BITBUCKET_BRANCH \
     $BITBUCKET_PIPELINE_URL \
     $AWS_DEFAULT_REGION \
     $AWS_ACCOUNT_ID \

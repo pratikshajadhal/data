@@ -25,6 +25,16 @@
                 },
                 {
                     "@type": "OpenUri",
+                    "name": "Changelog",
+                    "targets": [
+                        {
+                            "os": "default",
+                            "uri": "https://bitbucket.org/truveio/{{bitbucketRepoName}}/src/{{bitbucketBranch}}/CHANGELOG.md"
+                        }
+                    ]
+                },
+                {
+                    "@type": "OpenUri",
                     "name": "AWS Image",
                     "targets": [
                         {

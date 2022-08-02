@@ -20,12 +20,12 @@
 							"spacing": "none",
 							"text": "v{{imgTag}}"
 						},
-                        {
-                            "type": "TextBlock",
-                            "spacing": "small",
-                            "color": "accent",
-                            "text": "Env: **{{envName}}**"
-                        }
+						{
+							"type": "TextBlock",
+							"spacing": "small",
+							"color": "accent",
+							"text": "Env: **{{envName}}**"
+						}
 					]
 				}
 			]
@@ -42,21 +42,26 @@
 								{
 									"type": "ActionSet",
 									"actions": [
-                                        {
-                                            "type": "Action.OpenUrl",
-                                            "title": "Bitbucket Pipeline",
-                                            "url": "{{bitbucketPipelineUrl}}"
-                                        },
-                                        {
-                                            "type": "Action.OpenUrl",
-                                            "title": "AWS Image",
-                                            "url": "https://{{awsRegion}}.console.aws.amazon.com/ecr/repositories/private/{{awsAccountId}}/{{serviceEcrName}}/image/{{imgSha256}}/details/?region={{awsRegion}}"
-                                        },
-                                        {
-                                            "type": "Action.OpenUrl",
-                                            "title": "Service URL",
-                                            "url": "{{serviceUrl}}"
-                                        }
+										{
+											"type": "Action.OpenUrl",
+											"title": "Bitbucket Pipeline",
+											"url": "{{bitbucketPipelineUrl}}"
+										},
+										{
+											"type": "Action.OpenUrl",
+											"title": "Changelog",
+											"url": "https://bitbucket.org/truveio/{{bitbucketRepoName}}/src/{{bitbucketBranch}}/CHANGELOG.md"
+										},
+										{
+											"type": "Action.OpenUrl",
+											"title": "AWS Image",
+											"url": "https://{{awsRegion}}.console.aws.amazon.com/ecr/repositories/private/{{awsAccountId}}/{{serviceEcrName}}/image/{{imgSha256}}/details/?region={{awsRegion}}"
+										},
+										{
+											"type": "Action.OpenUrl",
+											"title": "Service URL",
+											"url": "{{serviceUrl}}"
+										}
 									]
 								}
 							]
