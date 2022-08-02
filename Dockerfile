@@ -9,3 +9,11 @@ WORKDIR /app/
 # expose the port that uvicorn will run the app
 EXPOSE 8000
 CMD ["python3", "main.py"]
+# CMD ["python3", "task/tasks.py"]
+# CMd must be changed.
+# Same docker images
+
+
+# Lambda get task from sqs, create task on ECS fargate task with some docker images but change cli
+# CMD[python3, -task_type='FILEVINE']
+

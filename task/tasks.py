@@ -2,14 +2,12 @@
 # Ugly way to import parent folders, Please fix it Mert.#TODO:
 import sys
 import os
-sys.path.append('..')
+sys.path.append('.')
 
 import argparse
-import fire
 from datetime import datetime
 from dotenv import load_dotenv
 
-from api_server.config import TruveDataTask
 from filevine.client import FileVineClient
 from utils import load_config, get_logger, find_yaml
 from task.hist_helper import *
@@ -130,15 +128,19 @@ def run_social_historical():
 def create_cli(source:str, type:str) -> str:
   return f'python {os.getcwd()}/task/tasks.py --source={source} --task_type={type}'
 
-def handle_task(incoming_data:TruveDataTask):
-    # TODO:
-    pass
+# def handle_task(incoming_data:TruveDataTask):
+#     # TODO:
+#     pass
 
 if __name__ == '__main__':
+    """
+        We will be creating tasks on different ECS fargate with lambda function.
+        Inputs needs to provide 
+    """
     # Arg parser
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--source", required=True, help="Please enter the type. Filevine, leaddocket, instagram etc.")
-    arg_parser.add_argument("--task_type", required=True, help="Please enter the task_name. historical, wh_subscription etc.")
+    arg_parser.add_argument("source",  help="Please enter the type. Filevine, leaddocket, instagram etc.")
+    arg_parser.add_argument("task_type",  help="Please enter the task_name. historical, wh_subscription etc.")
     args = arg_parser.parse_args()
 
     task_run_option = args.source
@@ -167,6 +169,10 @@ if __name__ == '__main__':
             # TODO:
             print("(+) SOCIAL subscription")
     else:
+        print(task_run_option)
         raise ValueError("Unknown task source")
             
 
+
+## 
+# Some docker images

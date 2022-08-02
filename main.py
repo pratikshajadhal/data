@@ -1,7 +1,7 @@
 
 from dotenv import load_dotenv
 import uvicorn
-from task.tasks import run_fv_historical
+# from task.tasks import run_fv_historical
 
 load_dotenv()
 
