@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
+'''
 try:
     from typing import Literal
 except ImportError:
     from typing_extensions import Literal
-
+'''
 
 TRANSFORM_TYPES = str #Literal["key", "org_id", "data"]
 SOURCE_TYPES = str #Literal["internal", "etl"]

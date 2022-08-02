@@ -133,14 +133,35 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                 
         #Populate people type
         people_type_df = self._read_tsm(tsm_table_name="PeopleType")
+
         people_type_col_name = self._get_col_name(table_fields=table_fields, tsm_col_name="People_Type_ID")
-        contact_type_df = (contact_df.select("id", people_type_col_name))
-        contact_type_df = contact_type_df.withColumn("People_Type",explode(split(col(people_type_col_name),'\\|')))
-        contact_type_df = contact_type_df.join(people_type_df, on=["People_Type"], how="left")
 
-        contact_df.printSchema()
+        contact_type_df = (contact_df.select("People_ID", people_type_col_name.name))
+        
+        
+        contact_type_df = contact_type_df.withColumn("People_Type",explode(split(col(people_type_col_name.name),'\\|'))).select("People_ID", "People_Type")
+        contact_type_df.printSchema()
+        contact_type_df = contact_type_df.join(people_type_df, on=["People_Type"], how="left").select("People_ID", "People_Type_ID")
 
-        return contact_df
+        contact_df = contact_df.select("Truve_Org_ID", "People_ID", "First_Name", "Middle_Name", "Last_Name", "Date_of_Birth", "Gender", "Custom1", "Custom2", "Custom3")
+        
+        return {"PeopleMaster" : contact_df, "PeopleMaster_PeopleType" : contact_type_df}
+
+    def build_project(self, project_df: SP_DATAFRAME):
+        project_df = project_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        table_fields = self._get_table_config("ProjectMaster")
+
+        
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                project_df = project_df.withColumn(field.name, contact_df[field.transform.source_field])
+            elif not field.transform:
+                project_df = project_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        project_df.printSchema()        
+
+
+
 
 
 if __name__ == "__main__":
@@ -150,4 +171,5 @@ if __name__ == "__main__":
 
     builder = TSMBuilder("sstm.yaml", spark=spark)
     #builder.build_peopletypes(contact_df=contact_df)
-    builder.build_peoplemaster(contact_df=contact_df)
+    #builder.build_peoplemaster(contact_df=contact_df)
+    builder.build_project(project_df)
