@@ -2,54 +2,17 @@
 
 <br/>
 
-# 0.1.4
+# 0.1.5
 
-Original Commit ID: 5fbb3a9
+Original Commit ID: 913581a
 
 ## Changes
-- data-api changelog updates
+New&#x2F;button changelog
 
-- minor change in comments
+- Modified files to add changelog button
 
-- package installation without package.json for data-api repo
+- Modified alert.sh
 
-- feedback changes
-
-- feedback incorporated: changelog specific commit calculation
-
-- minor change in changelog.md template file and enabling changelog create&#x2F;update for production branch as well
-
-- Merge branch &#39;development&#39; into data-api-changelog
-
-- update changelog tools per truve-api
-
-- test change
-
-- more testery
+- fix formatting
 
 - bump patch version
-
-- minor change in comments
-
-- package installation without package.json for data-api repo
-
-- feedback changes - fixes
-
-- feedback incorporated: changelog specific commit calculation
-
-- minor change in changelog.md template file and enabling changelog create&#x2F;update for production branch as well
-
-- Merge branch &#39;development&#39; into data-api-changelog
-
-- update changelog tools per truve-api
-
-- test change
-
-- more testery
-
-- bump patch version
-
-- update pipeline
-
-- fix changelog commit msg version
-
