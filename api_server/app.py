@@ -12,7 +12,6 @@ from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from task.hist_helper import *
-from task.tasks import handle_task
 from utils import get_logger, get_yaml_of_org
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
@@ -346,7 +345,7 @@ async def add_tasks(request: Request):
 
     # What will be the content of this message?
     # # SQS---
-    queue_name = 'data-dev-queue'
+    queue_name = 'my-test-queue'
     message = {
             "FUNC_PARAMS": {
                 "source": task_object.source,
