@@ -42,27 +42,34 @@ pipelines:
               # TODO
 
       - step:
-          name: Push Changelog
-          image: sleavely/node-awscli:16.x
-          script:
-            - chmod +rx .infra/devops/deploy/bitbucket*
-            
-            # configure remote URL to use service bot username and app password
-            - git remote set-url origin "https://${TRUVE_BOT_USERNAME}:${TRUVE_BOT_APP_PASSWORD}@bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
-
-            # create/update and push changelog file to branch
-            - npm i mustache
-            - sh .infra/devops/deploy/bitbucket/changelog/push.sh
-
-      - step:
           name: Build/Push Image
           image: amazon/aws-cli:2.6.3
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
+
+            # create/update changelog file
+            - npm i mustache
+            - sh .infra/devops/deploy/bitbucket/changelog/write.sh
+
             - sh .infra/devops/deploy/bitbucket/ecr_build_push.sh $DEV_AWS_ACCESS_KEY_ID $DEV_AWS_SECRET_ACCESS_KEY $AWS_DEFAULT_REGION "$(cat version)" dev
-            
           services:
             - docker
+
+      - step:
+          name: Changelog
+          image: amazon/aws-cli:2.6.3
+          script:
+            - chmod +rx .infra/devops/deploy/bitbucket*
+
+            # create/update changelog file
+            - npm i mustache
+            - sh .infra/devops/deploy/bitbucket/changelog/write.sh
+            
+            # configure remote URL to use service bot username and app password
+            - git remote set-url origin "https://${TRUVE_BOT_USERNAME}:${TRUVE_BOT_APP_PASSWORD}@bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+
+            # push changelog file to branch
+            - sh .infra/devops/deploy/bitbucket/changelog/push.sh
 
       - step:
           name: Deploy
