@@ -2,17 +2,17 @@
 
 <br/>
 
-# 0.1.5
+# 0.1.7
 
-Original Commit ID: 913581a
+Original Commit ID: df65007
 
 ## Changes
-New&#x2F;button changelog
+Merged in infra&#x2F;split-changelog-steps (pull request #33)
 
-- Modified files to add changelog button
+Infra&#x2F;split changelog steps
 
-- Modified alert.sh
+- update pipeline
 
-- fix formatting
+- change docker build&#x2F;push and changelog step images
 
 - bump patch version
