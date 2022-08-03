@@ -43,7 +43,7 @@ pipelines:
 
       - step:
           name: Build/Push Image
-          image: amazon/aws-cli:2.6.3
+          image: sleavely/node-awscli:16.x
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
 
@@ -57,7 +57,7 @@ pipelines:
 
       - step:
           name: Changelog
-          image: amazon/aws-cli:2.6.3
+          image: sleavely/node-awscli:16.x
           script:
             - chmod +rx .infra/devops/deploy/bitbucket*
 
