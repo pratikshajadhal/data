@@ -3,11 +3,9 @@ from ast import List
 from typing import Dict
 from etl.datamodel import ColumnConfig, ColumnDefn, ETLDestination, ETLSource, FileVineConfig
 import pandas as pd
-from .destination import ETLDestination, RedShiftDestination, S3Destination
+from .destination import ETLDestination, S3Destination
 import filevine.client as fv_client
 import json
-
-import settings
 
 class ModelETL(object):
     
@@ -17,8 +15,8 @@ class ModelETL(object):
                     project_type:str,
                     destination:ETLDestination, 
                     fv_config:FileVineConfig, 
-                    column_config:ColumnConfig, 
-                    primary_key_column:str):
+                    primary_key_column:str,
+                    column_config:ColumnConfig = None):
         self.model_name = model_name
         self.column_config = column_config
         self.source = source
