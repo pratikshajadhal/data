@@ -49,13 +49,13 @@ class ContactETL(ModelETL):
         return contact_list
 
 
-    def get_snapshot(self, project_type_id):
+    def get_snapshot(self, project_type_id, project_list):
         # No need to get projects. TODO: Delete line when you sure about endpoint.
         # **core/contacts** or **core/projects/{project_id}/contacts** ?
 
         # One caveat, when we get snapshot for contacts response may change. It may cause some conflict.Check this
 
-        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        # project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
         for project in project_list:
             if project["projectTypeId"]["native"] == project_type_id:
                 snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]], bring_one=True)
