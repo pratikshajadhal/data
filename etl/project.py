@@ -43,8 +43,8 @@ class ProjectETL(ModelETL):
         return final_contact_list
 
 
-    def get_snapshot(self, project_type_id):
-        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+    def get_snapshot(self, project_type_id, project_list):
+        # project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
         for project in project_list:
             print(project)
             if project["projectTypeId"]["native"] == project_type_id:

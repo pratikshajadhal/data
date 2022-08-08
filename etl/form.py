@@ -59,8 +59,8 @@ class FormETL(ModelETL):
 
         return section_data_list
 
-    def get_snapshot(self, project_type_id):
-        project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+    def get_snapshot(self, project_type_id, project_list):
+        # project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
         for project in project_list:
             if project["projectTypeId"]["native"] == project_type_id:
                 snapshot_data = self.extract_data_from_source(project_list=[project["projectId"]["native"]])
