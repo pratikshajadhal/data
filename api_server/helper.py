@@ -1,15 +1,13 @@
-import argparse
-import queue
-import boto3
-import json
 from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
 from .config import FVWebhookInput, TruveDataTask
+from etl.helper import get_fv_etl_object, get_ld_etl_object
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
 from etl.destination import SqsDestination
 from utils import load_config, get_config_of_section, get_logger
+from filevine.client import FileVineClient
 
 logger = get_logger(__name__)
 
@@ -124,3 +122,67 @@ def send_message_to_queue(queue_name: str, message: dict):
     else:
         logger.debug("(+) Task message is succesfully pushed to SQS")
 
+# -- - - - - - - - - - - - - - - - - - - - - - - - - - -  TPA Onboarding grooming
+
+def get_pre_needs(org_id, user_id):
+    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
+    project_list = fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+    # project_type_ids = fv_client.get_all_project_type_ids() # Will be commented out
+    project_type_ids = [18764] # TODO: it will be for all project_type_ids. TODO: delete it.
+    logger.info("Project list and project_type_ids has been fetched!")
+
+    return project_list, project_type_ids
+
+
+def get_all_snapshot(section_data, org_id, user_id, project_list, project_type_ids):
+    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
+    
+    entities = list()
+
+    temp_entities = ["casesummary", "intake", "meds","project", "contact"]
+    # temp_entities = ["casesummary", "intake", "meds", "negotiations","project", "contact"]
+    for each_entity in section_data:
+        output = dict()
+        entity_name = each_entity["id"]
+        if entity_name in temp_entities: #TODO: delete. Currently we are doing just for temp_entities
+            print(f"entity name {entity_name} is processing")
+            if each_entity["isCollection"] == True:
+                etl_object = get_fv_etl_object(org_id=org_id, user_id=user_id, entity_type="collections", entity_name=entity_name, project_type_id=project_type_ids[0])
+
+
+            elif each_entity["isCollection"] == False:
+                etl_object = get_fv_etl_object(org_id=org_id, user_id=user_id, entity_type="form", entity_name=entity_name, project_type_id=project_type_ids[0])
+
+
+            snapshot = etl_object.get_snapshot(project_type_ids[0], project_list)
+            section = fv_client.get_section_metadata(projectTypeId=project_type_ids[0], section_name=entity_name)
+            output["name"] = entity_name
+            output["fields"] = section["customFields"]
+            output["snapshot"] = snapshot
+            
+
+            entities.append(output)
+        else:
+            # Currently skipping
+            continue
+
+    return entities
+
+
+# -- - - - - - - - - - - - - - - - - - - - - - - - - - -  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Flink dene
