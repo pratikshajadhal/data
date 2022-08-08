@@ -1,13 +1,17 @@
 import os
+from html import entities
+from attr import fields
+import uvicorn
 import json
 import uvicorn
 
 from fastapi import FastAPI, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Request, status
 from dacite import from_dict
 
-from api_server.config import FVWebhookInput, TruveDataTask
-from api_server.helper import handle_wb_input, send_message_to_queue
+from api_server.config import FVWebhookInput, TruveDataTask, OnboardingObject, TaskStatus, EtlStatus, MappingObject
+from api_server.helper import handle_wb_input, send_message_to_queue, get_pre_needs, get_all_snapshot
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
@@ -53,6 +57,96 @@ async def home():
         "status": "OK",
         "version": serverSourceVersion.strip()
     }
+
+@app.post("/tpa/onboard", tags=["TPA"]) 
+async def create_integration_onboarding(request: Request):
+    """
+    example_json_body:
+        {
+            "org_id": 6586,
+            "tpa_id": 1234,
+            "credentials":{
+                "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
+                "user_id": 31958
+            }
+        }
+    """
+    # TODO: Needs to be private and only accesible to truve-api
+    # TODO: Needs to have some identifier that specifies which onboarding jobs: filevine, lead, social ??
+    # TODO: Depends on pipe tipe we will determine custom schema is required or not
+    # TODO: Add custom exception handler 
+    logger.debug(f"Tpa integration create")
+    json_body = await request.json()
+    onboard = from_dict(data=json_body, data_class=OnboardingObject)
+
+    # Essantial configs and ids
+    org_id = onboard.org_id,
+    user_id = onboard.credentials.user_id
+
+    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
+    # check_auth = fv_client.get_keys()
+    # TODO: Create custom exception handler.
+    # if not check_auth:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_401_UNAUTHORIZED,
+    #         detail="Temp test"
+    #     )
+
+    project_list, project_type_ids = get_pre_needs(org_id, user_id)
+
+    for each_pt_id in project_type_ids:
+        section_data = fv_client.get_sections(projectTypeId=each_pt_id)["items"]
+    section_data = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
+    
+    # Get entities to be returned: Entity, section, snapshot
+    entities = get_all_snapshot(section_data, org_id, user_id, project_list, project_type_ids)
+
+
+    return {"status": "test temp, Success, custom mapping required, snapshot success, grooming file returned",
+            "data": {
+                "project_type_id": project_type_ids[0],
+                "entities": entities
+            }
+    }
+
+
+@app.post("tpa/notify")
+async def populate_mapping(request: Request):
+    # 1- Based on org_id in request body, it will fetch mapping file from postgres
+
+    # 2- Check mapping, validate with dataclass?
+
+    # 3- Based on mapping update redshift statuses.
+
+    # 4- Lambda will listen redshift to trigger pipelines.
+
+    # 5- Pipeline implementation depends on task architecture on AWS. All jobs can run in one Cluster or it will be seperate ECS Fargate cluster. It could be changed over time depends on task architecture that devops team will
+    logger.debug(f"Tpa integration create")
+    task_json = await request.json()
+    onboard = from_dict(data=task_json, data_class=MappingObject)
+
+
+@app.post("/task/status", tags=["TPA"])
+async def update_task_status(request: Request):
+    # TODO: Needs to be private and only accesible to truve-api
+
+    # This endpoint get request and update status of tasks. Will be called by workers.
+    task_json = await request.json()
+    status_task = from_dict(data=task_json, data_class=TaskStatus)
+    print(status_task)
+
+    
+@app.post("/pipeline/status", tags=["TPA"])
+async def update_etl_status(request: Request):
+    """
+        This is called by the final stage of the ETL pipeline - Databricks, Glue or both - when an ETL is completed for any of a particular org’s integrations.
+    """
+    # TODO: Needs to be private and only accesible to Databricks
+    # Once all jobs are being completed, Pipeline statuss will be completed.
+    task_json = await request.json()
+    status_task = from_dict(data=task_json, data_class=EtlStatus)
+    print(status_task)
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
 
 @app.get("/fv/{org}/snapshots", tags=["filevine"])
