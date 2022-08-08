@@ -162,6 +162,14 @@ class FileVineClient(object):
         return self.make_post_request(end_point=end_point, body=paylaod)
 
 
+    def get_all_project_type_ids(self):
+        end_point = "core/projectTypes/"
+        return [ each["projectTypeId"]["native"] for each in self.make_request(end_point)["items"]]
+
+    def get_keys(self):
+        end_point = "subscriptions/keys"
+        return self.make_request(end_point)
+
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
     #print(fv_client.get_contacts(project_id=10561860))
