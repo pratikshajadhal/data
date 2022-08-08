@@ -99,6 +99,8 @@ async def create_integration_onboarding(request: Request):
     section_data = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
     
     # Get entities to be returned: Entity, section, snapshot
+    # TODO: add project and contacts snapshot.
+    # TODO: solve project_type_id based solution. Whic project id do we need to get
     entities = get_all_snapshot(section_data, org_id, user_id, project_list, project_type_ids)
 
 
