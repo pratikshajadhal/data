@@ -28,6 +28,7 @@ class ETLDestination:
 class FileVineConfig:
     org_id:int
     user_id:int
+    api_key: str
 
 @dataclass
 class ColumnDefn:
