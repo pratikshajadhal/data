@@ -13,8 +13,8 @@ load_dotenv()
 
 class FileVineClient(object):
 
-    def __init__(self, org_id:str, user_id:str):
-        self.api_key = os.environ["LOCAL_TPA_API_KEY_FILEVINE"]
+    def __init__(self, org_id:str, user_id:str, api_key:str):
+        self.api_key = api_key
         self.org_id = org_id
         self.base_url = "https://api.filevine.io/"
         self.api_timestamp = "2021-08-18T12:37:03.438Z"
