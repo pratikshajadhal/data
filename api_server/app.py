@@ -1,18 +1,18 @@
-from html import entities
-from attr import fields
+from py import code
 import uvicorn
 import json
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request
 from dacite import from_dict
 
 from api_server.config import FVWebhookInput, TruveDataTask, OnboardingObject, TaskStatus, EtlStatus, MappingObject
-from api_server.helper import handle_wb_input, send_message_to_queue, get_pre_needs, get_all_snapshot
+from api_server.helper import handle_wb_input, get_pre_needs, get_all_snapshot, onboard_fv, onboard_ld, onboard_social
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from task.hist_helper import *
 from utils import get_logger, get_yaml_of_org
+
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
 
@@ -24,7 +24,23 @@ app = FastAPI(
 )
 
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+from fastapi.responses import JSONResponse
+from api_server.exceptions import  ValidationErr, AuthErr
 
+
+@app.exception_handler(500)
+async def internal_exception_handler(request: Request, exc: Exception):
+    return JSONResponse({"message": "Unknown error", "code": 500, "detail":str(exc)}, status_code=500)
+
+@app.exception_handler(ValidationErr) 
+async def validation_exception_handler(request: Request, exc: ValidationErr):
+    return exc.response()
+
+@app.exception_handler(AuthErr) 
+async def validation_exception_handler(request: Request, exc: AuthErr):
+    return exc.response()
+
+# ------------------- ------------------- ------------------- -------------------
 @app.get("/")
 async def home():
     return {"message": "V1.0"}
@@ -32,57 +48,49 @@ async def home():
 
 @app.post("/tpa/onboard", tags=["TPA"]) 
 async def create_integration_onboarding(request: Request):
+    # TODO: Needs to be private and only accesible to truve-api
     """
     example_json_body:
         {
             "org_id": 6586,
-            "tpa_id": 1234,
+            "tpa_id": "FILEVINE",
             "credentials":{
                 "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
                 "user_id": 31958
             }
         }
     """
-    # TODO: Needs to be private and only accesible to truve-api
-    # TODO: Needs to have some identifier that specifies which onboarding jobs: filevine, lead, social ??
-    # TODO: Depends on pipe tipe we will determine custom schema is required or not
-    # TODO: Add custom exception handler 
-    logger.debug(f"Tpa integration create")
     json_body = await request.json()
-    onboard = from_dict(data=json_body, data_class=OnboardingObject)
-
+    try:
+        onboard = from_dict(data=json_body, data_class=OnboardingObject)
+    except:
+        raise ValidationErr()
+    
     # Essantial configs and ids
     org_id = onboard.org_id,
-    user_id = onboard.credentials.user_id
-
-    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
-    # check_auth = fv_client.get_keys()
-    # TODO: Create custom exception handler.
-    # if not check_auth:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_401_UNAUTHORIZED,
-    #         detail="Temp test"
-    #     )
-
-    project_list, project_type_ids = get_pre_needs(org_id, user_id)
-
-    for each_pt_id in project_type_ids:
-        section_data = fv_client.get_sections(projectTypeId=each_pt_id)["items"]
-    section_data = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
+    creds = onboard.credentials
+    logger.info(f"Onboarding for TPA: {onboard.tpa_id}, Org:{onboard.org_id} started!")
     
-    # Get entities to be returned: Entity, section, snapshot
-    # TODO: add project and contacts snapshot.
-    # TODO: solve project_type_id based solution. Whic project id do we need to get
-    entities = get_all_snapshot(section_data, org_id, user_id, project_list, project_type_ids)
+    if onboard.tpa_id == 'FILEVINE':
+
+        message, groom, project_type_id = onboard_fv(onboard.org_id, onboard.credentials)
+        data = {
+                "project_type_id": project_type_id,
+                "entities": groom
+                }
+    elif onboard.tpa_id == 'LEADDOCKET':
+        message, data= onboard_ld()
+    elif onboard.tpa_id == 'SOCIAL':
+        message, data = onboard_social()
 
 
-    return {"status": "test temp, Success, custom mapping required, snapshot success, grooming file returned",
-            "data": {
-                "project_type_id": project_type_ids[0],
-                "entities": entities
-            }
+    return {
+            "message": message,
+            "data": data
     }
 
+
+# -------------------------
 
 @app.post("tpa/notify")
 async def populate_mapping(request: Request):
