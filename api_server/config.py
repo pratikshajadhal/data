@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Literal
+from pydantic import BaseModel
 
 EVENT_TYPES = ["PhaseChanged", "Created", "Updated", "Deleted"]
 ENTITY_TYPES = ["Project", "Form", "CollectionItem"]
@@ -9,7 +10,6 @@ source_type = Literal["FILEVINE", "LEADDOCKET", "SOCIAL"]
 task_type = Literal["HISTORICAL_LOAD", "SUBSCRIPTION"]
 pipeline_statuses = Literal["SUCCESS", "FAILED"]
 fail_reasons = Literal["auth", "mapping", "data"]
-
 
 
 @dataclass
@@ -40,7 +40,7 @@ class Creds:
 @dataclass
 class OnboardingObject:
     org_id: int # TODO: CAUTION, it must be string for lead docket please check.
-    tpa_id : int #???
+    tpa_id : str 
     credentials: Creds
 
 @dataclass
