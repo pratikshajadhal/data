@@ -13,7 +13,7 @@ class ModelETL(object):
                     source:ETLSource, 
                     entity_type:str,
                     project_type:str,
-                    destination:ETLDestination, 
+                    destination:ETLDestination,
                     fv_config:FileVineConfig, 
                     primary_key_column:str,
                     column_config:ColumnConfig = None):
@@ -22,7 +22,7 @@ class ModelETL(object):
         self.source = source
         self.destination = destination
         self.source_df = None
-        self.fv_client = fv_client.FileVineClient(org_id=fv_config.org_id, user_id=fv_config.user_id)
+        self.fv_client = fv_client.FileVineClient(org_id=fv_config.org_id, user_id=fv_config.user_id, api_key=fv_config.api_key)
         self.flattend_map = None
         self.source_schema = None
         self.key_column = primary_key_column
