@@ -1,13 +1,13 @@
-from etl.datamodel import ColumnConfig, FileVineConfig, SelectedConfig
+from etl.datamodel import  FileVineConfig, SelectedConfig
 from etl.destination import S3Destination
-from .config import FVWebhookInput, TruveDataTask
+from .config import FVWebhookInput
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
-from etl.destination import SqsDestination
 from utils import load_config, get_config_of_section, get_logger
 from filevine.client import FileVineClient
+from api_server.exceptions import AuthErr
 
 logger = get_logger(__name__)
 
@@ -109,23 +109,9 @@ def handle_wb_input(wb_input:FVWebhookInput):
     #TODO - Handle delete event specifically for Collections
 
 
-# -- - - - - - - - - - - - - - - - - - - - - - - - - - -  SQS HELPER
-
-def send_message_to_queue(queue_name: str, message: dict):
-    dest = SqsDestination()
-
-    try:
-        queue_url = dest.get_queue_url(queue_name=queue_name)
-        dest.send_message(queue_url=queue_url, message=message)
-    except Exception as e:
-        logger.warning(e)
-    else:
-        logger.debug("(+) Task message is succesfully pushed to SQS")
-
 # -- - - - - - - - - - - - - - - - - - - - - - - - - - -  TPA Onboarding grooming
 
-def get_pre_needs(org_id, user_id):
-    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
+def get_pre_needs(fv_client: FileVineClient):
     project_list = fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
     # project_type_ids = fv_client.get_all_project_type_ids() # Will be commented out
     project_type_ids = [18764] # TODO: it will be for all project_type_ids. TODO: delete it.
@@ -134,9 +120,7 @@ def get_pre_needs(org_id, user_id):
     return project_list, project_type_ids
 
 
-def get_all_snapshot(section_data, org_id, user_id, project_list, project_type_ids):
-    fv_client = FileVineClient(org_id=org_id, user_id=user_id)
-    
+def get_all_snapshot(fv_client: FileVineClient,section_data, org_id, creds, project_list, project_type_ids):
     entities = list()
 
     temp_entities = ["casesummary", "intake", "meds","project", "contact"]
@@ -147,11 +131,11 @@ def get_all_snapshot(section_data, org_id, user_id, project_list, project_type_i
         if entity_name in temp_entities: #TODO: delete. Currently we are doing just for temp_entities
             print(f"entity name {entity_name} is processing")
             if each_entity["isCollection"] == True:
-                etl_object = get_fv_etl_object(org_id=org_id, user_id=user_id, entity_type="collections", entity_name=entity_name, project_type_id=project_type_ids[0])
+                etl_object = get_fv_etl_object(org_id=org_id, creds=creds, entity_type="collections", entity_name=entity_name, project_type_id=project_type_ids[0])
 
 
             elif each_entity["isCollection"] == False:
-                etl_object = get_fv_etl_object(org_id=org_id, user_id=user_id, entity_type="form", entity_name=entity_name, project_type_id=project_type_ids[0])
+                etl_object = get_fv_etl_object(org_id=org_id, creds=creds, entity_type="form", entity_name=entity_name, project_type_id=project_type_ids[0])
 
 
             snapshot = etl_object.get_snapshot(project_type_ids[0], project_list)
@@ -159,7 +143,6 @@ def get_all_snapshot(section_data, org_id, user_id, project_list, project_type_i
             output["name"] = entity_name
             output["fields"] = section["customFields"]
             output["snapshot"] = snapshot
-            
 
             entities.append(output)
         else:
@@ -169,7 +152,45 @@ def get_all_snapshot(section_data, org_id, user_id, project_list, project_type_i
     return entities
 
 
-# -- - - - - - - - - - - - - - - - - - - - - - - - - - -  
+def onboard_fv(org_id, creds):
+    fv_client = FileVineClient(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    try:
+        check_auth = fv_client.get_keys()
+    except:
+        raise AuthErr()
+
+
+    project_list, project_type_ids = get_pre_needs(fv_client)
+    for each_pt_id in project_type_ids:
+        section_data = fv_client.get_sections(projectTypeId=each_pt_id)["items"]
+    section_data = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
+    
+    # Get entities to be returned: Entity, section, snapshot
+    # TODO: add project and contacts snapshot.
+    # TODO: solve project_type_id based solution. Whic project id do we need to get??
+    entities = get_all_snapshot(fv_client, section_data, org_id, creds, project_list, project_type_ids)
+    message = "Success, custom mapping required, snapshot success, grooming file returned"
+
+    return message, entities, project_type_ids[0]
+
+
+def onboard_ld():
+    #TODO:
+    message =  "Success, custom mapping required, snapshot success, grooming file returned"
+    data = "TODO:"
+    return message, data
+    pass
+
+
+def onboard_social():
+    #TODO:
+    message = "Success, no custom mapping required"
+    return message, "None"
+    pass
+
+
+
+# -- - - - - - - - - - - - - TPA parts- - - - - - - - - - - - - -  
 
 
 
