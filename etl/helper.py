@@ -14,13 +14,14 @@ from etl.lead.lead_users import LeadUsersETL
 from api_server.config import Creds
 from utils import get_config_of_section, get_config_of_lead_section
 
-def handle_project_object(selected_field_config:SelectedConfig, project_type_id:int, entity:str):
-    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
+def handle_project_object(org_id, creds, project_type_id:int, entity:str):
 
-    selected_column_config = get_config_of_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower(), 
-                                                project_type_id=project_type_id,
-                                                is_core=True)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+
+    # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
+    #                                             section_name=entity.lower(), 
+    #                                             project_type_id=project_type_id,
+    #                                             is_core=True)
 
     project_etl = ProjectETL(model_name="project", 
                                 source=None, 
@@ -28,13 +29,13 @@ def handle_project_object(selected_field_config:SelectedConfig, project_type_id:
                                 project_type=project_type_id,
                                 destination=None, 
                                 fv_config=fv_config, 
-                                column_config=selected_column_config,
+                                column_config=None,
                                 primary_key_column="projectId")
     return project_etl
 
-def handle_form_object(org_id, user_id, project_type_id:int, entity:str):
+def handle_form_object(org_id, creds, project_type_id:int, entity:str):
     
-    fv_config = FileVineConfig(org_id=org_id, user_id=user_id)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
 
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
@@ -47,15 +48,14 @@ def handle_form_object(org_id, user_id, project_type_id:int, entity:str):
                                 entity_type="form",
                                 project_type=project_type_id,
                                 destination=None, 
-                                fv_config=fv_config, 
+                                fv_config=fv_config,
                                 # column_config=selected_column_config, 
                                 primary_key_column="projectId")
     return form_etl
 
 
-def handle_collection_object(org_id:int, user_id:int,  project_type_id:int, entity:str):
-    fv_config = FileVineConfig(org_id=org_id, user_id=user_id)
-
+def handle_collection_object(org_id, creds, project_type_id:int, entity:str):
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
     #                                             section_name=entity.lower(), 
@@ -72,13 +72,14 @@ def handle_collection_object(org_id:int, user_id:int,  project_type_id:int, enti
     return collection_etl
 
 
-def handle_contact_object(selected_field_config:SelectedConfig, project_type_id:int, entity:str):
-    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
+def handle_contact_object(org_id, creds, project_type_id:int, entity:str):
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
 
-    selected_column_config = get_config_of_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower(), 
-                                                project_type_id=project_type_id,
-                                                is_core=True)
+
+    # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
+    #                                             section_name=entity.lower(), 
+    #                                             project_type_id=project_type_id,
+    #                                             is_core=True)
 
     contact_etl = ContactETL(model_name="contact", 
                                 source=None, 
@@ -86,21 +87,21 @@ def handle_contact_object(selected_field_config:SelectedConfig, project_type_id:
                                 project_type=project_type_id,
                                 destination=None, 
                                 fv_config=fv_config, 
-                                column_config=selected_column_config,
+                                column_config=None,
                                 primary_key_column="projectId")
     return contact_etl
 
 
-def get_fv_etl_object(org_id, user_id, entity_type, entity_name, project_type_id=None):
+def get_fv_etl_object(org_id, creds, entity_type, entity_name, project_type_id=None):
     cls = None
     if entity_type.lower() == "project":
-        cls = handle_project_object(org_id, user_id, entity=entity_name, project_type_id=project_type_id)
+        cls = handle_project_object(org_id, creds, entity=entity_name, project_type_id=project_type_id)
     elif entity_type.lower() == "form":
-        cls = handle_form_object(org_id, user_id, entity=entity_name, project_type_id=project_type_id)
+        cls = handle_form_object(org_id, creds, entity=entity_name, project_type_id=project_type_id)
     elif entity_type.lower() == "collections":
-        cls = handle_collection_object(org_id, user_id, entity=entity_name, project_type_id=project_type_id)
+        cls = handle_collection_object(org_id, creds, entity=entity_name, project_type_id=project_type_id)
     elif entity_type.lower() == "contact":
-        cls = handle_contact_object(org_id, user_id, entity=entity_name, project_type_id=project_type_id)
+        cls = handle_contact_object(org_id, creds, entity=entity_name, project_type_id=project_type_id)
     else:
         raise Exception("Unknown entity type")
     return cls    
