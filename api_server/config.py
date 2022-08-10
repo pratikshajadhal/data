@@ -44,16 +44,16 @@ class OnboardingObject:
     credentials: Creds
 
 @dataclass
-class MappingObject:
-    tpa_id : int
-    cred_key: str
+class NotifyObject:
+    org_id : int
+    tpa_id: str
 
 # - - -
 
 @dataclass
 class TaskStatus:
     truve_id: int 
-    tpa_id : int 
+    tpa_id : str 
     job_result: dict
     error_body: dict = None
 
@@ -65,7 +65,7 @@ class FailObject:
 @dataclass
 class EtlStatus:
     truve_id: int 
-    tpa_id : int 
+    tpa_id : str 
     pipeline_status: pipeline_statuses
     fail_data: FailObject = None
 

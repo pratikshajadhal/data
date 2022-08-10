@@ -5,6 +5,7 @@ from py import code
 import uvicorn
 import json
 import uvicorn
+from fastapi.responses import JSONResponse
 
 from fastapi import FastAPI, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,22 +13,51 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi import FastAPI, HTTPException, Request
 from dacite import from_dict
 
-from api_server.config import FVWebhookInput, TruveDataTask, OnboardingObject, TaskStatus, EtlStatus, MappingObject
-from api_server.helper import handle_wb_input, get_pre_needs, get_all_snapshot, onboard_fv, onboard_ld, onboard_social
+from api_server.config import FVWebhookInput, OnboardingObject, TaskStatus, EtlStatus, NotifyObject
+from api_server.helper import handle_wb_input, onboard_fv, onboard_ld, onboard_social
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from task.hist_helper import *
 from utils import get_logger, get_yaml_of_org
+from api_server.exceptions import  ValidationErr, AuthErr
+from fastapi.responses import JSONResponse
+from api_server.exceptions import  ValidationErr, AuthErr
+
 
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
 
-APP_NAME = "webhook-listener"
+APP_NAME = "DATA API"
+description = """
+
+## Actions
+Truve API will be able to:
+* **Create new TPA integration onboarding**.
+* **Notify onboarding mapping populated** (_Prod table updating phase is not implemented yet_).
+
+Worker will be able to:
+* **Update job complete** (_Prod table updating phase is not implemented yet_) 
+
+Databricks or GLUE be able to:
+* **Update Pipeline complete** (_Prod table updating phase is not implemented yet_)
+"""
+
+tags_metadata = [
+    {
+        "name": "TPA",
+        "externalDocs": {
+            "description": "TPA docs",
+            "url": "https://www.notion.so/truveai/Data-Source-TPA-Onboarding-b00a2ed5c4a24f87a019cd7403f1bf9b",
+        },
+    },
+]
+
 app = FastAPI(
-    title = "Data Integration API",
-    description = "Handles data source webhook events and data source onboarding",
-    version = 0.1
+    title=APP_NAME,
+    description=description,
+    version="0.0.1",
+    openapi_tags=tags_metadata
 )
 
 # CORS config (TODO: handle through env var)
@@ -53,9 +83,11 @@ async def loadVersion():
         serverSourceVersion = f.read().strip()
 
     print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
-from fastapi.responses import JSONResponse
-from api_server.exceptions import  ValidationErr, AuthErr
 
+
+
+
+# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 
 @app.exception_handler(500)
 async def internal_exception_handler(request: Request, exc: Exception):
@@ -69,7 +101,6 @@ async def validation_exception_handler(request: Request, exc: ValidationErr):
 async def validation_exception_handler(request: Request, exc: AuthErr):
     return exc.response()
 
-# ------------------- ------------------- ------------------- -------------------
 @app.get("/")
 async def home():
     return {"message": "V1.0"}
@@ -80,20 +111,27 @@ async def home():
         "status": "OK",
         "version": serverSourceVersion.strip()
     }
+@app.post("tpa/test", tags=["TPA"])
+async def test(name: str):
+    print(name)
+
+    return {"name": name}
+
+# ------------------- -------------------TPA ------------------- -------------------
 
 @app.post("/tpa/onboard", tags=["TPA"]) 
 async def create_integration_onboarding(request: Request):
     # TODO: Needs to be private and only accesible to truve-api
     """
-    example_json_body:
-        {
-            "org_id": 6586,
-            "tpa_id": "FILEVINE",
-            "credentials":{
-                "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
-                "user_id": 31958
-            }
+    example_json_body: {
+        "org_id": 6586,
+        "tpa_id": "FILEVINE",
+        "credentials":{
+            "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
+            "user_id": 31958
         }
+}
+
     """
     json_body = await request.json()
     try:
@@ -115,8 +153,10 @@ async def create_integration_onboarding(request: Request):
                 }
     elif onboard.tpa_id == 'LEADDOCKET':
         message, data= onboard_ld()
-    elif onboard.tpa_id == 'SOCIAL':
+    elif onboard.tpa_id == 'INSTAGRAM':
         message, data = onboard_social()
+    elif onboard.tpa_id == 'test':
+        print(3 / 0)
 
 
     return {
@@ -125,10 +165,15 @@ async def create_integration_onboarding(request: Request):
     }
 
 
-# -------------------------
-
-@app.post("tpa/notify")
-async def populate_mapping(request: Request):
+@app.post("/tpa/notify", tags=["TPA"]) 
+async def notify_mapping(request: Request):
+    """
+    example_json_body: {
+        "org_id": 6586,
+        "tpa_id": "FILEVINE"
+    }
+}
+    """
     # 1- Based on org_id in request body, it will fetch mapping file from postgres
 
     # 2- Check mapping, validate with dataclass?
@@ -138,31 +183,62 @@ async def populate_mapping(request: Request):
     # 4- Lambda will listen redshift to trigger pipelines.
 
     # 5- Pipeline implementation depends on task architecture on AWS. All jobs can run in one Cluster or it will be seperate ECS Fargate cluster. It could be changed over time depends on task architecture that devops team will
-    logger.debug(f"Tpa integration create")
+    
+    logger.debug(f"Tpa notify")
     task_json = await request.json()
-    onboard = from_dict(data=task_json, data_class=MappingObject)
+    try:
+        onboard = from_dict(data=task_json, data_class=NotifyObject)
+    except:
+        raise ValidationErr()
+
+    
 
 
 @app.post("/task/status", tags=["TPA"])
 async def update_task_status(request: Request):
+    """
+    example_json_body: {
+        "truve_id": 123,
+        "tpa_id": "FILEVINE",
+        "job_result":{
+            "status": "success"
+        }
+}
+    """
     # TODO: Needs to be private and only accesible to truve-api
-
     # This endpoint get request and update status of tasks. Will be called by workers.
     task_json = await request.json()
-    status_task = from_dict(data=task_json, data_class=TaskStatus)
-    print(status_task)
+    try:
+        status_task = from_dict(data=task_json, data_class=TaskStatus)
+    except:
+        raise ValidationErr()
 
-    
+    return {"detail": "(TEMP) Success, job updated"}
+
+
 @app.post("/pipeline/status", tags=["TPA"])
 async def update_etl_status(request: Request):
     """
-        This is called by the final stage of the ETL pipeline - Databricks, Glue or both - when an ETL is completed for any of a particular org’s integrations.
+    example_json_body: {
+        "truve_id": 123,
+        "tpa_id": "FILEVINE",
+        "pipeline_status": "FAILED",
+        "fail_data":{
+            "fail_reason_prefix": "auth",
+            "fail_error": {
+                "body": "Unknown",
+                "status_code": 500}
+    }
+}
     """
     # TODO: Needs to be private and only accesible to Databricks
     # Once all jobs are being completed, Pipeline statuss will be completed.
     task_json = await request.json()
-    status_task = from_dict(data=task_json, data_class=EtlStatus)
-    print(status_task)
+    try:
+        status_task = from_dict(data=task_json, data_class=EtlStatus)
+    except:
+        raise ValidationErr()
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
 
@@ -439,34 +515,34 @@ async def lead_webhook_handler(request: Request, clientId:str):
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - SOCIAL MEDIA and TASKS- - - - - - - - - - 
-@app.post("/tasks/add", tags=["tasks"])
-async def add_tasks(request: Request):
-    """
-        Function to add tasks as a background job.
-        TODO: This is test func it will be parsed and smth. Plz ignore current function.
-    """
-    # Step by step
+# @app.post("/tasks/add", tags=["tasks"])
+# async def add_tasks(request: Request):
+#     """
+#         Function to add tasks as a background job.
+#         TODO: This is test func it will be parsed and smth. Plz ignore current function.
+#     """
+#     # Step by step
 
-    logger.debug(f"Adding task")
-    task_json = await request.json()
-    task_object = from_dict(data=task_json, data_class=TruveDataTask)
+#     logger.debug(f"Adding task")
+#     task_json = await request.json()
+#     task_object = from_dict(data=task_json, data_class=TruveDataTask)
 
-    # Find conf file. based on org_id or org_name. Skipping currently
-    org_id = task_object.task_params["org_id"]
+#     # Find conf file. based on org_id or org_name. Skipping currently
+#     org_id = task_object.task_params["org_id"]
 
-    # What will be the content of this message?
-    # # SQS---
-    queue_name = 'my-test-queue'
-    message = {
-            "FUNC_PARAMS": {
-                "source": task_object.source,
-                "type": task_object.task_type
-            },
-            "org_name": org_id,
-            "task_state": "DELIVERED"
-            }
-    send_message_to_queue(queue_name, message)
-    return {"status" : "success", "message" : "Task added to queue successfully"}
+#     # What will be the content of this message?
+#     # # SQS---
+#     queue_name = 'my-test-queue'
+#     message = {
+#             "FUNC_PARAMS": {
+#                 "source": task_object.source,
+#                 "type": task_object.task_type
+#             },
+#             "org_name": org_id,
+#             "task_state": "DELIVERED"
+#             }
+#     send_message_to_queue(queue_name, message)
+#     return {"status" : "success", "message" : "Task added to queue successfully"}
 
 
 
