@@ -1,12 +1,14 @@
+from http.client import UNPROCESSABLE_ENTITY
 from py import code
 import uvicorn
 import json
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 from fastapi import FastAPI, HTTPException, Request
 from dacite import from_dict
 
-from api_server.config import FVWebhookInput, OnboardingObject, TaskStatus, EtlStatus, NotifyObject
+from api_server.config import FVWebhookInput,  TaskStatus, EtlStatus, Notify, Onboarding
 from api_server.helper import handle_wb_input, onboard_fv, onboard_ld, onboard_social
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
@@ -58,6 +60,10 @@ app = FastAPI(
 async def internal_exception_handler(request: Request, exc: Exception):
     return JSONResponse({"message": "Unknown error", "code": 500, "detail":str(exc)}, status_code=500)
 
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse({"message": "Bad request", "code": 422, "detail":str(exc)}, status_code=422)
+
 @app.exception_handler(ValidationErr) 
 async def validation_exception_handler(request: Request, exc: ValidationErr):
     return exc.response()
@@ -66,38 +72,29 @@ async def validation_exception_handler(request: Request, exc: ValidationErr):
 async def validation_exception_handler(request: Request, exc: AuthErr):
     return exc.response()
 
+
 @app.get("/")
 async def home():
     return {"message": "V1.0"}
 
-@app.post("tpa/test", tags=["TPA"])
-async def test(name: str):
-    print(name)
-
-    return {"name": name}
 
 # ------------------- -------------------TPA ------------------- -------------------
-
+from api_server.config import Onboarding
 @app.post("/tpa/onboard", tags=["TPA"]) 
-async def create_integration_onboarding(request: Request):
+async def create_integration_onboarding(onboard: Onboarding):
     # TODO: Needs to be private and only accesible to truve-api
-    """
-    example_json_body: {
-        "org_id": 6586,
-        "tpa_id": "FILEVINE",
-        "credentials":{
-            "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
-            "user_id": 31958
-        }
-}
 
-    """
-    json_body = await request.json()
-    try:
-        onboard = from_dict(data=json_body, data_class=OnboardingObject)
-    except:
-        raise ValidationErr()
-    
+    TPA_CUSTOM_SCHEMAS = ("FILEVINE", "LEADDOCKET")
+    TPA_WITHOUT_CUSTOM_SCHEMAS = ("INSTAGRAM", "FACEBOOK")
+    # - - - 
+    # TODO: Delete once YO OK.
+    # json_body = await request.json()
+    # try:
+    #     onboard = from_dict(data=json_body, data_class=OnboardingObject)
+    # except:
+    #     raise ValidationErr()
+    # - - - 
+
     # Essantial configs and ids
     org_id = onboard.org_id,
     creds = onboard.credentials
@@ -125,14 +122,9 @@ async def create_integration_onboarding(request: Request):
 
 
 @app.post("/tpa/notify", tags=["TPA"]) 
-async def notify_mapping(request: Request):
-    """
-    example_json_body: {
-        "org_id": 6586,
-        "tpa_id": "FILEVINE"
-    }
-}
-    """
+async def notify_mapping(notify: Notify):
+
+    print(notify)
     # 1- Based on org_id in request body, it will fetch mapping file from postgres
 
     # 2- Check mapping, validate with dataclass?
@@ -144,39 +136,20 @@ async def notify_mapping(request: Request):
     # 5- Pipeline implementation depends on task architecture on AWS. All jobs can run in one Cluster or it will be seperate ECS Fargate cluster. It could be changed over time depends on task architecture that devops team will
     
     logger.debug(f"Tpa notify")
-    task_json = await request.json()
-    try:
-        onboard = from_dict(data=task_json, data_class=NotifyObject)
-    except:
-        raise ValidationErr()
 
-    
 
 
 @app.post("/task/status", tags=["TPA"])
-async def update_task_status(request: Request):
-    """
-    example_json_body: {
-        "truve_id": 123,
-        "tpa_id": "FILEVINE",
-        "job_result":{
-            "status": "success"
-        }
-}
-    """
+async def update_task_status(task_status: TaskStatus):
     # TODO: Needs to be private and only accesible to truve-api
     # This endpoint get request and update status of tasks. Will be called by workers.
-    task_json = await request.json()
-    try:
-        status_task = from_dict(data=task_json, data_class=TaskStatus)
-    except:
-        raise ValidationErr()
+    print(task_status)
 
     return {"detail": "(TEMP) Success, job updated"}
 
 
 @app.post("/pipeline/status", tags=["TPA"])
-async def update_etl_status(request: Request):
+async def update_etl_status(etl_status: EtlStatus):
     """
     example_json_body: {
         "truve_id": 123,
@@ -192,11 +165,7 @@ async def update_etl_status(request: Request):
     """
     # TODO: Needs to be private and only accesible to Databricks
     # Once all jobs are being completed, Pipeline statuss will be completed.
-    task_json = await request.json()
-    try:
-        status_task = from_dict(data=task_json, data_class=EtlStatus)
-    except:
-        raise ValidationErr()
+    print(etl_status)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
