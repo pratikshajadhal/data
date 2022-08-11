@@ -153,7 +153,7 @@ def get_all_snapshot(fv_client: FileVineClient,section_data, org_id, creds, proj
 
 
 def onboard_fv(org_id, creds):
-    fv_client = FileVineClient(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    fv_client = FileVineClient(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
     try:
         check_auth = fv_client.get_keys()
     except:

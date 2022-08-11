@@ -11,12 +11,11 @@ from etl.lead.lead_contact import LeadContactETL
 from etl.lead.lead_opport import LeadOpportETL
 from etl.lead.lead_referrals import LeadReferralsETL
 from etl.lead.lead_users import LeadUsersETL
-from api_server.config import Creds
 from utils import get_config_of_section, get_config_of_lead_section
 
 def handle_project_object(org_id, creds, project_type_id:int, entity:str):
 
-    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
     #                                             section_name=entity.lower(), 
@@ -35,7 +34,7 @@ def handle_project_object(org_id, creds, project_type_id:int, entity:str):
 
 def handle_form_object(org_id, creds, project_type_id:int, entity:str):
     
-    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
 
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
@@ -55,7 +54,7 @@ def handle_form_object(org_id, creds, project_type_id:int, entity:str):
 
 
 def handle_collection_object(org_id, creds, project_type_id:int, entity:str):
-    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 
     #                                             section_name=entity.lower(), 
@@ -73,7 +72,7 @@ def handle_collection_object(org_id, creds, project_type_id:int, entity:str):
 
 
 def handle_contact_object(org_id, creds, project_type_id:int, entity:str):
-    fv_config = FileVineConfig(org_id=org_id, user_id=creds.user_id, api_key=creds.api_key)
+    fv_config = FileVineConfig(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
 
 
     # selected_column_config = get_config_of_section(selected_config=selected_field_config, 

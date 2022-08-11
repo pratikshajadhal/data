@@ -31,43 +31,82 @@ class TruveDataTask:
     task_params: Dict
     
 
+
+
 # - - TPA
-@dataclass
-class Creds:
-    api_key: str
-    user_id: int
+class Onboarding(BaseModel):
+    org_id: int
+    tpa_id: str
+    credentials: dict
 
-@dataclass
-class OnboardingObject:
-    org_id: int # TODO: CAUTION, it must be string for lead docket please check.
-    tpa_id : str 
-    credentials: Creds
+    class Config:
+        schema_extra = {
+            "example": {
+                "org_id": "Foo",
+                "tpa_id": "FILEVINE",
+                "credentials":{
+                    "api_key": "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f",
+                    "user_id": 31958
+                    }
+                }
+        }
 
-@dataclass
-class NotifyObject:
-    org_id : int
+
+class Notify(BaseModel):
+    org_id: int
     tpa_id: str
 
-# - - -
+    class Config:
+        schema_extra = {
+            "example": {
+                "org_id": "Foo",
+                "tpa_id": "FILEVINE",
+                }
+            }
 
-@dataclass
-class TaskStatus:
+
+class TaskStatus(BaseModel):
     truve_id: int 
     tpa_id : str 
     job_result: dict
     error_body: dict = None
 
-@dataclass
-class FailObject:
-    fail_reason_prefix: fail_reasons
-    fail_error: Dict = None
+    class Config:
+        schema_extra = {
+            "example": {
+                    "truve_id": 123,
+                    "tpa_id": "FILEVINE",
+                    "job_result":{
+                        "status": "success"
+                    }
+                }
+            }
 
-@dataclass
-class EtlStatus:
+class EtlStatus(BaseModel):
     truve_id: int 
     tpa_id : str 
-    pipeline_status: pipeline_statuses
-    fail_data: FailObject = None
+    job_result: dict
+    error_body: dict = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                    # TODO:
+                    "truve_id": 123,
+                    "tpa_id": "FILEVINE",
+                    "job_result":{
+                        "status": "success"
+                    }
+                }
+            }
+
+
+# @dataclass
+# class EtlStatus:
+#     truve_id: int 
+#     tpa_id : str 
+#     pipeline_status: pipeline_statuses
+#     fail_data: FailObject = None
 
 # - - -
 
