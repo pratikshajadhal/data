@@ -21,6 +21,11 @@ core:
     - isMinor
     - uniqueId
     - searchNames
+  - name: projecttype
+    fields: 
+    - projectTypeId
+    - name
+    - phases
   - name: project
     fields:
     - projectTypeCode

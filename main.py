@@ -18,6 +18,7 @@ import uvicorn
 from etl.destination import RedShiftDestination, S3Destination
 from etl.form import FormETL
 from etl.project import ProjectETL
+from etl.projecttypes import ProjectTypeETL
 from utils import load_config, get_chunks, load_lead_config
 from tasks.tasks import make_fv_subscription
 
@@ -71,6 +72,38 @@ def start_contact_etl():
 
         break
 
+def start_projecttype_etl():
+    selected_field_config = load_config(file_path="src.yaml")
+    print(selected_field_config.projectTypes[0])
+    fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
+
+    #Handle Contact Entity
+    for model in selected_field_config.core:
+        if model.name != "projecttype":
+            continue
+
+        model_etl = ProjectTypeETL(model_name="projecttype", 
+                            source=None, 
+                            entity_type="core",
+                            project_type=None,
+                            destination=S3Destination(org_id=fv_config.org_id), 
+                            fv_config=fv_config, 
+                            column_config=model, 
+                            primary_key_column="projectTypeId")
+
+        model_etl.get_schema_of_model()
+
+        model_etl.flattend_map = model_etl.get_filtered_schema(model_etl.source_schema)
+
+        dest_col_format = model_etl.convert_schema_into_destination_format(model_etl.flattend_map)
+
+        count = 0
+        
+        model_data = model_etl.extract_data_from_source()
+
+        transformed_data = model_etl.transform_data(model_data)
+
+        model_etl.load_data_to_destination(trans_df=transformed_data, schema=dest_col_format, project=None)
 
 def start_project_etl():
     selected_field_config = load_config(file_path="src.yaml")
@@ -209,13 +242,28 @@ if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
     #start_collection_etl(18764, "negotiations")
     #start_form_etl(18764, "casesummary")
-    start_contact_etl()
-    exit()
+    #start_contact_etl()
+    #exit()
+    #start_projecttype_etl()
+    start_form_etl(18764, "intake")
     #start_project_etl()
 
     # - - - - 
 
+<<<<<<< HEAD
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+=======
+    # start_statuses_etl()
+    # start_case_type_etl()
+    # start_leadsource_etl()
+    # start_lead_row_etl()
+    # start_lead_detail_etl()
+    # start_lead_contact_etl()
+    # start_opport_etl()
+    # start_referrals_etl()
+    # start_users_etl()
+    #uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
+>>>>>>> More TSM transformations
 
     # # Wh subscription for filevine
     # make_fv_subscription(

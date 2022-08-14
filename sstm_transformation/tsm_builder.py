@@ -1,4 +1,5 @@
 import abc
+from cmath import phase
 from typing import Dict, List
 import yaml
 from dacite import from_dict
@@ -162,9 +163,9 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         return {"PeopleMaster" : contact_df, "PeopleMaster_PeopleType" : contact_type_df}
 
-    def build_project(self, project_df: SP_DATAFRAME):
+    def build_casemaster(self, project_df: SP_DATAFRAME):
         project_df = project_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        table_fields = self._get_table_config("ProjectMaster")
+        table_fields = self._get_table_config("CaseMaster")
 
         
         for field in table_fields:
@@ -174,15 +175,105 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                 project_df = project_df.withColumn(field.name, lit(None).cast(StringType()))
 
         # TODO Change datatype here
-        col_list = ["Truve_Org_ID", "Project_ID", "Project_Type_ID", "Is_Archived", "Incident_Date"]
-        project_df = project_df.select("Truve_Org_ID", "Project_ID", "Project_Type_ID", "Is_Archived", "Incident_Date")
+        col_list = ["Truve_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]
+        project_df = project_df.select("Truve_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date")
         project_df.printSchema()
 
         self.add_default_columns(project_df)
-        return {"ProjectMaster", project_df}
+        return {"CaseMaster", project_df}
+
+    def build_practicetypes(self, projecttype_df: SP_DATAFRAME):
+        projecttype_df = projecttype_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        table_fields = self._get_table_config("PracticeTypes")
+
+        
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                projecttype_df = projecttype_df.withColumn(field.name, projecttype_df[field.transform.source_field])
+            elif not field.transform:
+                projecttype_df = projecttype_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        # TODO Change datatype here
+        col_list = ["Truve_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"]
+        projecttype_df = projecttype_df.select(["Truve_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"])
+        projecttype_df.printSchema()
+
+        self.add_default_columns(projecttype_df)
+        return {"PracticeTypes": projecttype_df}
+
+    def build_phasemaster(self, projecttypedf: SP_DATAFRAME):
+        #explode projecttype to get Phases 
+
+        from pyspark.sql.functions import explode
+        import pyspark.sql.functions as F
+
+        raw_phases_df = projecttypedf.select(projecttypedf.projectTypeId, explode(projecttypedf.phases))
+        raw_phases_df = raw_phases_df.select(raw_phases_df.projectTypeId, F.col("col.name"), F.col("col.phaseId"), F.col("col.isPermanent"))
+        
+        raw_phases_df = raw_phases_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        raw_phases_df = raw_phases_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
+        table_fields = self._get_table_config("PhaseMaster")
+
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                raw_phases_df = raw_phases_df.withColumn(field.name, raw_phases_df[field.transform.source_field])
+            elif not field.transform:
+                raw_phases_df = raw_phases_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        col_list = [field.name for field in table_fields]
+        
+        phase_master_df = raw_phases_df.select(*col_list)
+
+        phase_master_df.show(n=100)
+        return {"PhaseMaster" : phase_master_df}
+
+    def build_casefigures(self, meds_df: SP_DATAFRAME):
+        #explode projecttype to get Phases 
+
+        meds_df = meds_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        meds_df = meds_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
+        table_fields = self._get_table_config("CaseFigures")
+
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                meds_df = meds_df.withColumn(field.name, meds_df[field.transform.source_field])
+            elif not field.transform:
+                meds_df = meds_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        col_list = [field.name for field in table_fields]
+        
+        meds_df = meds_df.select(*col_list)
+
+        meds_df.show(n=100)
+        return {"CaseFigures" : meds_df}
+
+    def build_intakesummary(self, intake_df: SP_DATAFRAME):
+        #explode projecttype to get Phases 
+
+        intake_df = intake_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        intake_df = intake_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
+        table_fields = self._get_table_config("IntakeSummary")
+
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                intake_df = intake_df.withColumn(field.name, intake_df[field.transform.source_field])
+            elif not field.transform:
+                intake_df = intake_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        col_list = [field.name for field in table_fields]
+        
+        intake_df = intake_df.select(*col_list)
+
+        intake_df.show(n=100)
+        return {"IntakeSummary" : intake_df}
 
     def build_casesummary(self, casesummary_df: SP_DATAFRAME):
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        casesummary_df = casesummary_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
         table_fields = self._get_table_config("CaseSummary")
 
         for field in table_fields:
@@ -191,21 +282,62 @@ class TSMBuilder(metaclass=abc.ABCMeta):
             elif not field.transform:
                 casesummary_df = casesummary_df.withColumn(field.name, lit(None).cast(StringType()))
 
+        col_list = [field.name for field in table_fields]
+        
+        casesummary_df = casesummary_df.select(*col_list)
+
+        casesummary_df.show(n=100)
+        return {"CaseSummary" : casesummary_df}
+
 if __name__ == "__main__":
     print("Hi")
-    '''
     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
+    builder = TSMBuilder("sstm.yaml", spark=spark)
     
+    '''
     contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
     #contact_df.printSchema()
 
     builder = TSMBuilder("sstm.yaml", spark=spark)
     #builder.build_peopletypes(contact_df=contact_df)
     builder.build_peoplemaster(contact_df=contact_df)
-    
+    '''
+
+    '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")
     project_df.printSchema()
     print(project_df.count())
     
-    builder.build_project(project_df)
+    builder.build_casemaster(project_df)
     '''
+
+    '''
+    projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
+    projecttype_df.printSchema()
+    project_type_df = builder.build_practicetypes(projecttype_df)
+    print(project_type_df)
+    print(project_type_df["PracticeTypes"].count())
+    '''
+
+    '''
+    projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
+    projecttype_df.printSchema()
+    project_type_df = builder.build_phasemaster(projecttype_df)
+    '''
+
+    '''
+    meds_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/meds.parquet")
+    meds_df.printSchema()
+    builder.build_casefigures(meds_df=meds_df)
+    '''
+
+    '''
+    intake_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/intake.parquet")
+    intake_df.printSchema()
+    builder.build_intakesummary(intake_df=intake_df)
+    '''
+
+    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
+    casesummary_df.printSchema()
+    builder.build_casesummary(casesummary_df=casesummary_df)
+    

@@ -117,8 +117,10 @@ class ModelETL(object):
                 elif field_config["type"] == "StringList":
                     field_value = '|'.join(value)
                 elif isinstance(value, list):
-                    field_value = '|'.join(value)
-                
+                    try:
+                        field_value = '|'.join(value)
+                    except:
+                        field_value = value
                 else:
                     field_value = value
 

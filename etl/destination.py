@@ -81,6 +81,8 @@ class S3Destination(ETLDestination):
         elif kwargs["section"] == "core" and kwargs["entity"] == "project":
             file_name = "{}.parquet".format(kwargs['project'])
             s3_key = f"filevine/{self.config['org_id']}/{kwargs['project_type']}/{kwargs['project']}/project.parquet"
+        elif kwargs["section"] == "core" and kwargs["entity"] == "projecttype":
+            s3_key = f"filevine/{self.config['org_id']}/{kwargs['entity']}/projecttypes.parquet"
         elif kwargs["section"] == "leaddocket":
             file_name = "{}.parquet".format(kwargs["push_id"])
             s3_key = f"{kwargs['section']}/{kwargs['organization_identifier']}/{kwargs['model_name']}/{file_name}"
@@ -109,6 +111,8 @@ class S3Destination(ETLDestination):
         
         logger.info(f"Uploading data to destination in following {s3_key}")
 
+        #Temp code 
+        data_df.to_parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",

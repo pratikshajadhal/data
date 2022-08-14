@@ -91,7 +91,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string    
-  - name: ProjectMaster  
+  - name: CaseMaster  
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -103,7 +103,7 @@ tsm:
       transform:
         source: etl
         type: org_id
-    - name: Project_ID
+    - name: Case_ID
       data_type: int
       transform:
         source: etl
@@ -111,7 +111,7 @@ tsm:
         source_entity_name: project
         source_field: projectId
         type: data
-    - name: Project_Type_ID
+    - name: Practice_Type_ID
       data_type: int
       transform:
         source: etl
@@ -135,6 +135,88 @@ tsm:
         source_entity_name: project
         source_field: incidentDate
         type: data
+  - name: PracticeTypes
+    fields:
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: int
+      transform:
+        source: etl
+        type: org_id
+    - name: Practice_Type_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projecttype
+        source_field: projectTypeId
+        type: data
+    - name: Practice_Type_Name
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projecttype
+        source_field: name
+        type: data
+    - name: Custom1
+      data_type: string
+    - name: Custom2
+      data_type: string
+    - name: Custom3
+      data_type: string
+  - name: PhaseMaster
+    fields: 
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: int
+      transform:
+        source: etl
+        type: org_id
+    - name: Phase_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: phases
+        source_field: phaseId
+        type: data
+    - name: Phase_Name
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: phases
+        source_field: name
+        type: data
+    - name: Practice_Type_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: phases
+        source_field: projectTypeId
+        type: data
+    - name: Phase_Order
+      data_type: string
+    - name: Phase_Category
+      data_type: string
+    - name: Phase_Sub_Category
+      data_type: string
+    - name: Custom1
+      data_type: string  
+    - name: Custom2
+      data_type: string  
+    - name: Custom3
+      data_type: string
   - name: CaseSummary
     fields:
     - name: Truve_Org_ID
@@ -299,3 +381,166 @@ tsm:
       data_type: string      
     - name: Custom5
       data_type: string      
+  - name: CaseFigures
+    fields:
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: int
+      transform:
+        source: etl
+        type: org_id
+    - name: Parent_Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: collection
+        source_entity_name: meds
+        source_field: projectId
+        type: data
+    - name: Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: collection
+        source_entity_name: meds
+        source_field: projectId
+        type: data
+    - name: Case_Figure_ID
+      data_type: int
+    - name: Figure_Type
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: collection
+        source_entity_name: meds
+        source_field: type
+        type: data
+    - name: Figure_Date
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: collection
+        source_entity_name: meds
+        source_field: recordsordereddate
+        type: data
+    - name: Figure_Status
+      data_type: string
+    - name: Value
+      data_type: float
+      transform:
+        source: etl
+        source_entity_type: collection
+        source_entity_name: meds
+        source_field: valueTotal
+        type: data
+    - name: Custom1
+      data_type: string  
+    - name: Custom2
+      data_type: string  
+    - name: Custom3
+      data_type: string      
+  - name: IntakeSummary
+    fields:
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: int
+      transform:
+        source: etl
+        type: org_id
+    - name: Parent_Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: projectId
+        type: data
+    - name: Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: projectId
+        type: data
+    - name: Intake_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: projectId
+        type: data
+    - name: Person_Performing_Intake_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: personperformingintake
+        type: data
+    - name: Intake_Source
+      data_type: string
+    - name: Date_of_Intake
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: dateofintake
+        type: data
+    - name: Date_of_Incident
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: dateofincident
+        type: data
+    - name: DUI_or_HitandRun
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: dUIOrHItAndRun
+        type: data
+    - name: Referral_Fee
+      data_type: double
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: referralfee
+        type: data
+    - name: Referral_Fee
+      data_type: double
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: referralfee
+        type: data
+    - name: If_Case_Referred_In
+      data_type: boolean
+    - name: If_Qualified_Case
+      data_type: boolean
+    - name: If_VIP_Lead
+      data_type: boolean
+    - name: Custom1
+      data_type: string  
+    - name: Custom2
+      data_type: string  
+    - name: Custom3
+      data_type: string      
+
+
+    
