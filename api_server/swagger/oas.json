@@ -1,0 +1,361 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "Truve - Data REST API",
+        "description": "Truve Data REST API Spec (OAS) ## Actions Truve API will be able to: * **Create new TPA integration onboarding**. * **Notify onboarding mapping populated** (_Prod table updating phase is not implemented yet_).\nWorker will be able to: * **Update job complete** (_Prod table updating phase is not implemented yet_) \nDatabricks or GLUE be able to: * **Update Pipeline complete** (_Prod table updating phase is not implemented yet_)\n",
+        "version": "0.0.1",
+        "termsOfService": "https://truve.io/terms",
+        "contact": {
+            "email": "contact@truve.io"
+        }
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "summary": "Home",
+                "operationId": "home__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tpa/onboard": {
+            "post": {
+                "tags": [
+                    "TPA"
+                ],
+                "summary": "Create Integration Onboarding",
+                "operationId": "create_integration_onboarding_tpa_onboard_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Onboarding"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tpa/notify": {
+            "post": {
+                "tags": [
+                    "TPA"
+                ],
+                "summary": "Notify Mapping",
+                "operationId": "notify_mapping_tpa_notify_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notify"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/task/status": {
+            "post": {
+                "tags": [
+                    "TPA"
+                ],
+                "summary": "Update Job Complete",
+                "operationId": "update_job_complete_task_status_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TaskStatus"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pipeline/status": {
+            "post": {
+                "tags": [
+                    "TPA"
+                ],
+                "summary": "Update Etl Pipeline Complete",
+                "operationId": "update_etl_pipeline_complete_pipeline_status_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EtlStatus"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "EtlStatus": {
+                "title": "EtlStatus",
+                "required": [
+                    "truve_id",
+                    "tpa_id",
+                    "pipeline_status"
+                ],
+                "type": "object",
+                "properties": {
+                    "truve_id": {
+                        "title": "Truve Id",
+                        "type": "integer"
+                    },
+                    "tpa_id": {
+                        "title": "Tpa Id",
+                        "type": "string"
+                    },
+                    "pipeline_status": {
+                        "title": "Pipeline Status",
+                        "enum": [
+                            "SUCCESS",
+                            "FAILED"
+                        ],
+                        "type": "string"
+                    },
+                    "fail_detail": {
+                        "title": "Fail Detail",
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "truve_id": 123,
+                    "tpa_id": "FILEVINE",
+                    "pipeline_status": "SUCCESS"
+                }
+            },
+            "HTTPValidationError": {
+                "title": "HTTPValidationError",
+                "type": "object",
+                "properties": {
+                    "detail": {
+                        "title": "Detail",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        }
+                    }
+                }
+            },
+            "Notify": {
+                "title": "Notify",
+                "required": [
+                    "org_id",
+                    "tpa_id"
+                ],
+                "type": "object",
+                "properties": {
+                    "org_id": {
+                        "title": "Org Id",
+                        "type": "integer"
+                    },
+                    "tpa_id": {
+                        "title": "Tpa Id",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "org_id": 123123,
+                    "tpa_id": "FILEVINE"
+                }
+            },
+            "Onboarding": {
+                "title": "Onboarding",
+                "required": [
+                    "org_id",
+                    "tpa_id",
+                    "credentials"
+                ],
+                "type": "object",
+                "properties": {
+                    "org_id": {
+                        "title": "Org Id",
+                        "type": "integer"
+                    },
+                    "tpa_id": {
+                        "title": "Tpa Id",
+                        "type": "string"
+                    },
+                    "credentials": {
+                        "title": "Credentials",
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "org_id": 123,
+                    "tpa_id": "INSTAGRAM",
+                    "credentials": {
+                        "api_key": "foo",
+                        "user_id": 31958
+                    }
+                }
+            },
+            "TaskStatus": {
+                "title": "TaskStatus",
+                "required": [
+                    "truve_id",
+                    "tpa_id",
+                    "job_result"
+                ],
+                "type": "object",
+                "properties": {
+                    "truve_id": {
+                        "title": "Truve Id",
+                        "type": "integer"
+                    },
+                    "tpa_id": {
+                        "title": "Tpa Id",
+                        "type": "string"
+                    },
+                    "job_result": {
+                        "title": "Job Result",
+                        "type": "object"
+                    },
+                    "error_body": {
+                        "title": "Error Body",
+                        "type": "object"
+                    }
+                },
+                "example": {
+                    "truve_id": 123,
+                    "tpa_id": "FILEVINE",
+                    "job_result": {
+                        "status": "success"
+                    }
+                }
+            },
+            "ValidationError": {
+                "title": "ValidationError",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "type": "object",
+                "properties": {
+                    "loc": {
+                        "title": "Location",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "msg": {
+                        "title": "Message",
+                        "type": "string"
+                    },
+                    "type": {
+                        "title": "Error Type",
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "TPA",
+            "externalDocs": {
+                "description": "TPA docs",
+                "url": "https://www.notion.so/truveai/Data-Source-TPA-Onboarding-b00a2ed5c4a24f87a019cd7403f1bf9b"
+            }
+        }
+    ]
+}
