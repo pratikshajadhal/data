@@ -72,7 +72,7 @@ class TaskStatus(BaseModel):
     truve_id: int 
     tpa_id : str 
     job_result: dict
-    error_body: Optional[dict]
+    error_body: Optional[dict] = None
 
     class Config:
         schema_extra = {
@@ -94,7 +94,7 @@ class EtlStatus(BaseModel):
     truve_id: int 
     tpa_id : str 
     pipeline_status: pipeline_statuses
-    fail_detail: Optional[dict]
+    fail_detail: Optional[dict] = None
 
     # #TODO: If pipeline status FAILED then fail detail needs to be required. Check how to solve
     # TODO: Might dive detail. But if pipeline_Status fail then fail_detail must be required?
