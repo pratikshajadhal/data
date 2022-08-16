@@ -62,7 +62,8 @@ class S3Destination(ETLDestination):
                         "int" : "int",
                         "bool" : "boolean",
                         "date" : "date",
-                        "decimal" : "double"
+                        "decimal" : "double",
+                        "Integer": "int"
                         }
 
         #{'col1': 'timestamp', 'col2': 'bigint', 'col3': 'string'}

@@ -69,8 +69,15 @@ class ModelETL(object):
         for col, field_config in source_flattened_schema.items():
             if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "Doc" or field_config["type"] == "ReportFusion":
                     continue
-                
-            dest_col_defn.append(ColumnDefn(name=col, data_type=column_mapper[field_config["type"]]))
+            
+            print(field_config["type"])
+            try:
+                dest_col_defn.append(ColumnDefn(name=col, data_type=column_mapper[field_config["type"]]))
+            except:
+                print("***")
+                print(field_config["type"])
+                import time
+                time.sleep(100)
 
         return dest_col_defn
 
