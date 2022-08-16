@@ -202,14 +202,14 @@ def start_collection_etl(project_type, section_name):
 
 if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
-    #start_collection_etl(18764, "negotiations")
+    start_collection_etl(18764, "insurance")
     #start_form_etl(18764, "casesummary")
     #start_contact_etl()
     #start_project_etl()
 
     # - - - - 
 
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+    # uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
 
     # # Wh subscription for filevine
     # make_fv_subscription(
