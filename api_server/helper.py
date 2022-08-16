@@ -123,8 +123,8 @@ def get_pre_needs(fv_client: FileVineClient):
 def get_all_snapshot(fv_client: FileVineClient,section_data, org_id, creds, project_list, project_type_ids):
     entities = list()
 
-    temp_entities = ["casesummary", "intake", "meds","project", "contact"]
-    # temp_entities = ["casesummary", "intake", "meds", "negotiations","project", "contact"]
+    temp_entities = ["casesummary", "intake", "meds","project", "contact", "insurance"] # Negs is temprorily ignoring!
+    # temp_entities = ["casesummary", "intake", "meds", "negotiations","project", "contact", "insurance"]
     for each_entity in section_data:
         output = dict()
         entity_name = each_entity["id"]
@@ -154,11 +154,6 @@ def get_all_snapshot(fv_client: FileVineClient,section_data, org_id, creds, proj
 
 def onboard_fv(org_id, creds):
     fv_client = FileVineClient(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
-    try:
-        check_auth = fv_client.get_keys()
-    except:
-        raise AuthErr()
-
 
     project_list, project_type_ids = get_pre_needs(fv_client)
     for each_pt_id in project_type_ids:
