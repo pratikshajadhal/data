@@ -2,17 +2,11 @@
 
 <br/>
 
-# 0.1.7
+# 0.1.8
 
-Original Commit ID: df65007
+Original Commit ID: 37fd498
 
 ## Changes
-Merged in infra&#x2F;split-changelog-steps (pull request #33)
+Merged in f&#x2F;version-change (pull request #38)
 
-Infra&#x2F;split changelog steps
-
-- update pipeline
-
-- change docker build&#x2F;push and changelog step images
-
-- bump patch version
+Change version
