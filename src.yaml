@@ -21,6 +21,11 @@ core:
     - isMinor
     - uniqueId
     - searchNames
+  - name: projecttype
+    fields: 
+    - projectTypeId
+    - name
+    - phases
   - name: project
     fields:
     - projectTypeCode
@@ -164,14 +169,14 @@ projectTypes:
       - whatSurgeryWasRecommended
       - possibleInsuranceRedFlagsF
       - describeTheLiabilityDispute
-      - anteLitemNotice
+      #- anteLitemNotice
       - anteLitemReturnReceipt
       - companionCaseS
       - truckingSpoliationLtr
       - truckingCoReturnReceipt
-      - spoliationToPremisesOwner
-      - returnReceiptFromPremisesO
-      - businessLicenseForPremises
+      #- spoliationToPremisesOwner
+      #- returnReceiptFromPremisesO
+      #- businessLicenseForPremises
       - defendant1ServedOn
       - defendant1DefaultDate
       - defendant1AnswerFiledOn
@@ -459,14 +464,14 @@ projectTypes:
       - relationshipPerson7
       - eighthPersonInVehicle
       - if8OrMorePeopleInWreck
-      - incidentReportNotPR
+      #- incidentReportNotPR [Due to incompaible schemas]
       - vehicleOwnerSRelationshipT
       - whoseVehicleWereYouIn
       - whoWasDriving
       - driverSRelationshipToClien
       - doesClientHaveReport
       - clientSClaimNumber
-      - estimateCopy
+      #- estimateCopy
       - treatmentAtHospital
       - liabilityAtFaultInsurance
       - vehicleOperable

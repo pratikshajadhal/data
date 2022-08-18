@@ -57,3 +57,8 @@ dist/
 
 # Ignore folder
 /ignored/
+.env
+*.csv
+
+*.parquet
+sstm_input_data/

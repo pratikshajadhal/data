@@ -161,6 +161,12 @@ class FileVineClient(object):
         end_point = "subscriptions"
         return self.make_post_request(end_point=end_point, body=paylaod)
 
+    def get_projecttypes(self):
+        return self.get_entity("core/projecttypes")
+
+    def get_projecttypes_phases(self, project_type_id):
+        return self.get_entity(f"core/projecttypes/{project_type_id}/phases")
+        
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")

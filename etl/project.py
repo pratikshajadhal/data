@@ -25,8 +25,8 @@ class ProjectETL(ModelETL):
         final_contact_list = []
         project_list = self.fv_client.get_projects(project_list)
         
-        if len(project_list) > 1:
-            raise Exception("More than 1 project_list is not supported in this entity")
+        #if len(project_list) > 1:
+        #    raise Exception("More than 1 project_list is not supported in this entity")
         
         for project in project_list:
             if self.project_type is not None and project["projectTypeId"]["native"] == self.project_type:
@@ -51,6 +51,15 @@ class ProjectETL(ModelETL):
                 snapshot_data = self.fv_client.get_projects(project_list=[project["projectId"]["native"]])
                 return snapshot_data[0]
         return {}
+        
+    def trigger_etl(self, project_list:list[int], dest_col_format):
+        for contact in project_list:
+            contact_df = self.transform_data(record_list=[contact])
+            projectId = contact_df["projectId"].tolist()[0]
+            self.load_data_to_destination(trans_df=contact_df, schema=dest_col_format, project=projectId)
+                
+            
+
     
 if __name__ == "__main__":
     RedshiftConfig(table_name="fv_contact_raw", schema_name="pipeline_dev", dbname="dev")
