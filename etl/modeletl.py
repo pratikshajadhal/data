@@ -35,6 +35,7 @@ class ModelETL(object):
             self.column_config.fields.append(self.key_column)
         
     def persist_source_schema(self):
+        return 
         directory = os.getcwd()
         if not os.path.exists(f"{directory}/schemas/"):
             os.makedirs(f"{directory}/schemas/")
