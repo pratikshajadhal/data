@@ -112,7 +112,7 @@ class S3Destination(ETLDestination):
         logger.info(f"Uploading data to destination in following {s3_key}")
 
         #Temp code 
-        data_df.to_parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
+        #data_df.to_parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
         wr.s3.to_parquet(
                 df=data_df,
                 path=f"s3://{self.config['bucket']}/{s3_key}",

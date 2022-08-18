@@ -26,17 +26,17 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         return fv_org_id
 
     def add_default_columns(self, df: SP_DATAFRAME):
-        return df.withColumn("date_ingested", F.current_timestamp())
+        df = df.withColumn("date_ingested", F.current_timestamp())
 
     def _read_tsm(self, tsm_table_name: str) -> SP_DATAFRAME:
         # TODO read dependent TSM table from S3. 
         
         # As of now, read from local. Need to remove 
-        # contact_df = self.spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
-        #return self.build_peopletypes(contact_df)
+        #contact_df = self.spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
+        #return (self.build_peopletypes(contact_df))["PeopleTypes"]
 
         return self.spark.read.parquet("s3://dev-truve-devops-05-databr-bucketetlprocesseddata-h2m2xopoctot/peopletypes")
-        "s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/contact/historical_contacts.parquet"
+        #"s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/contact/historical_contacts.parquet"
 
     def _get_table_config(self, table_name) -> List[TSMTableField]:
         for table in self.config.tsm:
@@ -77,9 +77,6 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         """
         table_fields = self._get_table_config("PeopleType")
 
-        #table_schema = self._load_table_schema("PeopleType")
-        
-        
         people_type_col_name = None
         for field in table_fields:
             if field.name == "People_Type":
@@ -89,6 +86,8 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         person_type_df = person_type_df.withColumn("People_Type",explode(split(col(people_type_col_name),'\\|'))).drop(people_type_col_name).distinct()
         person_type_df = person_type_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        person_type_df = person_type_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
         person_type_df = person_type_df.withColumn('Custom1', lit(None).cast(StringType()))
         person_type_df = person_type_df.withColumn('Custom2', lit(None).cast(StringType()))
         person_type_df = person_type_df.withColumn('Custom3', lit(None).cast(StringType()))
@@ -97,7 +96,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         self.add_default_columns(person_type_df)
 
-        return person_type_df
+        return {"PeopleTypes" : person_type_df}
 
     def build_peoplemaster(self, contact_df:SP_DATAFRAME):
         """
@@ -129,12 +128,13 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                         StringType(), True)
                         ])
         """
-        table_fields = self._get_table_config("PeopleMaster")
+        table_fields = self._get_table_config("Peoples")
 
         #table_schema = self._load_table_schema("PeopleMaster")
 
         
         contact_df = contact_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        contact_df = contact_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         
         for field in table_fields:
             if field.transform and field.transform.type == "data":
@@ -152,20 +152,23 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         contact_type_df = contact_type_df.withColumn("People_Type",explode(split(col(people_type_col_name.name),'\\|'))).select("People_ID", "People_Type")
         contact_type_df.printSchema()
+        people_type_df.printSchema()
         contact_type_df = contact_type_df.join(people_type_df, on=["People_Type"], how="left").select("People_ID", "People_Type_ID")
         contact_df = contact_df.withColumn('Middle_Name', lit(None).cast(StringType()))
         
 
-        contact_df = contact_df.select("Truve_Org_ID", "People_ID", "First_Name", "Middle_Name", "Last_Name", "Date_of_Birth", "Gender", "Custom1", "Custom2", "Custom3")
+        contact_df = contact_df.select("Truve_Org_ID", "Client_Org_ID", "People_ID", "First_Name", "Middle_Name", "Last_Name", "Date_of_Birth", "Gender", "Custom1", "Custom2", "Custom3")
         
         self.add_default_columns(contact_df)
         self.add_default_columns(contact_type_df)
 
-        return {"PeopleMaster" : contact_df, "PeopleMaster_PeopleType" : contact_type_df}
+        return {"Peoples" : contact_df, "Peoples_PeopleType" : contact_type_df}
 
     def build_casemaster(self, project_df: SP_DATAFRAME):
         project_df = project_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        table_fields = self._get_table_config("CaseMaster")
+        project_df = project_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
+        table_fields = self._get_table_config("Cases")
 
         
         for field in table_fields:
@@ -175,15 +178,17 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                 project_df = project_df.withColumn(field.name, lit(None).cast(StringType()))
 
         # TODO Change datatype here
-        col_list = ["Truve_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]
-        project_df = project_df.select("Truve_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date")
+        col_list = ["Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]
+        project_df = project_df.select("Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date")
         project_df.printSchema()
 
         self.add_default_columns(project_df)
-        return {"CaseMaster", project_df}
+        return {"Cases" : project_df}
 
     def build_practicetypes(self, projecttype_df: SP_DATAFRAME):
         projecttype_df = projecttype_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        projecttype_df = projecttype_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        
         table_fields = self._get_table_config("PracticeTypes")
 
         
@@ -194,8 +199,8 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                 projecttype_df = projecttype_df.withColumn(field.name, lit(None).cast(StringType()))
 
         # TODO Change datatype here
-        col_list = ["Truve_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"]
-        projecttype_df = projecttype_df.select(["Truve_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"])
+        col_list = ["Truve_Org_ID", "Client_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"]
+        projecttype_df = projecttype_df.select(["Truve_Org_ID", "Client_Org_ID", "Practice_Type_ID", "Practice_Type_Name", "Custom1", "Custom2", "Custom3"])
         projecttype_df.printSchema()
 
         self.add_default_columns(projecttype_df)
@@ -213,7 +218,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         raw_phases_df = raw_phases_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         raw_phases_df = raw_phases_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         
-        table_fields = self._get_table_config("PhaseMaster")
+        table_fields = self._get_table_config("Phases")
 
         for field in table_fields:
             if field.transform and field.transform.type == "data":
@@ -226,7 +231,9 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         phase_master_df = raw_phases_df.select(*col_list)
 
         phase_master_df.show(n=100)
-        return {"PhaseMaster" : phase_master_df}
+        self.add_default_columns(df=phase_master_df)
+
+        return {"Phases" : phase_master_df}
 
     def build_casefigures(self, meds_df: SP_DATAFRAME):
         #explode projecttype to get Phases 
@@ -247,6 +254,8 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         meds_df = meds_df.select(*col_list)
 
         meds_df.show(n=100)
+        self.add_default_columns(df=meds_df)
+
         return {"CaseFigures" : meds_df}
 
     def build_intakesummary(self, intake_df: SP_DATAFRAME):
@@ -255,7 +264,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         intake_df = intake_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         intake_df = intake_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         
-        table_fields = self._get_table_config("IntakeSummary")
+        table_fields = self._get_table_config("IntakeDetails")
 
         for field in table_fields:
             if field.transform and field.transform.type == "data":
@@ -267,14 +276,16 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         intake_df = intake_df.select(*col_list)
 
+        self.add_default_columns(df=intake_df)
+
         intake_df.show(n=100)
-        return {"IntakeSummary" : intake_df}
+        return {"IntakeDetails" : intake_df}
 
     def build_casesummary(self, casesummary_df: SP_DATAFRAME):
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         casesummary_df = casesummary_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         
-        table_fields = self._get_table_config("CaseSummary")
+        table_fields = self._get_table_config("CaseDetails")
 
         for field in table_fields:
             if field.transform and field.transform.type == "data":
@@ -286,31 +297,32 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         casesummary_df = casesummary_df.select(*col_list)
 
+        self.add_default_columns(df=casesummary_df)
+
         casesummary_df.show(n=100)
-        return {"CaseSummary" : casesummary_df}
+        return {"CaseDetails" : casesummary_df}
 
 if __name__ == "__main__":
     print("Hi")
     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
     builder = TSMBuilder("sstm.yaml", spark=spark)
     
+    #builder = TSMBuilder("sstm.yaml", spark=spark)
+    
     '''
     contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
-    #contact_df.printSchema()
-
-    builder = TSMBuilder("sstm.yaml", spark=spark)
     #builder.build_peopletypes(contact_df=contact_df)
-    builder.build_peoplemaster(contact_df=contact_df)
+    result = builder.build_peoplemaster(contact_df=contact_df)
+    print(result)
+    exit()
     '''
-
+    
     '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")
     project_df.printSchema()
-    print(project_df.count())
-    
-    builder.build_casemaster(project_df)
+    print(builder.build_casemaster(project_df))
     '''
-
+    
     '''
     projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
     projecttype_df.printSchema()
@@ -318,26 +330,28 @@ if __name__ == "__main__":
     print(project_type_df)
     print(project_type_df["PracticeTypes"].count())
     '''
-
     '''
-    projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
-    projecttype_df.printSchema()
-    project_type_df = builder.build_phasemaster(projecttype_df)
+    phase_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
+    phase_df.printSchema()
+    phase_df.show(n=10)
+    exit()
+    phase_df = builder.build_phasemaster(phase_df)
     '''
-
+    
     '''
     meds_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/meds.parquet")
     meds_df.printSchema()
-    builder.build_casefigures(meds_df=meds_df)
+    print(builder.build_casefigures(meds_df=meds_df))
     '''
-
+    
     '''
     intake_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/intake.parquet")
     intake_df.printSchema()
     builder.build_intakesummary(intake_df=intake_df)
     '''
 
+    '''
     casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
     casesummary_df.printSchema()
     builder.build_casesummary(casesummary_df=casesummary_df)
-    
+    '''

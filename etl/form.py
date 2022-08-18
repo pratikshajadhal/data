@@ -43,8 +43,8 @@ class FormETL(ModelETL):
         return form_schema
 
     def get_projects(self) -> list[int]:
-        project_data_list = self.fv_client.get_projects(requested_fields=["projectId"])
-        project_list = [project_data["projectId"]["native"] for project_data in project_data_list]
+        project_data_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])
+        project_list = [project_data["projectId"]["native"] for project_data in project_data_list if project_data["projectTypeId"]["native"] == int(self.project_type) ]
         return project_list
 
     def extract_data_from_source(self, project_list:list[int]=[]):
@@ -52,12 +52,32 @@ class FormETL(ModelETL):
         for index, project in enumerate(project_list):
             logger.debug(f"Getting {self.entity_type} for project {project} {index}")
             section_data = self.fv_client.get_section_data(project_id=project, section_name=self.model_name)
-            section_data["projectId"] = project
             if not section_data:
                 continue
+            
+            section_data["projectId"] = project
             section_data_list = section_data_list + [section_data]
 
         return section_data_list
+
+    def trigger_etl(self, project_list:list[int], dest_col_format):
+        for project in project_list[:500]:
+            if project > 10813786:
+                continue
+            form_data_list = self.extract_data_from_source(project_list=[project])
+
+            form_df = self.transform_data(record_list=form_data_list)
+
+            if form_df.shape[0] == 0:
+                print("Empty dataframe")
+                continue
+            
+            self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+
+            #count = count + 1
+
+            #print("Total processed {}".format(count))
+
 
     def get_snapshot(self, project_type_id):
         project_list = self.fv_client.get_projects(requested_fields=["projectId", "projectTypeId"])

@@ -1,3 +1,4 @@
+import threading
 from etl.collections import CollectionETL
 from etl.contact import ContactETL
 from etl.datamodel import ETLSource, FileVineConfig, LeadDocketConfig
@@ -113,7 +114,7 @@ def start_project_etl():
         #Handle Contact Entity
     for model in selected_field_config.core:
         if model.name == "project":
-            contact_etl = ProjectETL(model_name="project", 
+            project_etl = ProjectETL(model_name="project", 
                                 source=None, 
                                 entity_type="core",
                                 project_type=18764,
@@ -122,20 +123,46 @@ def start_project_etl():
                                 column_config=model, 
                                 primary_key_column="projectId")
 
-            project_list = [10568297] #contact_etl.get_projects()
+            project_list = project_etl.extract_data_from_source()
+        
+            project_etl.get_schema_of_model()
 
-            #project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
+            project_etl.flattend_map = project_etl.get_filtered_schema(project_etl.source_schema)
 
-                #project_list = [10598323]
-
-            contact_etl.get_schema_of_model()
-
-            contact_etl.flattend_map = contact_etl.get_filtered_schema(contact_etl.source_schema)
-
-            dest_col_format = contact_etl.convert_schema_into_destination_format(contact_etl.flattend_map)
+            dest_col_format = project_etl.convert_schema_into_destination_format(project_etl.flattend_map)
 
             count = 0
             
+            #Added Multithreading support
+            chunk = 10
+
+            chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
+            
+            thread_count = 10
+            processed_chunk_list = 0
+
+            count = 0
+            thread_list = []
+
+            print(chunk_list)
+            print(len(chunk_list))
+            
+            for index, project_chunk in enumerate(chunk_list):
+                print(f"Total proessed so far {index}")
+                if count < thread_count:
+                    t = threading.Thread(target=project_etl.trigger_etl, args=(project_chunk, dest_col_format))
+                    t.start()
+                    thread_list.append(t)
+                    processed_chunk_list += 1
+                    count += 1
+                else:
+                    for t in thread_list:
+                        t.join()
+                    thread_list = []
+                    count = 0
+            
+
+            '''
             contact_list = contact_etl.extract_data_from_source()
 
             for contact in contact_list:
@@ -148,7 +175,7 @@ def start_project_etl():
             print("Total processed {}".format(count))
 
             break
-        
+            '''
 
 def start_form_etl(project_type, form_name):
     selected_field_config = load_config(file_path="src.yaml")
@@ -169,28 +196,69 @@ def start_form_etl(project_type, form_name):
 
             project_list = form_etl.get_projects() #[10568297] #contact_etl.get_projects()
 
-            #project_list = [10598323]
-
+            project_list = project_list
             form_etl.get_schema_of_model()
 
             form_etl.flattend_map = form_etl.get_filtered_schema(form_etl.source_schema)
 
             dest_col_format = form_etl.convert_schema_into_destination_format(form_etl.flattend_map)
 
-            count = 0
+            #Added Multithreading support
+            chunk = 10
+
+            chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
             
-            for project in project_list[:100]:
-                form_data_list = form_etl.extract_data_from_source(project_list=[project])
+            thread_count = 10
+            processed_chunk_list = 0
 
-                form_df = form_etl.transform_data(record_list=form_data_list)
+            count = 0
+            thread_list = []
+
+            print(chunk_list)
+            print(len(chunk_list))
+            
+            for index, project_chunk in enumerate(chunk_list):
+                print(f"Total proessed so far {index}")
+                if count < thread_count:
+                    t = threading.Thread(target=form_etl.trigger_etl, args=(project_chunk, dest_col_format))
+                    t.start()
+                    thread_list.append(t)
+                    processed_chunk_list += 1
+                    count += 1
+                else:
+                    for t in thread_list:
+                        t.join()
+                    thread_list = []
+                    count = 0
                 
-                form_etl.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+            
+            for t in thread_list:
+                t.join()
+                
 
-                count = count + 1
 
-                print("Total processed {}".format(count))
+            '''
+            while True and processed_chunk_list <= len(chunk_list):
+                
+                thread_list = []
+                count = 0
+                for index, project_chunk in enumerate(chunk_list):
+                    if count <= thread_count:
+                        t = threading.Thread(target=form_etl.trigger_etl, args=(project_chunk, dest_col_format))
+                        #t.start()
+                        thread_list.append(t)
+                        processed_chunk_list += 1
+                    else:
+                        break
+                    count += 1
+                    
+                #for t in thread_list:
+                #    t.join()
+
+                print("Assigning new threads")
 
             break
+            '''
 
 def start_collection_etl(project_type, section_name):
     selected_field_config = load_config(file_path="src.yaml")
@@ -219,33 +287,47 @@ def start_collection_etl(project_type, section_name):
 
             dest_col_format = form_etl.convert_schema_into_destination_format(form_etl.flattend_map)
 
+            #Added Multithreading support
+            chunk = 10
+
+            chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
             
+            thread_count = 10
+            processed_chunk_list = 0
+
             count = 0
+            thread_list = []
+
+            print(chunk_list)
+            print(len(chunk_list))
             
-            for project in project_list[:100]:
-                form_data_list = form_etl.extract_data_from_source(project_list=[project])
-
-                if len(form_data_list) == 0:
-                    continue
-
-                form_df = form_etl.transform_data(record_list=form_data_list)
+            for index, project_chunk in enumerate(chunk_list):
+                print(f"Total proessed so far {index}")
+                if count < thread_count:
+                    t = threading.Thread(target=form_etl.trigger_etl, args=(project_chunk, dest_col_format))
+                    t.start()
+                    thread_list.append(t)
+                    processed_chunk_list += 1
+                    count += 1
+                else:
+                    for t in thread_list:
+                        t.join()
+                    thread_list = []
+                    count = 0
                 
-                form_etl.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
-
-                count += 1
-
-                print("Total processed {}".format(count))
-
-            break
+            
+            for t in thread_list:
+                t.join()
+            
 
 if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
     #start_collection_etl(18764, "negotiations")
-    #start_form_etl(18764, "casesummary")
+    start_form_etl(18764, "casesummary")
     #start_contact_etl()
     #exit()
     #start_projecttype_etl()
-    start_form_etl(18764, "intake")
+    #start_form_etl(18764, "casesummary")
     #start_project_etl()
 
     # - - - - 

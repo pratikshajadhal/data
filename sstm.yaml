@@ -30,7 +30,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string
-  - name: PeopleMaster
+  - name: Peoples
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -91,7 +91,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string    
-  - name: CaseMaster  
+  - name: Cases  
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -169,7 +169,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string
-  - name: PhaseMaster
+  - name: Phases
     fields: 
     - name: Truve_Org_ID
       data_type: int
@@ -217,7 +217,7 @@ tsm:
       data_type: string  
     - name: Custom3
       data_type: string
-  - name: CaseSummary
+  - name: CaseDetails
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -443,7 +443,7 @@ tsm:
       data_type: string  
     - name: Custom3
       data_type: string      
-  - name: IntakeSummary
+  - name: IntakeDetails
     fields:
     - name: Truve_Org_ID
       data_type: int

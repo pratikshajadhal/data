@@ -85,7 +85,7 @@ class ModelETL(object):
                     #print(f"{key} not found in contact")
                     continue
                 field_config = self.flattend_map[key]
-                if field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "ReportFusion":
+                if field_config["type"] == "Doc" or field_config["type"] == "Header" or field_config["type"] == "DocGen" or field_config["type"] == "ActionButton" or field_config["type"] == "MultiDocGen" or field_config["type"] == "DocList" or field_config["type"] == "ReportFusion":
                     continue
                 elif field_config["type"] == "Id":
                     if isinstance(value, dict):

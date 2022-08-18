@@ -71,3 +71,21 @@ class CollectionETL(ModelETL):
                 if len(snapshot_data) != 0:
                     return snapshot_data[0]                    
         return {}
+        
+    def trigger_etl(self, project_list:list[int], dest_col_format):
+        for project in project_list:
+            form_data_list = self.extract_data_from_source(project_list=[project])
+
+            form_df = self.transform_data(record_list=form_data_list)
+
+            if form_df.shape[0] == 0:
+                print("Empty dataframe")
+                continue
+            
+            self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+
+            #count = count + 1
+
+            #print("Total processed {}".format(count))
+
+
