@@ -428,3 +428,7 @@ Outputs:
   HealthCheckEndpoint:
     Description: Health Check Endpoint
     Value: !Sub 'https://${SubdomainAliasIPv4Record}/diag/health'
+
+  ServiceHostAddress:
+    Description: Host address for Data API service
+    Value: !Ref SubdomainAliasIPv4Record
