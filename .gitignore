@@ -62,8 +62,3 @@ dist/
 
 *.parquet
 sstm_input_data/
-<<<<<<< HEAD
-=======
-
-.ipynb_checkpoints/
->>>>>>> refactor code
