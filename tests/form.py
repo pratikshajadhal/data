@@ -3,6 +3,60 @@ from etl.datamodel import FileVineConfig
 from etl.form import FormETL
 from etl.destination import S3Destination
 
+def test_fv_webhook_phase():
+    payload = {
+                "Timestamp": 1655210533742,
+                "Object": "Project",
+                "Event": "PhaseChanged",
+                "ObjectId": {
+                    "ProjectTypeId": 25962,
+                    "PhaseId": 141438
+                },
+                "OrgId": 6586,
+                "ProjectId": 10567083,
+                "UserId": 62385,
+                "Other": {
+                    "PhaseName": "Ready For Demand"
+                }
+            }
+    # TODO add tests cases 
+
+
+def test_fv_webhook_form():
+    payload = {"Timestamp": 1659389672522, 
+                "Object": "Form", 
+                "Event": "Updated", 
+                "ObjectId": {
+                            "ProjectTypeId": 18764, 
+                            "SectionSelector": "intake"
+                            }, 
+                "OrgId": 6586, 
+                "ProjectId": 9665828, 
+                "UserId": 48697, 
+                "Other": {}
+                }
+    # TODO add tests cases
+
+
+def test_fv_webhook_project():
+    payload = {"Timestamp": 1659383279769, 
+                "Object": "Project", 
+                "Event": "Updated", 
+                "ObjectId": {"ProjectId": 10176082}, 
+                "OrgId": 6586, 
+                "ProjectId": 10176082, 
+                "UserId": None, 
+                "Other": {"Action": "ReplacedHashtags"}}
+    # TODO add tests cases
+
+def test_fv_webhook_collections():
+    payload = {"Timestamp": 1659392519669, 
+                "Object": "CollectionItem", 
+                "Event": "Created", 
+                "ObjectId": {"ProjectTypeId": 18764, "SectionSelector": "meds", "ItemId": "9e21b8c6-1681-4fa6-8f22-35f005b5824d"}, 
+                "OrgId": 6586, "ProjectId": 10465844, "UserId": 5840, "Other": {}}
+    # TODO add tests cases
+
 def test_snapshot_intake():
     selected_field_config = load_config(file_path="src.yaml")
     print(selected_field_config.projectTypes[0])

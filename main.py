@@ -323,7 +323,7 @@ def start_collection_etl(project_type, section_name):
 if __name__ == "__main__":
     #start_form_etl(18764, "intake")    
     #start_collection_etl(18764, "negotiations")
-    start_form_etl(18764, "casesummary")
+    #start_form_etl(18764, "casesummary")
     #start_contact_etl()
     #exit()
     #start_projecttype_etl()
@@ -332,20 +332,7 @@ if __name__ == "__main__":
 
     # - - - - 
 
-<<<<<<< HEAD
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
-=======
-    # start_statuses_etl()
-    # start_case_type_etl()
-    # start_leadsource_etl()
-    # start_lead_row_etl()
-    # start_lead_detail_etl()
-    # start_lead_contact_etl()
-    # start_opport_etl()
-    # start_referrals_etl()
-    # start_users_etl()
-    #uvicorn.run("api_server.app:app", host="0.0.0.0", port=8000, reload=True, root_path="/")
->>>>>>> More TSM transformations
 
     # # Wh subscription for filevine
     # make_fv_subscription(
