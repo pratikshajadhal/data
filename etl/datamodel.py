@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Dict
 
 @dataclass
 class ETLSource:
@@ -9,7 +8,6 @@ class ETLSource:
 
 @dataclass
 class RedshiftConfig:
-    table_name: str
     schema_name: str
     dbname: str
     host: str
