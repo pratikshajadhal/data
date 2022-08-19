@@ -2,11 +2,11 @@
 
 <br/>
 
-# 0.1.10
+# 0.1.11
 
-Original Commit ID: 2ef0b12
+Original Commit ID: aaa40e8
 
 ## Changes
-Merged in fix&#x2F;env-changes (pull request #41)
+Merged in fix&#x2F;env-changes (pull request #42)
 
-fix: env changes based on CF stack
+Fix&#x2F;env changes
