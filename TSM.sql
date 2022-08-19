@@ -1,5 +1,7 @@
+SET search_path = tsm; 
 CREATE TABLE IF NOT EXISTS CMS_PeopleType (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   People_Type_ID int not null,
   People_Type varchar(255) not null,
   People_Sub_Type varchar(255),
@@ -23,8 +25,9 @@ CREATE TABLE IF NOT EXISTS CMS_Teams (
 );
 
 
-CREATE TABLE IF NOT EXISTS CMS_Peoples (
+CREATE TABLE IF NOT EXISTS CMS_People (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   People_ID int not null,
   Team_ID int not null references CMS_Teams(Team_ID),
   First_Name varchar(255) not null,
@@ -39,15 +42,17 @@ CREATE TABLE IF NOT EXISTS CMS_Peoples (
 );
 
 CREATE TABLE IF NOT EXISTS CMS_PeoplePeopleTypes (
-  People_ID int not null references CMS_Peoples(People_ID),
-  People_Type_ID int not null references CMS_PeopleType(People_Type_ID)
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  People_ID int not null references CMS_People(People_ID),
+  People_Type_ID int not null references CMS_PeopleType(People_Type_ID),
   primary key (People_ID, People_Type_ID)
 );
 
 
 CREATE TABLE IF NOT EXISTS CMS_CaseTypes (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Case_Type_ID int not null,
   Case_Type_Name varchar(255) not null unique,
   Case_Type_Category varchar(255),
@@ -62,6 +67,7 @@ CREATE TABLE IF NOT EXISTS CMS_CaseTypes (
 
 CREATE TABLE IF NOT EXISTS CMS_PracticeTypes (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Practice_Type_ID int not null,
   Practice_Type_Name varchar(255) not null,
   Custom1 varchar(255),
@@ -73,6 +79,7 @@ CREATE TABLE IF NOT EXISTS CMS_PracticeTypes (
 
 CREATE TABLE IF NOT EXISTS CMS_Phases (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Phase_ID int not null,
   Phase_Name varchar(255) not null unique,
   Phase_Order int not null unique,
@@ -89,6 +96,7 @@ CREATE TABLE IF NOT EXISTS CMS_Phases (
 
 CREATE TABLE IF NOT EXISTS CMS_StatusMaster (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Status_ID int not null,
   Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
   Case_Type_ID int not null references CMS_CaseTypes (Case_Type_ID),
@@ -103,6 +111,7 @@ CREATE TABLE IF NOT EXISTS CMS_StatusMaster (
 
 CREATE TABLE IF NOT EXISTS CMS_InsuranceMaster (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Insurance_ID int not null,
   Insurance_Name varchar(255) not null,
   Insurance_Type varchar(255) not null,
@@ -120,6 +129,7 @@ CREATE TABLE IF NOT EXISTS CMS_InsuranceMaster (
 
 CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
   Practice_Type_ID int not null references CMS_PracticeTypes(Practice_Type_ID),
@@ -128,11 +138,11 @@ CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
   Date_of_Incident date not null,
   Case_Name varchar(255),
   Plaintiff_Full_Name varchar(255),
-  Attorney_ID int references CMS_Peoples (People_ID),
-  Prelitigation_Paralegal_ID int references CMS_Peoples (People_ID),
-  Litigation_Paralegal_ID int references CMS_Peoples (People_ID),
-  CaseManager_ID int references CMS_Peoples (People_ID),
-  Cocounsel_ID int references CMS_Peoples (People_ID),
+  Attorney_ID int references CMS_People (People_ID),
+  Prelitigation_Paralegal_ID int references CMS_People (People_ID),
+  Litigation_Paralegal_ID int references CMS_People (People_ID),
+  CaseManager_ID int references CMS_People (People_ID),
+  Cocounsel_ID int references CMS_People (People_ID),
   Case_Team_ID int not null references CMS_Teams (Team_ID),
   Case_Status_ID int not null references CMS_StatusMaster (Status_ID),
   Insurance_ID int not null references CMS_InsuranceMaster (Insurance_ID),
@@ -158,6 +168,7 @@ CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
 
 CREATE TABLE IF NOT EXISTS CMS_CaseFigures (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
   Case_Figure_ID int not null,
@@ -177,7 +188,7 @@ CREATE TABLE IF NOT EXISTS IntakeDetails (
   Parent_Case_ID int not null,
   Case_ID int not null,
   Intake_ID int not null,
-  Person_Performing_Intake_ID int not null references CMS_Peoples (People_ID),
+  Person_Performing_Intake_ID int not null references CMS_People (People_ID),
   Intake_Source varchar(255) not null DEFAULT 'None',
   Date_of_Intake date,
   Date_of_Incident date,
@@ -197,6 +208,7 @@ CREATE TABLE IF NOT EXISTS IntakeDetails (
 
 CREATE TABLE IF NOT EXISTS CMS_PhaseChanges (
   Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
   Phase_ID int not null references CMS_Phases (Phase_ID),
