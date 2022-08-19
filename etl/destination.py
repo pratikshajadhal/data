@@ -33,7 +33,7 @@ class ETLDestination(object):
 class S3Destination(ETLDestination):
     def __init__(self, org_id, s3_bucket:str=None):
         self.config = {"org_id" : org_id,
-                    "bucket" : s3_bucket or os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"]
+                    "bucket" : s3_bucket or os.environ["AWS_S3_BUCKET_NAME_ETL_RAW_DATA"]
                     }
 
         server_env = os.environ["SERVER_ENV"]
@@ -136,7 +136,7 @@ class RedShiftDestination(ETLDestination):
                     user=os.environ["AWS_REDSHIFT_CONNECTION_UNAME"],
                     dbname=os.environ["AWS_REDSHIFT_CONNECTION_DBNAME"],
                     password=os.environ["AWS_REDSHIFT_CONNECTION_PWORD"],
-                    s3_bucket=os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"],
+                    s3_bucket=os.environ["AWS_S3_BUCKET_NAME_ETL_RAW_DATA"],
                     s3_temp_dir=os.environ["AWS_S3_BUCKET_NAME_TEMP_DIR"])
         self.config = rs_config
         return asdict(rs_config)
