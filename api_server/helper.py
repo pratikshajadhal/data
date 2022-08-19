@@ -1,6 +1,9 @@
+import os
+import datetime
+
 from etl.datamodel import  FileVineConfig, SelectedConfig
-from etl.destination import S3Destination
-from .config import FVWebhookInput
+from etl.destination import S3Destination, RedShiftDestination
+from .config import FVWebhookInput, TaskStatus
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from etl.form import FormETL
 from etl.project import ProjectETL
@@ -187,18 +190,28 @@ def onboard_social():
 
 # -- - - - - - - - - - - - - TPA parts- - - - - - - - - - - - - -  
 
+def update_redshift_job_status(truve_id: int, job_identifier:str, status_id: int):
+    rs = RedShiftDestination()
+    now = datetime.datetime.now()    
+    query = f"""
+            UPDATE {os.environ["AWS_REDSHIFT_TASK_TABLE_PATH"]}
+            SET status_id = {status_id}, updated_at = '{now}'
+            WHERE id = {truve_id} AND job_identifier = '{job_identifier}' 
+        """
+
+    rs.execute_query(query)
+
+    # rs.load_data(df, table_name="tpa_updates.exec_statuses")
+
+def update_redshift_pipeline_status(truve_id:int, tpa_identifier: str, status_id: int):
+    rs = RedShiftDestination()
+    now = datetime.datetime.now()
+    query = f"""
+        UPDATE {os.environ["AWS_REDSHIFT_PIPELINE_TABLE_PATH"]}
+        SET status_id = {status_id}, updated_at = '{now}'
+        WHERE id = {truve_id} AND tpa_identifier = '{tpa_identifier}' 
+    """
+
+    rs.execute_query(query)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# Flink dene
