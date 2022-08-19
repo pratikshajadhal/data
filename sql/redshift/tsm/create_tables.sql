@@ -115,7 +115,11 @@ CREATE TABLE IF NOT EXISTS CMS_Cases (
   Case_ID int not null,
   Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
   Is_Archived boolean,
+<<<<<<< HEAD:sql/redshift/tsm/create_tables.sql
   Date_of_Incident date,
+=======
+  Date_of_Incident date not null,
+>>>>>>> fix: TSM updates:TSM.sql
   primary key (Case_ID)
 );
 
