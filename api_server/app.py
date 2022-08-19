@@ -1,11 +1,9 @@
 import os
-from html import entities
-from attr import fields
-from http.client import UNPROCESSABLE_ENTITY
-from py import code
+import requests
 import uvicorn
 import json
 import uvicorn
+
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
@@ -16,18 +14,19 @@ from fastapi import FastAPI, HTTPException, Request
 from dacite import from_dict
 
 from api_server.config import FVWebhookInput,  TaskStatus, EtlStatus, Notify, Onboarding
-from api_server.helper import handle_wb_input, onboard_fv, onboard_ld, onboard_social
-from etl.helper import get_fv_etl_object, get_ld_etl_object
-from filevine.client import FileVineClient
-from leaddocket.client import LeadDocketClient
+from api_server.helper import onboard_fv, onboard_ld, onboard_social, update_redshift_pipeline_status, update_redshift_job_status
+from etl.destination import S3Destination, RedShiftDestination
 from task.hist_helper import *
 from utils import get_logger, get_yaml_of_org
 from api_server.exceptions import  ValidationErr, AuthErr
 from fastapi.responses import JSONResponse
 from api_server.exceptions import  ValidationErr, AuthErr
+from api_server.config import Onboarding
+
 
 
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+
 logger = get_logger(__name__)
 
 APP_NAME = "DATA API"
@@ -76,21 +75,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
-@app.on_event("startup")
-async def loadVersion():
-    global serverSourceVersion
-
-    with open('version', 'r') as f:
-        serverSourceVersion = f.read().strip()
-
-    print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
-
-
-
-
-# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
-
 @app.exception_handler(500)
 async def internal_exception_handler(request: Request, exc: Exception):
     return JSONResponse({"message": "Unknown error", "code": 500, "detail":str(exc)}, status_code=500)
@@ -107,6 +91,16 @@ async def validation_exception_handler(request: Request, exc: ValidationErr):
 async def validation_exception_handler(request: Request, exc: AuthErr):
     return exc.response()
 
+# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+
+@app.on_event("startup")
+async def loadVersion():
+    global serverSourceVersion
+
+    with open('version', 'r') as f:
+        serverSourceVersion = f.read().strip()
+
+    print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
 
 @app.get("/")
 async def home():
@@ -118,28 +112,19 @@ async def home():
         "status": "OK",
         "version": serverSourceVersion.strip()
     }
-@app.post("tpa/test", tags=["TPA"])
+@app.post("/tpa/test", tags=["TPA"])
 async def test(name: str):
-    print(name)
+    pass
 
-    return {"name": name}
+# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 
-# ------------------- -------------------TPA ------------------- -------------------
-from api_server.config import Onboarding
+# ------------------- ------------------- TPA ------------------- -------------------
 @app.post("/tpa/onboard", tags=["TPA"]) 
 async def create_integration_onboarding(onboard: Onboarding):
     # TODO: Needs to be private and only accesible to truve-api
 
     TPA_CUSTOM_SCHEMAS = ("FILEVINE", "LEADDOCKET")
     TPA_WITHOUT_CUSTOM_SCHEMAS = ("INSTAGRAM", "FACEBOOK")
-    # - - - 
-    # TODO: Delete once YO OK.
-    # json_body = await request.json()
-    # try:
-    #     onboard = from_dict(data=json_body, data_class=OnboardingObject)
-    # except:
-    #     raise ValidationErr()
-    # - - - 
 
     # Essantial configs and ids
     org_id = onboard.org_id,
@@ -169,39 +154,60 @@ async def create_integration_onboarding(onboard: Onboarding):
 
 @app.post("/tpa/notify", tags=["TPA"]) 
 async def notify_mapping(notify: Notify):
-
-    print(notify)
-    # 1- Based on org_id in request body, it will fetch mapping file from postgres
-
-    # 2- Check mapping, validate with dataclass?
-
-    # 3- Based on mapping update redshift statuses.
-
-    # 4- Lambda will listen redshift to trigger pipelines.
-
-    # 5- Pipeline implementation depends on task architecture on AWS. All jobs can run in one Cluster or it will be seperate ECS Fargate cluster. It could be changed over time depends on task architecture that devops team will
-    
     logger.debug(f"Tpa notify")
-    return {"message": "(TEMP) Success, pipeline triggered"}
+    rs = RedShiftDestination()
 
+    # -- Check data statuses from Truve API. 4th step  Get integration statuses
+    # Get request to Truve API
+    URL = "truve-test.com"
+    try:
+        # TODO:
+        r = requests.get(url = URL)
+        data_status = r["data"]
+    except:
+        import random
+        my_bet = ["PENDING", "FAILED", "SUCCESS"]
+        data_status = (random.choice(my_bet))
+
+    options = {'FAILED' :"onboarding failure", 'PENDING':f"pipeline not ready"}
+    if data_status == 'SUCCESS':
+        # TODO: Trigger pipeline
+        # Update redshift table ?
+        return {"message": "Success, pipeline triggered"}
+
+    return {"message": (f"SUCESS, {options[data_status]}" + f" (data_status is {data_status})")}
 
 
 @app.post("/task/status", tags=["TPA"])
 async def update_job_complete(task_status: TaskStatus):
+    # Burası sadece update etcek abi sanıırm???
     # TODO: Needs to be private and only accesible to truve-api
     # This endpoint get request and update status of tasks. Will be called by workers.
-    print(task_status)
-
-    return {"message": "(TEMP) Success, job updated"}
+    logger.info(f"Truve_id: {task_status.truve_id}, job_identifier: {task_status.job_identifier}")
+    status_mapper = {
+        "PENDING": 1,
+        "RUNNING": 2,
+        "SUCCESS": 3,
+        "FAILURE": 4
+    }
+    status_id = status_mapper[task_status.job_result["Status"]]
+    
+    update_redshift_job_status(task_status.truve_id, task_status.job_identifier, status_id)
+    return {"message": "Success, job updated"}
 
 
 @app.post("/pipeline/status", tags=["TPA"])
 async def update_etl_pipeline_complete(etl_status: EtlStatus):
     # TODO: Needs to be private and only accesible to Databricks
     # Once all jobs are being completed, Pipeline statuss will be completed.
-    print(etl_status)
+    status_mapper = {
+        "SUCCESS": 3,
+        "FAILED": 4
+    }
+    status_id = status_mapper[etl_status.pipeline_status]
 
-    return {"message": "(TEMP) Success, Valid request received"}
+    update_redshift_pipeline_status(etl_status.truve_id, etl_status.tpa_id, status_id)
+    return {"message": "Success, Valid request received"}
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
