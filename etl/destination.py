@@ -1,4 +1,4 @@
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from typing import Dict
 import pandas as pd
 import os
@@ -117,10 +117,20 @@ class S3Destination(ETLDestination):
 
 
 class RedShiftDestination(ETLDestination):
+    def __init__(self):
+        self.config = {
+                        "schema_name" : os.environ["AWS_REDSHIFT_CONNECTION_SCHEMA_NAME"],
+                        "host" : os.environ["AWS_REDSHIFT_CONNECTION_HOST"],
+                        "port" : os.environ["AWS_REDSHIFT_CONNECTION_PORT"],
+                        "user" : os.environ["AWS_REDSHIFT_CONNECTION_UNAME"],
+                        "dbname" : os.environ["AWS_REDSHIFT_CONNECTION_DBNAME"],
+                        "password" : os.environ["AWS_REDSHIFT_CONNECTION_PWORD"],
+                        "s3_bucket" : os.environ["AWS_S3_BUCKET_NAME_RAW_DATA"],
+                        "s3_temp_dir" : os.environ["AWS_S3_BUCKET_NAME_TEMP_DIR"]
+                        }           
 
     def get_default_config(self, **kwargs) -> Dict:
-        print(os.environ["AWS_REDSHIFT_CONNECTION_HOST"])
-        rs_config = RedshiftConfig(table_name=kwargs["table_name"], 
+        rs_config = RedshiftConfig(
                     schema_name=os.environ["AWS_REDSHIFT_CONNECTION_SCHEMA_NAME"],
                     host=os.environ["AWS_REDSHIFT_CONNECTION_HOST"],
                     port=os.environ["AWS_REDSHIFT_CONNECTION_PORT"],
@@ -143,7 +153,7 @@ class RedShiftDestination(ETLDestination):
         return column_mapper
 
     def connect_to_redshift(self):
-        rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
+        rs_config : RedshiftConfig = from_dict(data_class=RedshiftConfig, data=self.config)
         connect = psycopg2.connect(dbname=rs_config.dbname,
                                 host=rs_config.host,
                                 port=rs_config.port,
@@ -196,9 +206,15 @@ class RedShiftDestination(ETLDestination):
         cursor.execute(create_table_query)
         connect.commit()
 
-    def load_data(self, data_df:pd.DataFrame, **kwrags):
-        rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
-        
+
+    def execute_query(self, query: str):
+        cursor, connect = self.connect_to_redshift()
+
+        cursor.execute(query)
+        connect.commit()
+
+    def load_data(self, data_df:pd.DataFrame, table_name:str):
+        rs_config  = from_dict(data_class=RedshiftConfig, data=self.config)
         pr.connect_to_redshift(dbname=rs_config.dbname,
                                 host=rs_config.host,
                                 port=rs_config.port,
@@ -213,9 +229,10 @@ class RedShiftDestination(ETLDestination):
                     aws_access_key_id=os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
                     aws_secret_access_key=os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
             )
+            print("Connected s3")
         else:
             # Fetch credentials from task role
-            credentials = self.s3_session.get_credentials()
+            credentials = s3_session.get_credentials()
 
             # Credentials are refreshable, so accessing your access key / secret key
             # separately can lead to a race condition. Use this to get an actual matched
@@ -232,7 +249,13 @@ class RedShiftDestination(ETLDestination):
             )
 
         # Write the DataFrame to S3 and then to redshift
-        pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)
+        pr.pandas_to_redshift(data_frame=data_df,
+                             redshift_table_name=table_name,
+                             region='eu-central-1',
+                             append=True
+                            )
+
+    
 
 
 class SqsDestination(ETLDestination):
