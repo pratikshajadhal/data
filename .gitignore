@@ -57,8 +57,13 @@ dist/
 
 # Ignore folder
 /ignored/
+<<<<<<< HEAD
 .env
 *.csv
 
 *.parquet
 sstm_input_data/
+=======
+
+sstm_input_data/
+>>>>>>> fix: env changes based on CF stack
