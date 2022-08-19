@@ -59,7 +59,7 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
 
     collection_etl = CollectionETL(model_name=wb_input.section, 
                                 source=None, 
-                                entity_type="collection",
+                                entity_type="collections",
                                 project_type=wb_input.project_type_id,
                                 destination=S3Destination(org_id=wb_input.org_id), 
                                 fv_config=fv_config, 
