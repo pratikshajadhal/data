@@ -351,9 +351,8 @@ CREATE TABLE IF NOT EXISTS igCities (
 
 ----------------------------------------------
 
-CREATE TABLE IF NOT EXISTS Departments (
+CREATE TABLE IF NOT EXISTS APP_Departments (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   department_id int not null,
   deparment_name varchar(255) not null unique,
   Custom1 varchar(255),
@@ -364,15 +363,14 @@ CREATE TABLE IF NOT EXISTS Departments (
 
 
 
-CREATE TABLE IF NOT EXISTS TeamsforTargets (
+CREATE TABLE IF NOT EXISTS APP_TeamsforTargets (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   Team_ID int not null,
   Team_Name varchar(255) not null unique,
   Team_Type varchar(255),
   Team_Sub_Type varchar(255),
-  Team_member_id int references Peoples(people_id),
-  department_id int references Departments(department_id),
+  Team_member_id int references CMS_People(people_id),
+  department_id int references APP_Departments(department_id),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -382,12 +380,11 @@ CREATE TABLE IF NOT EXISTS TeamsforTargets (
 
 
 
-CREATE TABLE IF NOT EXISTS Targets (
+CREATE TABLE IF NOT EXISTS APP_Targets (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   Target_ID int not null,
-  deparment_id int not null references Departments(department_id),  
-  Team_member_id int not null references Peoples(people_id),
+  deparment_id int not null references APP_Departments(department_id),  
+  Team_member_id int not null references CMS_People(people_id),
   Year int not null,
   Quarter int not null,
   Month int not null,
