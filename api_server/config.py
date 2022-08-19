@@ -70,17 +70,17 @@ class Notify(BaseModel):
 
 class TaskStatus(BaseModel):
     truve_id: int 
-    tpa_id : str 
+    job_identifier : str 
     job_result: dict
     error_body: Optional[dict] = None
 
     class Config:
         schema_extra = {
             "example": {
-                    "truve_id": 123,
-                    "tpa_id": "FILEVINE",
+                    "truve_id": 1,
+                    "job_identifier": "INSTAGRAM_HOURLY_POSTS_PULL",
                     "job_result":{
-                        "status": "success"
+                        "Status": "SUCCESS"
                     }
                 }
             }
