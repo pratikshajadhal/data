@@ -50,6 +50,25 @@ CREATE TABLE IF NOT EXISTS CMS_PeoplePeopleTypes (
 );
 
 
+
+CREATE TABLE IF NOT EXISTS CMS_Phases (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Phase_ID int not null,
+  Phase_Name varchar(255) not null unique,
+  Phase_Order int not null unique,
+  Phase_Category varchar(255),
+  Phase_Sub_Category varchar(255),
+  Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
+  Custom1 varchar(255),
+  Custom2 varchar(255),
+  Custom3 varchar(255),
+  primary key (Phase_ID)
+);
+
+
+
+
 CREATE TABLE IF NOT EXISTS CMS_CaseTypes (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
@@ -109,6 +128,17 @@ CREATE TABLE IF NOT EXISTS CMS_StatusMaster (
 );
 
 
+CREATE TABLE IF NOT EXISTS CMS_Cases (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Case_ID int not null,
+  Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
+  Is_Archived boolean,
+  Date_of_Incident date not null,
+  primary key (Case_ID)
+);
+
+
 CREATE TABLE IF NOT EXISTS CMS_InsuranceMaster (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
@@ -150,9 +180,9 @@ CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
   Case_Source_Name varchar(255),
   Attorney_Fee_Percentage decimal(3,2),
   Projected_Settlement_Date date,
-  Projected_Settlement_Amount date,
+  Projected_Settlement_Amount decimal(8,2),
   Actual_Settlement_Date date,
-  Actual_Settlement_Amount date,
+  Actual_Settlement_Amount decimal(8,2),
   If_Case_Settled_Presuit varchar(50),
   If_VIP_Case varchar(50),
   If_Case_Referred_Out varchar(50),
@@ -183,7 +213,7 @@ CREATE TABLE IF NOT EXISTS CMS_CaseFigures (
   foreign key (Parent_Case_ID, Case_ID) references CMS_CaseDetails (Parent_Case_ID, Case_ID)
 );
 
-CREATE TABLE IF NOT EXISTS IntakeDetails (
+CREATE TABLE IF NOT EXISTS CMS_IntakeDetails (
   Truve_Org_ID int not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
@@ -223,9 +253,9 @@ CREATE TABLE IF NOT EXISTS CMS_PhaseChanges (
 --Social Media Standard Models
 
 --Instagram
-CREATE TABLE IF NOT EXISTS igPosts (
+CREATE TABLE IF NOT EXISTS IG_Posts (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Post_ID varchar(255) not null,
   PostDate timestamp not null,
   Caption text,
@@ -242,9 +272,9 @@ CREATE TABLE IF NOT EXISTS igPosts (
 );
 
 
-CREATE TABLE IF NOT EXISTS igDates (
+CREATE TABLE IF NOT EXISTS IG_Dates (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Date_Date date not null,
   Followers int,
   Posts int,
@@ -253,9 +283,9 @@ CREATE TABLE IF NOT EXISTS igDates (
 );
 
 
-CREATE TABLE IF NOT EXISTS igHashtags (
+CREATE TABLE IF NOT EXISTS IG_Hashtags (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Hashtag varchar(255) not null,
   Hashtag_Date date,
   Posts int,
@@ -266,9 +296,9 @@ CREATE TABLE IF NOT EXISTS igHashtags (
 );
 
 
-CREATE TABLE IF NOT EXISTS igMediaTypes (
+CREATE TABLE IF NOT EXISTS IG_MediaTypes (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Media_Type varchar(255) not null,
   Media_Type_Date date,
   Posts int,
@@ -278,9 +308,9 @@ CREATE TABLE IF NOT EXISTS igMediaTypes (
 );
 
 
-CREATE TABLE IF NOT EXISTS igCountries (
+CREATE TABLE IF NOT EXISTS IG_Countries (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Country varchar(255) not null,
   Countries_Date date,
   Followers int,
@@ -290,9 +320,9 @@ CREATE TABLE IF NOT EXISTS igCountries (
 );
 
 
-CREATE TABLE IF NOT EXISTS igAges (
+CREATE TABLE IF NOT EXISTS IG_Ages (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Age varchar(255) not null,
   Ages_Date date,
   Followers int,
@@ -302,9 +332,9 @@ CREATE TABLE IF NOT EXISTS igAges (
 );
 
 
-CREATE TABLE IF NOT EXISTS igGender (
+CREATE TABLE IF NOT EXISTS IG_Gender (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Gender varchar(255) not null,
   Gender_Date date,
   Followers int,
@@ -314,9 +344,9 @@ CREATE TABLE IF NOT EXISTS igGender (
 );
 
 
-CREATE TABLE IF NOT EXISTS igLocales (
+CREATE TABLE IF NOT EXISTS IG_Locales (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Locale varchar(255) not null,
   Locale_Date date,
   Followers int,
@@ -326,9 +356,9 @@ CREATE TABLE IF NOT EXISTS igLocales (
 );
 
 
-CREATE TABLE IF NOT EXISTS igHours (
+CREATE TABLE IF NOT EXISTS IG_Hours (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Hour varchar(255) not null,
   Hours_Date date,
   Posts int,
@@ -338,9 +368,9 @@ CREATE TABLE IF NOT EXISTS igHours (
 );
 
 
-CREATE TABLE IF NOT EXISTS igCities (
+CREATE TABLE IF NOT EXISTS IG_Cities (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   City varchar(255) not null,
   Cities_Date date,
   Followers int,
