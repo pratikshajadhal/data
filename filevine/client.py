@@ -3,7 +3,7 @@ import requests
 import os
 import json 
 import logging
-
+from api_server.exceptions import AuthErr
 from dotenv import load_dotenv
 from utils import get_logger
 
@@ -39,8 +39,12 @@ class FileVineClient(object):
 		}
         response = requests.post(url, headers={"Content-Type" : "application/json"}, data=json.dumps(data))
         if response.status_code != 200:
+            if response.status_code == 401:
+                raise AuthErr
+
+            if response.status_code == 404:
+                raise 
             logger.error("Unable to generate tokens")
-            raise Exception("Token genreation error")
         return json.loads(response.text)
 
 
@@ -77,6 +81,8 @@ class FileVineClient(object):
         if response.status_code != 200:
             logging.error(response.text)
             logging.error(response.status_code)
+            if response.status_code == 401:
+                raise AuthErr
             if response.status_code == 404:
                 return None
             raise
