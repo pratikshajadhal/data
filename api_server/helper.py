@@ -4,12 +4,13 @@ import datetime
 from etl.datamodel import  FileVineConfig, SelectedConfig
 from etl.destination import S3Destination, RedShiftDestination
 from .config import FVWebhookInput, TaskStatus
-from etl.helper import get_fv_etl_object, get_ld_etl_object
+from etl.helper import get_fv_etl_object, get_ld_etl_object, ld_handle_object
 from etl.form import FormETL
 from etl.project import ProjectETL
 from etl.collections import CollectionETL
 from utils import load_config, get_config_of_section, get_logger
 from filevine.client import FileVineClient
+from leaddocket.client import LeadDocketClient
 from api_server.exceptions import AuthErr
 
 logger = get_logger(__name__)
@@ -155,6 +156,12 @@ def get_all_snapshot(fv_client: FileVineClient,section_data, org_id, creds, proj
     return entities
 
 
+def get_ld_snapshots(ld_client: LeadDocketClient, org_id: str):
+    ld_client = LeadDocketClient(base_url=creds["base_url"], api_key=creds["api_key"])
+
+    pass
+
+
 def onboard_fv(org_id, creds):
     fv_client = FileVineClient(org_id=org_id, user_id=creds["user_id"], api_key=creds["api_key"])
 
@@ -172,12 +179,27 @@ def onboard_fv(org_id, creds):
     return message, entities, project_type_ids[0]
 
 
-def onboard_ld():
-    #TODO:
+def onboard_ld(org_id: str, creds):
+    entities = ["statuses", "leadsource", "casetype", 
+                "leadrow",
+                "leaddetail",
+                "contact",
+                "opportunities",
+                "referrals",
+                "users"]
+    output = list()
+
+    for entity in entities:
+        data = dict()
+        etl_obj = ld_handle_object(org_id=org_id, entity=entity, creds=creds)
+        snapshot = etl_obj.get_snapshot()
+        data["entity_name"] = entity
+        data["field"] = snapshot
+        
+        output.append(data)
+    
     message =  "Success, custom mapping required, snapshot success, grooming file returned"
-    data = "TODO:"
-    return message, data
-    pass
+    return message, output
 
 
 def onboard_social():
