@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Literal
+from typing import Any, Dict, Literal, Union
 from pydantic import BaseModel, root_validator
 from enum import Enum
 from typing import Literal, List, Optional
@@ -38,7 +38,7 @@ class TruveDataTask:
 
 # - - TPA
 class Onboarding(BaseModel):
-    org_id: int
+    org_id: Union[int, str] # int for filevine, str for leaddocket.
     tpa_id: str
     credentials: dict
 
