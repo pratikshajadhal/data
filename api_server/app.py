@@ -81,11 +81,8 @@ async def internal_exception_handler(request: Request, exc: Exception):
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return JSONResponse({"message": "Bad request", "code": 422, "detail":str(exc)}, status_code=422)
+    return JSONResponse({"message": "Bad request", "detail":str(exc)}, status_code=422)
 
-@app.exception_handler(ValidationErr) 
-async def validation_exception_handler(request: Request, exc: ValidationErr):
-    return exc.response()
 
 @app.exception_handler(AuthErr) 
 async def validation_exception_handler(request: Request, exc: AuthErr):
@@ -122,29 +119,20 @@ async def test(name: str):
 @app.post("/tpa/onboard", tags=["TPA"]) 
 async def create_integration_onboarding(onboard: Onboarding):
     # TODO: Needs to be private and only accesible to truve-api
-
-    TPA_CUSTOM_SCHEMAS = ("FILEVINE", "LEADDOCKET")
-    TPA_WITHOUT_CUSTOM_SCHEMAS = ("INSTAGRAM", "FACEBOOK")
-
-    # Essantial configs and ids
-    org_id = onboard.org_id,
-    creds = onboard.credentials
     logger.info(f"Onboarding for TPA: {onboard.tpa_id}, Org:{onboard.org_id} started!")
     
     if onboard.tpa_id == 'FILEVINE':
-
         message, groom, project_type_id = onboard_fv(onboard.org_id, onboard.credentials)
         data = {
                 "project_type_id": project_type_id,
                 "entities": groom
                 }
     elif onboard.tpa_id == 'LEADDOCKET':
-        message, data= onboard_ld()
+        message, data= onboard_ld(org_id= onboard.org_id, creds = onboard.credentials)
     elif onboard.tpa_id == 'INSTAGRAM':
         message, data = onboard_social()
     elif onboard.tpa_id == 'test':
         print(3 / 0)
-
 
     return {
             "message": message,
