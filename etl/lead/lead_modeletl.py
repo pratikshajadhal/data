@@ -14,15 +14,16 @@ class LeadModelETL(object):
     
     def __init__(self, model_name:str,
                     ld_config: LeadDocketConfig, 
-                    column_config: ColumnConfig, 
-                    fields,
-                    destination: ETLDestination,
+                    fields= None,
+                    api_key = None,
+                    destination: ETLDestination= None,
+                    column_config: ColumnConfig= None, 
                     ):
         self.model_name = model_name
         self.ld_config = ld_config
         self.column_config = column_config
         self.base_url = ld_config.base_url
-        self.ld_client = LeadDocketClient(ld_config.base_url)
+        self.ld_client = LeadDocketClient(ld_config.base_url, api_key)
         self.fields = fields
         self.destination = destination
 

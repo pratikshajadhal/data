@@ -115,66 +115,44 @@ def get_ld_etl_object(org_config: LeadSelectedConfig, entity_name:str):
     return cls    
 
 
-def ld_handle_object(selected_field_config:LeadSelectedConfig, entity:str):
-    ld_config = LeadDocketConfig(selected_field_config.org_name, selected_field_config.base_url)
-
+def ld_handle_object(org_id:str, entity:str, creds):
+    ld_config = LeadDocketConfig(org_id, creds["base_url"])
 
     if entity == "statuses" or entity == 'leadsource' or entity == 'casetype':
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = CoreETL(model_name=section.name, 
+        etl_object = CoreETL(
+                    model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"])
     elif entity == "leadrow":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = LeadRowETL(model_name=section.name, 
+        etl_object = LeadRowETL(model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"]
+                   )
     elif entity == "leaddetail":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = LeadDetailETL(model_name=section.name, 
+       
+        etl_object = LeadDetailETL(model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"])
     elif entity == "contact":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = LeadContactETL(model_name=section.name, 
-                    ld_config=ld_config,    
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+        etl_object = LeadContactETL(model_name=entity, 
+                    ld_config=ld_config, 
+                    api_key= creds["api_key"]   
+                    )
     elif entity == "opportunities":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]        
-        etl_object = LeadOpportETL(model_name=section.name, 
+        etl_object = LeadOpportETL(model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"]
+                    )
     elif entity == "referrals":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = LeadReferralsETL(model_name=section.name, 
+        etl_object = LeadReferralsETL(model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"]
+                    )
     elif entity == "users":
-        section = get_config_of_lead_section(selected_config=selected_field_config, 
-                                                section_name=entity.lower())[0]
-        etl_object = LeadUsersETL(model_name=section.name, 
+        etl_object = LeadUsersETL(model_name=entity, 
                     ld_config=ld_config,
-                    column_config=section, 
-                    fields=section.fields,
-                    destination=None)
+                    api_key= creds["api_key"]
+                    )
     else:
         return 0
     return etl_object
