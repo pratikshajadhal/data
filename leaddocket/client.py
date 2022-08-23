@@ -1,11 +1,8 @@
 from typing import Dict, List
 import requests
-import os
 import json 
 import logging
-import pandas as pd
-import yaml
-from dacite import from_dict
+from api_server.exceptions import AuthErr
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -15,13 +12,14 @@ load_dotenv()
 
 class LeadDocketClient(object):
 
-    def __init__(self, base_url:str, api_key:str=os.environ["LOCAL_TPA_API_KEY_LEADDOCKET"]):
+    def __init__(self, base_url:str, api_key:str):
         self.base_url = base_url
         self.api_key = api_key
         self.headers = {
                         'Accept': 'application/json',
                         'api_key': self.api_key
                         }
+    
 
     def make_request(self, end_point:str, query_param:Dict={}):
         url = f"{self.base_url}{end_point}"
@@ -30,6 +28,9 @@ class LeadDocketClient(object):
         if response.status_code != 200:
             logging.error(response.text)
             logging.error(response.status_code)
+
+            if response.status_code == 401:
+                raise AuthErr
             if response.status_code == 404:
                 return None
             raise

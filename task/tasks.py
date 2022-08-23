@@ -46,7 +46,7 @@ def make_fv_subscription(s3_conf_file_path: str,
         "CollectionItem.Deleted",
         "CollectionItem.Updated"]
 
-    fv_client = FileVineClient(org_id = org_id, user_id = user_id)
+    fv_client = FileVineClient(org_id = org_id, user_id = user_id, api_key=os.environ["LOCAL_TPA_API_KEY_FILEVINE"])
     # # To connect webhook 2 steps need to be covered. 
     # # # 1- Get subscription payload(subscription_id). 
     # # # 2- Create webhook connection using subsription payload
