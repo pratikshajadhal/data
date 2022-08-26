@@ -294,7 +294,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
     """
     incoming_json = await request.json()
     event_type = incoming_json["EventType"]
-    logger.info(f"Got LeadDocket Webhook Request {event_type}")
+    logger.info(f"Got LeadDocket Webhook Request \033[91m {event_type} \033[0m")
     #TODO: Find appropriate yaml file based on clientId(org_name)
     s3_conf_file_path = "src-lead.yaml" 
 
