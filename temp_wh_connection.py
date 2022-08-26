@@ -121,7 +121,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def main():
-    lb = LeadBot(webhook_url='test_ip')
+    lb = LeadBot(webhook_url='http://3.74.173.122:8000/lead_webhook_handler?clientId=aliawadlaw')
     lb.update_webhook()
 
 if __name__ == '__main__':
