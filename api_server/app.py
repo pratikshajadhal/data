@@ -281,7 +281,7 @@ async def lg_get(org_name):
 @app.post("/lead_webhook_handler", tags=["leaddocket"])
 async def lead_webhook_handler(request: Request, clientId:str):
     """
-     Function to handle webhooks for filevine
+     Function to handle webhooks for leaddocket
 
         API endpoint to handle webhook incoming request.
         Currently webhook was set for 5 different incomings.
@@ -289,10 +289,12 @@ async def lead_webhook_handler(request: Request, clientId:str):
         - LeadCreated
         - LeadStatusChanged
         - Contact Added
+        - Contact Edited
         - Opportunity Added.
     """
     incoming_json = await request.json()
-    logger.info(f"Got LeadDocket Webhook Request {incoming_json}")
+    event_type = incoming_json["EventType"]
+    logger.info(f"Got LeadDocket Webhook Request {event_type}")
     #TODO: Find appropriate yaml file based on clientId(org_name)
     s3_conf_file_path = "src-lead.yaml" 
 
@@ -306,6 +308,16 @@ async def lead_webhook_handler(request: Request, clientId:str):
 
 
     elif event_type == 'Contact Added':
+        # #Extract Metadata
+        contact_id = incoming_json.get("ContactId")
+
+        # Update Contact ETL
+        start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
+    
+    elif event_type == 'Contact Edited':
+        print("=======Contact Edited, incoming contact edited is:")
+        print(incoming_json)
+        print("="*20)
         # #Extract Metadata
         contact_id = incoming_json.get("ContactId")
 
@@ -365,6 +377,7 @@ async def listen_lead(request: Request):
         - LeadCreated
         - LeadStatusChanged
         - Contact Added
+        - Contact Edited
         - Opportunity Added.
     """
     incoming_json = await request.json()
