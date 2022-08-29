@@ -2,11 +2,11 @@
 
 <br/>
 
-# 0.1.13
+# 0.1.14
 
-Original Commit ID: 0104b1b
+Original Commit ID: 2bbb60e
 
 ## Changes
-Merged in fix&#x2F;env-changes (pull request #44)
+Merged in f&#x2F;version-update (pull request #49)
 
-Fix&#x2F;env changes
+Update version to build pipelines successfully
