@@ -6,7 +6,7 @@ set -e
 AWS_CLI_PROFILE_NAME=$1
 if [ -z "$1" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:DATABRICKS_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:DATABRICKS_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>  <optional:TPAApiKeySecretName>"'
     exit 1
 fi
 
@@ -14,7 +14,7 @@ fi
 SERVICE_ECR_IMAGE_TAG=$2
 if [ -z "$2" ]
 then
-    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:DATABRICKS_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>"'
+    echo 'Usage: "sh .infra/aws/cf/tools/02-service.sh <AWS_CLI_PROFILE_NAME> <SERVICE_ECR_IMAGE_TAG> <optional:SERVICE_DNS_ENV_ALIAS_KEY> <optional:ENV_NAME> <optional:SERVICE_DNS_HOSTED_ZONE_NAME> <optional:SERVICE_NAME> <optional:SERVICE_TASK_CONTAINER_PORT> <optional:SERVICE_TASK_MIN_CONTAINERS> <optional:SERVICE_TASK_MAX_CONTAINERS> <optional:SERVICE_AUTOSCALING_TARGET_TASK_CPU_PCT> <optional:ALB_SSL_CERT_STACK_NAME> <optional:ECS_CLUSTER_STACK_NAME> <optional:DATABRICKS_STACK_NAME> <optional:BUCKETS_STACK_NAME> <optional:STACK_NAME>  <optional:TPAApiKeySecretName>"'
     exit 1
 fi
 
@@ -109,6 +109,14 @@ then
     STACK_NAME="$ENV_NAME-data-api-02-service"
 fi
 
+# Optional 15th argument for this CloudFormation TPA API Credentials secret manager name
+TPA_API_KEY_SECRET_NAME=${15}
+if [ -z "${15}" ]
+then
+    TPA_API_KEY_SECRET_NAME="$ENV_NAME-TPAApiKeyCredentials"
+fi
+
+
 # Query ECS Cluster Name
 echo "Fetching ECS Cluster Name..."
 ECS_CLUSTER_NAME=$(aws cloudformation describe-stacks --stack-name $ECS_CLUSTER_STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`ClusterName`].OutputValue' --output text --profile $AWS_CLI_PROFILE_NAME)
@@ -171,6 +179,7 @@ aws cloudformation deploy --template-file=.infra/aws/cf/02-service.yml \
         ServiceDnsSslCertArn=$SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN \
         BucketNameTempData=$BUCKET_NAME_TEMP_DATA \
         BucketNameEtlRawData=$BUCKET_NAME_ETL_RAW_DATA \
+        TPAApiKeySecretName=$TPA_API_KEY_SECRET_NAME \
     --stack-name $STACK_NAME \
     --capabilities CAPABILITY_NAMED_IAM \
     --profile $AWS_CLI_PROFILE_NAME

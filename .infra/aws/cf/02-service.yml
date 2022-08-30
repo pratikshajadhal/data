@@ -82,6 +82,9 @@ Parameters:
   BucketNameEtlRawData:
     Type: String
 
+  TPAApiKeySecretName:
+    Type: String
+
 Conditions:
   IsProd:
     !Equals [!Ref EnvironmentName, prod]
@@ -211,9 +214,9 @@ Resources:
 
             ## Local - TPA - API Keys
             - Name: LOCAL_TPA_API_KEY_FILEVINE
-              Value: ''
+              Value: !Sub '{{resolve:secretsmanager:${TPAApiKeySecretName}:SecretString:LocalTPAApiKeyFileVine}}'
             - Name: LOCAL_TPA_API_KEY_LEADDOCKET
-              Value: ''
+              Value: !Sub '{{resolve:secretsmanager:${TPAApiKeySecretName}:SecretString:LocalTPAApiKeyLeadDocket}}'
 
   # Role used to execute task (i.e. start/stop/scale)
   TaskExecutionRole:
