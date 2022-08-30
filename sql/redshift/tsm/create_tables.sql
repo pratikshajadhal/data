@@ -115,11 +115,7 @@ CREATE TABLE IF NOT EXISTS CMS_Cases (
   Case_ID int not null,
   Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
   Is_Archived boolean,
-<<<<<<< HEAD:sql/redshift/tsm/create_tables.sql
   Date_of_Incident date,
-=======
-  Date_of_Incident date not null,
->>>>>>> fix: TSM updates:TSM.sql
   primary key (Case_ID)
 );
 
@@ -201,13 +197,8 @@ CREATE TABLE IF NOT EXISTS CMS_IntakeDetails (
   Parent_Case_ID int not null,
   Case_ID int not null,
   Intake_ID int not null,
-<<<<<<< HEAD:sql/redshift/tsm/create_tables.sql
   Person_Performing_Intake_ID int,
   Intake_Source varchar(255),
-=======
-  Person_Performing_Intake_ID int not null references CMS_People (People_ID),
-  Intake_Source varchar(255) not null DEFAULT 'None',
->>>>>>> fix: apply PR feedbacks:TSM.sql
   Date_of_Intake date,
   Date_of_Incident date,
   DUI_or_HitandRun varchar(50),
