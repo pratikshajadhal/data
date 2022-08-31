@@ -109,12 +109,6 @@ then
     STACK_NAME="$ENV_NAME-data-api-02-service"
 fi
 
-# Optional 15th argument for this CloudFormation TPA API Credentials secret manager name
-TPA_API_KEY_SECRET_NAME=${15}
-if [ -z "${15}" ]
-then
-    TPA_API_KEY_SECRET_NAME="$ENV_NAME-TPAApiKeyCredentials"
-fi
 
 
 # Query ECS Cluster Name
@@ -179,7 +173,6 @@ aws cloudformation deploy --template-file=.infra/aws/cf/02-service.yml \
         ServiceDnsSslCertArn=$SERVICE_DNS_SSL_SUBDOMAIN_CERT_ARN \
         BucketNameTempData=$BUCKET_NAME_TEMP_DATA \
         BucketNameEtlRawData=$BUCKET_NAME_ETL_RAW_DATA \
-        TPAApiKeySecretName=$TPA_API_KEY_SECRET_NAME \
     --stack-name $STACK_NAME \
     --capabilities CAPABILITY_NAMED_IAM \
     --profile $AWS_CLI_PROFILE_NAME
