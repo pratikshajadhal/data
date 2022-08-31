@@ -4,15 +4,21 @@ import uvicorn
 
 from fastapi import FastAPI, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from dacite import from_dict
 
 from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
+from etl.destination import PostgresDestination
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from tasks.hist_helper import *
 from utils import get_logger, get_yaml_of_org
+
+
+
+
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 logger = get_logger(__name__)
 
@@ -36,6 +42,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(500)
+async def internal_exception_handler(request: Request, exc: Exception):
+    return JSONResponse({"message": "Unknown error", "code": 500, "detail":str(exc)}, status_code=500)
 
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
 @app.on_event("startup")
@@ -412,6 +422,20 @@ async def listen_lead(request: Request):
         'statusCode': 200,
         'body': json.dumps('Success')}
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - TPA - - - - - - - - - - 
+@app.get("/organizations/{orgId}/tpas/{tpaIdentifier}/status", tags=["tpa"])
+async def fv_get_sections(orgId: str, tpaIdentifier: str):
+    # TODO:
+    pg_dest = PostgresDestination()
+    latest = pg_dest.get_latest_pipeline_status("pipelines", tpa_identifier=tpaIdentifier, org_uuid=orgId)
+
+    return {
+        "message": {
+            "Latest pipeline number": latest[0],
+            "Latest pipeline status": latest[1]
+        }
+    }
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
