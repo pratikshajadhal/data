@@ -7,9 +7,9 @@ import pandas as pd
 import os
 import psycopg2
 from dacite import from_dict
-import datetime
-import logging
+
         
+import pandas as pd
 import boto3
 import pandas_redshift as pr
 import awswrangler as wr
@@ -242,3 +242,47 @@ class RedShiftDestination(ETLDestination):
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)
+
+
+class PostgresDestination(ETLDestination):
+    def __init__(self):
+        server_env = os.environ["SERVER_ENV"]
+
+        if server_env == "LOCAL":
+            # Establishing the connection
+            self.connect = psycopg2.connect(
+                                    database= os.environ["LOCAL_POSTGRES_DB"], 
+                                    user= os.environ["LOCAL_POSTGRES_USER"], 
+                                    password= os.environ["LOCAL_POSTGRES_PASS"],
+                                    host= os.environ["LOCAL_POSTGRES_HOST"],
+                                    port= '5432'
+            )
+            self.connect.autocommit = True
+            self.cursor = self.connect.cursor()
+        else:
+            # TODO:
+            pass
+
+
+    def _execute_query(self, query: str) -> None:
+        self.cursor.execute(query)
+        self.connect.commit()
+
+    def get_latest_pipeline_status(self, table_name: str, tpa_identifier: str, org_uuid: str) -> tuple:
+        query =f"""
+            SELECT  
+                org_pipeline_number,
+                status_id 
+            FROM {os.environ["LOCAL_POSTGRES_PIPELINE_TABLE_PATH"]} AS p
+            JOIN(
+                    SELECT MAX(org_pipeline_number) as latest_pipeline_number
+                    FROM tpa.pipelines
+                    WHERE tpa_identifier = '{tpa_identifier}'
+                ) AS max 
+            ON p.org_pipeline_number = max.latest_pipeline_number
+        """
+        self._execute_query(query)
+        res = self.cursor.fetchall()
+
+        # df = pd.DataFrame(res, columns=['org_pipeline_number', 'status_id'])
+        return res[0]
