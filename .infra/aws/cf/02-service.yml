@@ -209,11 +209,11 @@ Resources:
             - Name: AWS_S3_BUCKET_NAME_TEMP_DATA
               Value: !Ref BucketNameTempData  # NOTE: This value comes from this stack, not the env secret
 
-            ## Local - TPA - API Keys
+            # Local - TPA - API Keys
             - Name: LOCAL_TPA_API_KEY_FILEVINE
-              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/TPAApiKeyCredentials:SecretString:LocalTPAApiKeyFileVine}}'
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:LOCAL_TPA_API_KEY_FILEVINE}}'
             - Name: LOCAL_TPA_API_KEY_LEADDOCKET
-              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/TPAApiKeyCredentials:SecretString:LocalTPAApiKeyLeadDocket}}'
+              Value: !Sub '{{resolve:secretsmanager:${EnvironmentName}/ecs/${ServiceName}/env:SecretString:LOCAL_TPA_API_KEY_LEADDOCKET}}'
 
   # Role used to execute task (i.e. start/stop/scale)
   TaskExecutionRole:
