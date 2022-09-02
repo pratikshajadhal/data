@@ -1,8 +1,9 @@
 from cmath import phase
 from ctypes import Union
 from dataclasses import asdict, dataclass
-from typing import Dict
-from numpy import dtype
+from typing import Dict, List, Optional
+from uuid import UUID
+from xml.dom import NotFoundErr
 import pandas as pd
 import os
 import psycopg2
@@ -16,6 +17,7 @@ import awswrangler as wr
 
 from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
+
 
 logger = get_logger(__name__)
 
@@ -263,26 +265,72 @@ class PostgresDestination(ETLDestination):
             # TODO:
             pass
 
-
+    
     def _execute_query(self, query: str) -> None:
         self.cursor.execute(query)
         self.connect.commit()
 
-    def get_latest_pipeline_status(self, table_name: str, tpa_identifier: str, org_uuid: str) -> tuple:
+
+    def get_latest_pipeline_status(self, tpa_identifier: str, org_uuid: UUID) -> tuple:
+        latest = dict()
+        
         query =f"""
-            SELECT  
-                org_pipeline_number,
-                status_id 
-            FROM {os.environ["LOCAL_POSTGRES_PIPELINE_TABLE_PATH"]} AS p
-            JOIN(
-                    SELECT MAX(org_pipeline_number) as latest_pipeline_number
-                    FROM tpa.pipelines
-                    WHERE tpa_identifier = '{tpa_identifier}'
-                ) AS max 
-            ON p.org_pipeline_number = max.latest_pipeline_number
+        SELECT
+            p.pipeline_number,
+            ex.status_name 
+        FROM {os.environ["POSTGRES_PIPELINE_TABLE_PATH"]} AS p
+        JOIN(
+                SELECT tpa_identifier, MAX(pipeline_number) as latest_pipeline_number
+                FROM tpa.pipelines
+                WHERE tpa_identifier = '{tpa_identifier}'
+                GROUP BY tpa_identifier 
+            ) AS p2 
+        ON p.pipeline_number = p2.latest_pipeline_number AND p.tpa_identifier = p2.tpa_identifier
+        JOIN {os.environ["POSTGRES_EXEC_TABLE_PATH"]} as ex
+        ON p.status_id = ex.id 
         """
+
         self._execute_query(query)
-        res = self.cursor.fetchall()
+        res = self.cursor.fetchall()[0]
 
         # df = pd.DataFrame(res, columns=['org_pipeline_number', 'status_id'])
+        if res:
+            latest.update({"latest_pipeline_number": res[0], "latest_pipeline_status": res[1]})
+        else:
+            raise 
+        return latest
+
+
+    def check_params(self, org_uuid: str, tpa_identifier: str):
+        query = f"""
+            SELECT COUNT(1)
+            FROM {os.environ["POSTGRES_PIPELINE_TABLE_PATH"]}
+            WHERE org_uuid = '{org_uuid}' and tpa_identifier = '{tpa_identifier}';
+        """
+        self._execute_query(query)
+        res = self.cursor.fetchone()
         return res[0]
+
+
+    def attach_error_reason(self, latest: dict):
+        # TODO:
+        query = f"""
+            SELECT
+                j.error_reason_id,
+                j.error_details
+            FROM tpa.pipelines p1
+            JOIN tpa.jobs j 
+            ON  p1.id = j.pipeline_id 
+        """
+        pass
+
+
+# DO NOT use __pg_dest directly. Use get_postgres() instead.
+__pg_dest: Optional[PostgresDestination] = None
+
+
+def get_postgres():
+    global __pg_dest
+    if __pg_dest is None:
+        __pg_dest = PostgresDestination()
+    return __pg_dest
