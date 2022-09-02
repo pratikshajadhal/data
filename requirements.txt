@@ -72,3 +72,5 @@ uvicorn==0.17.6
 Werkzeug==2.1.1
 yarg==0.1.9
 yarl==1.7.2
+
+pytest~=7.1.2

@@ -1,19 +1,27 @@
 import os
 import json
+from collections import Counter
+import json
+import os
+from uuid import UUID
+
+import aiohttp
 import uvicorn
-
-from fastapi import FastAPI, File, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from dacite import from_dict
 
-from api_server.config import FVWebhookInput, TruveDataTask
+from api_server.config import FVWebhookInput
 from api_server.helper import handle_wb_input
+from etl.destination import get_postgres, reset_db
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
+from models.request import JobStatusInfo
+from models.response import OK
 from tasks.hist_helper import *
-from utils import get_logger, get_yaml_of_org
-# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+from utils import determine_pipeline_status_from_jobs, get_logger, get_yaml_of_org
+
+# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -
 logger = get_logger(__name__)
 
 APP_NAME = "webhook-listener"
@@ -37,12 +45,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
+# - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -
 @app.on_event("startup")
 async def loadVersion():
     global serverSourceVersion
 
-    with open('version', 'r') as f:
+    with open('../version', 'r') as f:
         serverSourceVersion = f.read().strip()
 
     print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
@@ -53,7 +61,7 @@ async def home():
         "status": "OK",
         "version": serverSourceVersion.strip()
     }
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - - 
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - -
 
 @app.get("/fv/{org}/snapshots", tags=["filevine"])
 async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
@@ -114,7 +122,7 @@ async def fv_get_sections(org:int, project_type_id:int):
             }
 
     """
-    
+
     logger.debug(f"{org} {project_type_id}")
     org_config = get_yaml_of_org(org)
     fv_client = FileVineClient(org_id=org, user_id=org_config.user_id)
@@ -122,7 +130,7 @@ async def fv_get_sections(org:int, project_type_id:int):
 
     section_data = section_data["items"]
     items = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
-    
+
     return {"project_type_id" : project_type_id,
             "data" : items}
 
@@ -158,15 +166,15 @@ async def fv_webhook_handler(request: Request):
     event_json = await request.json()
 
     logger.info(f"Got FV Webhook Request {event_json}")
-    
+
     #Extract Metadata
     entity = event_json["Object"]
-    
+
     if entity == "Project":
         #In case of project webhook, Handling will be different
-        
+
         event_name = event_json["Event"]
-        
+
         if event_name != "PhaseChanged":
             project_type_id = None
             org_id = event_json["OrgId"]
@@ -207,7 +215,7 @@ async def fv_webhook_handler(request: Request):
         response = handle_wb_input(wb_input=wh_input)
     except Exception as e:
         raise e
-        
+
     #finally:
     return {
         'statusCode': 200,
@@ -296,7 +304,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
     event_type = incoming_json["EventType"]
     logger.info(f"Got LeadDocket Webhook Request {event_type}")
     #TODO: Find appropriate yaml file based on clientId(org_name)
-    s3_conf_file_path = "src-lead.yaml" 
+    s3_conf_file_path = "src-lead.yaml"
 
     event_type = incoming_json.get("EventType")
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
@@ -313,7 +321,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
 
         # Update Contact ETL
         start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
-    
+
     elif event_type == 'Contact Edited':
         print("=======Contact Edited, incoming contact edited is:")
         print(incoming_json)
@@ -332,7 +340,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
 
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))
-        
+
 
     return {
         'statusCode': 200,
@@ -406,12 +414,35 @@ async def listen_lead(request: Request):
 
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))
-        
+
 
     return {
         'statusCode': 200,
         'body': json.dumps('Success')}
 
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - PIPELINES - - - - - - - - - -
+
+
+@app.put(
+    "/pipelines/{pipeline_id}/jobs/{job_id}",
+    response_model=OK,
+    response_model_exclude_none=True,
+    tags=["pipeline"],
+)
+async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo):
+    if not get_postgres().set_job_status(body.status, pipeline_id, job_id):
+        raise HTTPException(status_code=404, detail="job/pipeline not found")
+
+    # TODO: Replay attack: set status to PENDING or if already RUNNING, set to RUNNING again.
+
+    jobs = get_postgres().jobs(pipeline_id)
+    status = determine_pipeline_status_from_jobs(jobs)
+    if status is not None:
+        # Pipeline status needs to be updated.
+        get_postgres().set_pipeline_status(pipeline_id, status)
+
+    return OK()
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")

@@ -1,19 +1,25 @@
+import json
+from pprint import pprint
+from uuid import UUID
+from datetime import datetime
+
 from cmath import phase
 from ctypes import Union
 from dataclasses import asdict, dataclass
-from typing import Dict
+from typing import Dict, List, Optional
 from numpy import dtype
 import pandas as pd
 import os
 import psycopg2
 from dacite import from_dict
-import datetime
 import logging
-        
+
 import boto3
 import pandas_redshift as pr
 import awswrangler as wr
 
+from models.request import ExecStatus, ErrorReason
+from models.response import Job, Pipeline
 from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
 
@@ -28,7 +34,7 @@ class ETLDestination(object):
         return {}
 
     def load_data(self, data_df:pd.DataFrame, **kwargs):
-        return 0 
+        return 0
 
 class S3Destination(ETLDestination):
     def __init__(self, org_id, s3_bucket:str=None):
@@ -94,9 +100,9 @@ class S3Destination(ETLDestination):
 
     def save_project_phase(self, s3_key, project_id, phase_name):
         phase_df = pd.DataFrame([{"project_id" : project_id, "phase" : phase_name}])
-        
+
         s3_path = f"s3://{self.config['bucket']}/{s3_key}"
-        
+
         wr.s3.to_parquet(
                 df=phase_df,
                 path=f"{s3_path}",
@@ -108,10 +114,10 @@ class S3Destination(ETLDestination):
     def load_data(self, data_df: pd.DataFrame, **kwargs):
 
         s3_key = self.get_key(kwargs=kwargs)
-        
+
         logger.info(f"Uploading data to destination in following {s3_key}")
 
-        #Temp code 
+        #Temp code
         #data_df.to_parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
         wr.s3.to_parquet(
                 df=data_df,
@@ -129,7 +135,7 @@ class RedShiftDestination(ETLDestination):
 
     def get_default_config(self, **kwargs) -> Dict:
         print(os.environ["AWS_REDSHIFT_CONNECTION_HOST"])
-        rs_config = RedshiftConfig(table_name=kwargs["table_name"], 
+        rs_config = RedshiftConfig(table_name=kwargs["table_name"],
                     schema_name=os.environ["AWS_REDSHIFT_CONNECTION_SCHEMA_NAME"],
                     host=os.environ["AWS_REDSHIFT_CONNECTION_HOST"],
                     port=os.environ["AWS_REDSHIFT_CONNECTION_PORT"],
@@ -163,7 +169,7 @@ class RedShiftDestination(ETLDestination):
         cursor = connect.cursor()
         return cursor, connect
 
-    def create_redshift_table(self, 
+    def create_redshift_table(self,
                           column_def:list[ColumnDefn],
                           redshift_table_name,
                           column_data_types=None,
@@ -207,7 +213,7 @@ class RedShiftDestination(ETLDestination):
 
     def load_data(self, data_df:pd.DataFrame, **kwrags):
         rs_config : RedshiftConfig = from_dict(dataclass=RedshiftConfig, data=self.config)
-        
+
         pr.connect_to_redshift(dbname=rs_config.dbname,
                                 host=rs_config.host,
                                 port=rs_config.port,
@@ -232,7 +238,7 @@ class RedShiftDestination(ETLDestination):
             credentials = credentials.get_frozen_credentials()
             access_key = credentials.access_key
             secret_key = credentials.secret_key
-            
+
             pr.connect_to_s3(
                     bucket=rs_config.s3_bucket,
                     subdirectory=rs_config.s3_temp_dir,
@@ -242,3 +248,151 @@ class RedShiftDestination(ETLDestination):
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)
+
+
+class PostgresDestination(ETLDestination):
+    def __init__(self, **kwargs):
+        # Establishing the connection
+        super().__init__(**kwargs)
+        self.connect = psycopg2.connect(
+            database=os.environ["LOCAL_POSTGRES_DB"],
+            user=os.environ["LOCAL_POSTGRES_USER"],
+            password=os.environ["LOCAL_POSTGRES_PASS"],
+            host=os.environ["LOCAL_POSTGRES_HOST"],
+            port='5432'
+        )
+        self.connect.autocommit = True
+        self.cursor = self.connect.cursor()
+
+    def set_job_status(
+            self,
+            status: ExecStatus,
+            pipeline_uuid: UUID,
+            job_uuid: UUID,
+            error_reason: Optional[ErrorReason] = None,
+            error_details: Optional[object] = None) -> bool:
+        """Update started_at, ended_at, error_details, status_id, error_reason_id, updated_at depending on status."""
+        with self.connect as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    UPDATE jobs j
+                    SET started_at      = CASE WHEN %(status)s = 'RUNNING' THEN now() ELSE started_at END,
+                        ended_at        = CASE WHEN %(status)s <> 'RUNNING' THEN now() END,
+                        error_details   = %(details)s, -- No need for using CASE on this one because 'null' is NULL.
+                        status_id       = (SELECT es.id
+                                           FROM exec_statuses es
+                                           WHERE es.status_name = %(status)s),
+                        error_reason_id = CASE WHEN %(reason)s IS NOT NULL
+                                                   THEN (SELECT id 
+                                                         FROM error_reasons
+                                                         WHERE reason_name = %(status)s) END,
+                        updated_at      = now()
+                    WHERE j.uuid = %(job)s
+                      AND j.pipeline_id = (SELECT pipeline_id FROM pipelines WHERE uuid = %(pipeline)s);
+                """, ({
+                    'status': status.value,
+                    'job': str(job_uuid),
+                    'pipeline': str(pipeline_uuid),
+                    'details': json.dumps(error_details),
+                    'reason': error_reason,
+                }))
+
+                # Returns False if job/pipeline not found
+                return curs.rowcount == 1
+
+    def job(self, pipeline_uuid: UUID, job_uuid: UUID) -> Optional[Job]:
+        rv = [i for i in self.jobs(pipeline_uuid) if i.uuid == job_uuid]
+        return rv[0] if len(rv) else None
+
+    def jobs(self, pipeline_uuid: UUID) -> list[Job]:
+        with self.connect as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    SELECT j.uuid,
+                           (SELECT es.status_name FROM exec_statuses es WHERE es.id = j.status_id),
+                           j.updated_at, j.started_at, j.ended_at,
+                           (SELECT er.reason_name FROM error_reasons er WHERE er.id = j.error_reason_id),
+                           j.error_details
+                    FROM jobs j JOIN pipelines p ON j.pipeline_id = p.id
+                    WHERE p.uuid = %s;
+                """, (str(pipeline_uuid),))
+                res = [Job(
+                    uuid=i[0],
+                    status=i[1],
+                    updated_at=i[2],
+                    started_at=i[3],
+                    ended_at=i[4],
+                    reason=i[5],
+                    details=i[6],
+                ) for i in curs.fetchall()]
+        return res
+
+    def set_pipeline_status(self, pipeline_uuid: UUID, status: ExecStatus):
+        with self.connect as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    UPDATE pipelines p
+                    SET started_at      = CASE WHEN %(status)s = 'RUNNING' THEN now() ELSE started_at END,
+                        ended_at        = CASE WHEN %(status)s <> 'RUNNING' THEN now() END,
+                        status_id       = (SELECT es.id
+                                           FROM exec_statuses es
+                                           WHERE es.status_name = %(status)s),
+                        updated_at      = now()
+                    WHERE p.uuid = %(pipeline)s;
+                """, ({
+                    'status': status.value,
+                    'pipeline': str(pipeline_uuid),
+                }))
+
+                # Returns False if pipeline not found
+                return curs.rowcount == 1
+
+    def pipeline(self, pipeline_uuid: UUID) -> Pipeline:
+        with self.connect as conn:
+            with conn.cursor() as curs:
+                curs.execute("""
+                    SELECT uuid,
+                           org_uuid,
+                           tpa_identifier,
+                           pipeline_number,
+                           started_at,
+                           ended_at,
+                           updated_at,
+                           (SELECT es.status_name FROM exec_statuses es WHERE es.id = status_id)
+                    FROM pipelines
+                    WHERE uuid = %s;
+                """, (str(pipeline_uuid),))
+                p = curs.fetchone()
+
+        return Pipeline(
+            uuid=p[0],
+            org=p[1],
+            tpa=p[2],
+            number=p[3],
+            started_at=p[4],
+            ended_at=p[5],
+            updated_at=p[6],
+            status=p[7],
+        )
+
+
+# DO NOT use __pg_dest directly. Use get_postgres() instead.
+__pg_dest: Optional[PostgresDestination] = None
+
+
+def get_postgres():
+    global __pg_dest
+    if __pg_dest is None:
+        __pg_dest = PostgresDestination()
+    return __pg_dest
+
+
+def reset_db():
+    if os.environ['SERVER_ENV'] == 'TEST':
+        if __pg_dest is None:
+            get_postgres()
+        with __pg_dest.cursor as curs:
+            curs.execute("DELETE FROM jobs;")
+            curs.execute("DELETE FROM pipelines;")
+            with open('../sql/postgres/pipelines/insert_test_data.sql') as f:
+                curs.execute(f.read())
