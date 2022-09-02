@@ -2,21 +2,23 @@ import os
 import json
 import uvicorn
 
-from fastapi import FastAPI, File, HTTPException, Request
+from fastapi import FastAPI, File, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordBearer
 from dacite import from_dict
+from uuid import UUID
 
+
+from models.response import Status
 from api_server.config import FVWebhookInput, TruveDataTask
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
-from etl.destination import PostgresDestination
+from etl.destination import get_postgres
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from tasks.hist_helper import *
 from utils import get_logger, get_yaml_of_org
-
-
 
 
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - - 
@@ -28,6 +30,7 @@ app = FastAPI(
     description = "Handles data source webhook events and data source onboarding",
     version = 0.1
 )
+
 
 # CORS config (TODO: handle through env var)
 origins = [
@@ -42,6 +45,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.exception_handler(500)
 async def internal_exception_handler(request: Request, exc: Exception):
@@ -424,17 +428,28 @@ async def listen_lead(request: Request):
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - TPA - - - - - - - - - - 
-@app.get("/organizations/{orgId}/tpas/{tpaIdentifier}/status", tags=["tpa"])
-async def fv_get_sections(orgId: str, tpaIdentifier: str):
-    # TODO:
-    pg_dest = PostgresDestination()
-    latest = pg_dest.get_latest_pipeline_status("pipelines", tpa_identifier=tpaIdentifier, org_uuid=orgId)
+@app.get(
+    "/organizations/{orgId}/tpas/{tpaIdentifier}/status", 
+    tags=["tpa"],
+    # response_model= Status,
+    status_code=200
+)
+async def get_latest_status(orgId: UUID, tpaIdentifier: str):
+    # Check
+    if not get_postgres().check_params(orgId, tpaIdentifier):
+        raise HTTPException(status_code=404, detail="Path params orgId/tpa not found!")
+
+    # Get Data
+    latest = get_postgres().get_latest_pipeline_status(tpa_identifier=tpaIdentifier, org_uuid=orgId)
+
+    if latest["latest_pipeline_status"] == 'FAILURE':
+        # bring details
+        # TODO:
+        get_postgres().attach_error_reason(latest)
+
 
     return {
-        "message": {
-            "Latest pipeline number": latest[0],
-            "Latest pipeline status": latest[1]
-        }
+        "detail": latest
     }
 
 if __name__ == "__main__":
