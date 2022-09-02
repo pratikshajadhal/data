@@ -7,6 +7,7 @@ from uuid import UUID
 
 import aiohttp
 import uvicorn
+from aiohttp import ClientConnectionError, ClientError
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -18,6 +19,7 @@ from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
 from models.request import JobStatusInfo
 from models.response import OK
+from service.truve_api import send_tpa_event
 from tasks.hist_helper import *
 from utils import determine_pipeline_status_from_jobs, get_logger, get_yaml_of_org
 
@@ -441,8 +443,19 @@ async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo
     if status is not None:
         # Pipeline status needs to be updated.
         get_postgres().set_pipeline_status(pipeline_id, status)
+        pipeline = get_postgres().pipeline(pipeline_id)
+        # Notify truve-api
+        try:
+            status, body = await send_tpa_event(pipeline)
+            if status // 100 in (4, 5):
+                logger.error("failed to notify truve-api", {"status": status, "body": body})
+                raise HTTPException(status_code=500, detail="unknown error")
+        except ClientError as e:
+            logger.error("couldn't connect truve-api", e)
+            raise HTTPException(status_code=500, detail="unknown error")
 
     return OK()
+
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
