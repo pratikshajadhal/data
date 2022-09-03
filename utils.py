@@ -166,26 +166,6 @@ def split_s3_bucket_key(s3_path:str):
     if len(s3_components) > 1:
         s3_key = '/'.join(s3_components[1:])
     return bucket, s3_key
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-if __name__ == "__main__":
-
-    config = load_config(file_path="src.yaml")
-    print(get_config_of_section(config, section_name="intake", project_type_id=18764))
-
-    #print(config.projectTypes)
-    '''
-    contact_map = read_contact_metadata()
-    with open("contacts.json", "r") as f:
-        contact_data = json.loads(f.read())
-    contact_list = contact_data["items"]
-    record_list = []
-    for contact in contact_list:
-        post_processed_contact = transform_source_to_destination(contact["orgContact"], contact_map)
-        record_list.append(post_processed_contact)
-
-    contact_df = pd.DataFrame(record_list)
-    '''
 
 
 def determine_pipeline_status_from_jobs(jobs: list[Job]) -> Optional[ExecStatus]:
@@ -284,3 +264,24 @@ def determine_pipeline_status_from_jobs(jobs: list[Job]) -> Optional[ExecStatus]
     # so we can safely return None, to indicate that the pipeline's status should already have been updated.
 
     return status
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+if __name__ == "__main__":
+
+    config = load_config(file_path="src.yaml")
+    print(get_config_of_section(config, section_name="intake", project_type_id=18764))
+
+    #print(config.projectTypes)
+    '''
+    contact_map = read_contact_metadata()
+    with open("contacts.json", "r") as f:
+        contact_data = json.loads(f.read())
+    contact_list = contact_data["items"]
+    record_list = []
+    for contact in contact_list:
+        post_processed_contact = transform_source_to_destination(contact["orgContact"], contact_map)
+        record_list.append(post_processed_contact)
+
+    contact_df = pd.DataFrame(record_list)
+    '''

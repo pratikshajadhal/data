@@ -1,25 +1,22 @@
-import os
-import json
-from collections import Counter
 import json
 import os
 from uuid import UUID
 
-import aiohttp
 import uvicorn
-from aiohttp import ClientConnectionError, ClientError
+from aiohttp import ClientError
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette import status
 
 from api_server.config import FVWebhookInput
 from api_server.helper import handle_wb_input
-from etl.destination import get_postgres, reset_db
+from etl.destination import get_postgres
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
 from leaddocket.client import LeadDocketClient
-from models.request import JobStatusInfo
+from models.request import ExecStatus, JobStatusInfo
 from models.response import OK
-from service.truve_api import send_tpa_event
+from service.truve_api import client as truve_client
 from tasks.hist_helper import *
 from utils import determine_pipeline_status_from_jobs, get_logger, get_yaml_of_org
 
@@ -28,9 +25,9 @@ logger = get_logger(__name__)
 
 APP_NAME = "webhook-listener"
 app = FastAPI(
-    title = "Data Integration API",
-    description = "Handles data source webhook events and data source onboarding",
-    version = 0.1
+    title="Data Integration API",
+    description="Handles data source webhook events and data source onboarding",
+    version=0.1
 )
 
 # CORS config (TODO: handle through env var)
@@ -47,6 +44,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -  - - - - -
 @app.on_event("startup")
 async def loadVersion():
@@ -57,16 +55,19 @@ async def loadVersion():
 
     print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
 
+
 @app.get("/diag/health", status_code=200)
 async def home():
     return {
         "status": "OK",
         "version": serverSourceVersion.strip()
     }
+
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - FILEVINE - - - - - - - - -
 
 @app.get("/fv/{org}/snapshots", tags=["filevine"])
-async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
+async def fv_get_snapshot(org, project_type_id: int, entity_type, entity_name):
     """
         Function to return snapshot of given entity.
         Parameters:
@@ -91,13 +92,14 @@ async def fv_get_snapshot(org, project_type_id:int, entity_type, entity_name):
     """
     logger.debug(f"{org} {project_type_id} {entity_name} {entity_type}")
     org_config = get_yaml_of_org(org)
-    etl_object = get_fv_etl_object(org_config, entity_type=entity_type, entity_name=entity_name, project_type_id=project_type_id)
-    return {"project_type_id" : project_type_id,
-            "data" : etl_object.get_snapshot(project_type_id=project_type_id)}
+    etl_object = get_fv_etl_object(org_config, entity_type=entity_type, entity_name=entity_name,
+                                   project_type_id=project_type_id)
+    return {"project_type_id": project_type_id,
+            "data": etl_object.get_snapshot(project_type_id=project_type_id)}
 
 
 @app.get("/fv/{org}/sections", tags=["filevine"])
-async def fv_get_sections(org:int, project_type_id:int):
+async def fv_get_sections(org: int, project_type_id: int):
     """
         Function to return sections(entity names)
         Parameters:
@@ -131,10 +133,11 @@ async def fv_get_sections(org:int, project_type_id:int):
     section_data = fv_client.get_sections(projectTypeId=project_type_id)
 
     section_data = section_data["items"]
-    items = [{"id" : section["sectionSelector"], "name": section["name"], "isCollection" : section["isCollection"]} for section in section_data]
+    items = [{"id": section["sectionSelector"], "name": section["name"], "isCollection": section["isCollection"]} for
+             section in section_data]
 
-    return {"project_type_id" : project_type_id,
-            "data" : items}
+    return {"project_type_id": project_type_id,
+            "data": items}
 
 
 @app.post("/master_webhook_handler", tags=["filevine"])
@@ -169,11 +172,11 @@ async def fv_webhook_handler(request: Request):
 
     logger.info(f"Got FV Webhook Request {event_json}")
 
-    #Extract Metadata
+    # Extract Metadata
     entity = event_json["Object"]
 
     if entity == "Project":
-        #In case of project webhook, Handling will be different
+        # In case of project webhook, Handling will be different
 
         event_name = event_json["Event"]
 
@@ -203,22 +206,22 @@ async def fv_webhook_handler(request: Request):
         event_time = event_json["Timestamp"]
 
     wh_input = FVWebhookInput(project_type_id=project_type_id,
-                org_id=org_id,
-                project_id=project_id,
-                entity=entity,
-                event_name=event_name,
-                event_timestamp=event_time,
-                user_id=None,
-                section=section,
-                webhook_body=event_json
-                )
+                              org_id=org_id,
+                              project_id=project_id,
+                              entity=entity,
+                              event_name=event_name,
+                              event_timestamp=event_time,
+                              user_id=None,
+                              section=section,
+                              webhook_body=event_json
+                              )
 
     try:
         response = handle_wb_input(wb_input=wh_input)
     except Exception as e:
         raise e
 
-    #finally:
+    # finally:
     return {
         'statusCode': 200,
         'body': json.dumps('Success')
@@ -257,7 +260,7 @@ async def ld_get_snapshot(org, entity_name):
     etl_object = get_ld_etl_object(org_config, entity_name=entity_name)
     if not etl_object:
         raise HTTPException(status_code=422, detail="Unprocessable Entity")
-    return {"data" : etl_object.get_snapshot()}
+    return {"data": etl_object.get_snapshot()}
 
 
 # In lead docket the tables are static hence table names needs to be served manually!.
@@ -266,8 +269,9 @@ async def lg_get_sections():
     """
         Function to return entity names-table-names for leaddocket
     """
-    table_list = ["statuses","leadsource","casetype", "leadrow","leaddetail","contact","opportunities","referrals","users"]
-    return {"section_names" : table_list}
+    table_list = ["statuses", "leadsource", "casetype", "leadrow", "leaddetail", "contact", "opportunities",
+                  "referrals", "users"]
+    return {"section_names": table_list}
 
 
 @app.get("/ld/customfields/list", tags=["leaddocket"])
@@ -283,13 +287,13 @@ async def lg_get(org_name):
 
     custom_fields = ld_client.get_custom_fields()
     return {
-        "status":"success",
+        "status": "success",
         "data": custom_fields
     }
 
 
 @app.post("/lead_webhook_handler", tags=["leaddocket"])
-async def lead_webhook_handler(request: Request, clientId:str):
+async def lead_webhook_handler(request: Request, clientId: str):
     """
      Function to handle webhooks for leaddocket
 
@@ -305,7 +309,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
     incoming_json = await request.json()
     event_type = incoming_json["EventType"]
     logger.info(f"Got LeadDocket Webhook Request {event_type}")
-    #TODO: Find appropriate yaml file based on clientId(org_name)
+    # TODO: Find appropriate yaml file based on clientId(org_name)
     s3_conf_file_path = "src-lead.yaml"
 
     event_type = incoming_json.get("EventType")
@@ -314,7 +318,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
         lead_id = incoming_json.get("LeadId")
 
         # Update Lead Detail
-        start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
+        start_lead_detail_etl(s3_conf_file_path=s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
 
 
     elif event_type == 'Contact Added':
@@ -322,27 +326,26 @@ async def lead_webhook_handler(request: Request, clientId:str):
         contact_id = incoming_json.get("ContactId")
 
         # Update Contact ETL
-        start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
+        start_lead_contact_etl(s3_conf_file_path=s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
 
     elif event_type == 'Contact Edited':
         print("=======Contact Edited, incoming contact edited is:")
         print(incoming_json)
-        print("="*20)
+        print("=" * 20)
         # #Extract Metadata
         contact_id = incoming_json.get("ContactId")
 
         # Update Contact ETL
-        start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
+        start_lead_contact_etl(s3_conf_file_path=s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
 
     elif event_type == 'Opportunity Created':
         # #Extract Metadata
         opportunity_id = incoming_json.get("OpportunityId")
 
-        start_opport_etl(s3_conf_file_path= s3_conf_file_path, opport_ids=[opportunity_id], client_id=clientId)
+        start_opport_etl(s3_conf_file_path=s3_conf_file_path, opport_ids=[opportunity_id], client_id=clientId)
 
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))
-
 
     return {
         'statusCode': 200,
@@ -361,13 +364,13 @@ async def add_tasks(request: Request):
 
     from tasks.tasks import run_lead_historical
     # TODO:
-    parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
+    parsed_conf_path = 'src-lead.yaml'  # It will parsed from request body.
     run_lead_historical(s3_conf_file_path=parsed_conf_path)
     # task_type = from_dict(data=task_json, data_class=TruveDataTask)
 
     # logger.debug(task_type)
 
-    return {"status" : "success", "message" : "Task added successfully"}
+    return {"status": "success", "message": "Task added successfully"}
 
 
 # TODO:It will be TASK. PLZ DO NOT DELETE!
@@ -417,7 +420,6 @@ async def listen_lead(request: Request):
     else:
         raise ValueError('Unexpected event_type {}'.format(event_type))
 
-
     return {
         'statusCode': 200,
         'body': json.dumps('Success')}
@@ -432,27 +434,36 @@ async def listen_lead(request: Request):
     response_model_exclude_none=True,
     tags=["pipeline"],
 )
-async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo):
+async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo, request: Request):
+    # Temporary auth check solution:
+    if os.environ["SERVER_ENV"] not in ('LOCAL', 'TEST') and request.headers.get("Authorization", "Bearer x").replace(
+            'Bearer ') != os.environ["DATA_WORKER_INBOUND_AUTH_TOKEN"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized")
+
     if not get_postgres().set_job_status(body.status, pipeline_id, job_id):
         raise HTTPException(status_code=404, detail="job/pipeline not found")
 
     # TODO: Replay attack: set status to PENDING or if already RUNNING, set to RUNNING again.
 
     jobs = get_postgres().jobs(pipeline_id)
-    status = determine_pipeline_status_from_jobs(jobs)
-    if status is not None:
+    pipeline_status = determine_pipeline_status_from_jobs(jobs)
+    if pipeline_status is not None:
         # Pipeline status needs to be updated.
-        get_postgres().set_pipeline_status(pipeline_id, status)
+        get_postgres().set_pipeline_status(pipeline_id, pipeline_status)
         pipeline = get_postgres().pipeline(pipeline_id)
         # Notify truve-api
-        try:
-            status, body = await send_tpa_event(pipeline)
-            if status // 100 in (4, 5):
-                logger.error("failed to notify truve-api", {"status": status, "body": body})
+        # For now, we only notify success/failure
+        if pipeline_status in (ExecStatus.SUCCESS, ExecStatus.FAILURE):
+            status_str = 'succeeded' if pipeline_status == ExecStatus.SUCCESS else 'failed'
+            try:
+                http_status, body = await truve_client.send_tpa_pipeline_status(
+                    status_str, pipeline.org, pipeline.tpa, pipeline.number)
+                if http_status // 100 in (4, 5):
+                    logger.error(f"failed to notify truve-api (http: {http_status}) body: {body}")
+                    raise HTTPException(status_code=500, detail="unknown error")
+            except ClientError as e:
+                logger.error("couldn't connect truve-api", e)
                 raise HTTPException(status_code=500, detail="unknown error")
-        except ClientError as e:
-            logger.error("couldn't connect truve-api", e)
-            raise HTTPException(status_code=500, detail="unknown error")
 
     return OK()
 
