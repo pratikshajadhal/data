@@ -13,7 +13,7 @@ create table if not exists error_reasons (
 );
 
 create table if not exists pipelines (
-    id int,
+    id serial,
     uuid uuid not null unique,
     org_uuid uuid not null,
     tpa_identifier varchar(50) not null,
@@ -29,14 +29,14 @@ create table if not exists pipelines (
 );
 
 create table if not exists jobs (
-    id int,
-    uuid varchar(36) unique not null,
+    id serial,
+    uuid uuid unique not null,
     pipeline_id int not null references pipelines(id),
     job_identifier varchar(50) not null,
     status_id int not null references exec_statuses(id),
     error_reason_id int references error_reasons(id),
     error_details jsonb,
-    started_at timestamp not null DEFAULT current_timestamp,
+    started_at timestamp,
     ended_at timestamp,
     created_at timestamp not null DEFAULT current_timestamp,
     updated_at timestamp not null DEFAULT current_timestamp,
