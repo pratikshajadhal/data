@@ -9,6 +9,7 @@ from uuid import UUID
 
 from aiohttp import request
 
+from models.request import JobError
 from service.aws import get_stack_output
 
 
@@ -16,15 +17,16 @@ class AbstractClient(ABC):
 
     @abstractmethod
     async def send_tpa_pipeline_status(self, status: str, org_uuid: UUID, tpa_identifier: str,
-                                       pipeline_number: int, error_description: str | None = None) -> (int, object):
+                                       pipeline_number: int, error: JobError | None = None) -> (int, object):
         ...
 
 
 class Mock(AbstractClient):
     def __init__(self, *args, **kwargs):
         ...
+
     async def send_tpa_pipeline_status(self, status: str, org_uuid: UUID, tpa_identifier: str,
-                                       pipeline_number: int, error_description: str | None = None) -> (int, object):
+                                       pipeline_number: int, error: JobError | None = None) -> (int, object):
         return 200, None
 
 
@@ -32,20 +34,20 @@ class Live(AbstractClient):
     def __init__(self, base_url: str, route_tpa_events: str, static_auth_token: str):
         self.__tpa_events: str = urljoin(base_url, route_tpa_events)
         self.__headers = {
+            "Content-Type": "application/json",
             "Authorization": f"Bearer {static_auth_token}",
         }
 
     async def send_tpa_pipeline_status(self, status: str, org_uuid: UUID, tpa_identifier: str,
-                                       pipeline_number: int, error_description: str | None = None) -> (int, object):
+                                       pipeline_number: int, error: JobError | None = None) -> (int, object):
         """ Right now, status can only be one of {failed, succeeded}. """
         payload = {
             "pipelineNumber": pipeline_number,
             "status": status,
-            "description": "All jobs finished successfully" if status == "succeeded" else "One or more jobs failed",
         }
         if status == 'failed':
             payload.update({
-                "description": error_description,
+                "error": error,
             })
         async with request("POST", self.__tpa_events.format(**{
             # Example path template: /organizations/{orgId}/tpas/{tpaIdentifier}/events
@@ -62,7 +64,8 @@ api_base_url = os.environ["TRUVE_API_BASE_URL"]
 
 if os.environ["SERVER_ENV"] == "TEST" or mock.lower() in ('y', '1', 't', 'true', 'on', 'yes'):
     ClientClass = Mock
-else:
+elif os.environ["SERVER_ENV"] != "LOCAL":
+    # Use cloudformation stacks query in DEV/PROD
     health_check = get_stack_output(os.environ["TRUVE_API_STACK_NAME"])
     try:
         if urlopen(health_check).status != 200:

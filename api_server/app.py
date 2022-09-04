@@ -440,7 +440,12 @@ async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo
             'Bearer ') != os.environ["DATA_WORKER_INBOUND_AUTH_TOKEN"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized")
 
-    if not get_postgres().set_job_status(body.status, pipeline_id, job_id):
+    reason = details = None
+    if body.error is not None:
+        reason = body.error.reason
+        details = body.error.details
+
+    if not get_postgres().set_job_status(body.status, pipeline_id, job_id, reason, details):
         raise HTTPException(status_code=404, detail="job/pipeline not found")
 
     # TODO: Replay attack: set status to PENDING or if already RUNNING, set to RUNNING again.
@@ -452,7 +457,7 @@ async def update_job_status(pipeline_id: UUID, job_id: UUID, body: JobStatusInfo
         get_postgres().set_pipeline_status(pipeline_id, pipeline_status)
         pipeline = get_postgres().pipeline(pipeline_id)
         # Notify truve-api
-        # For now, we only notify success/failure
+        # For now, we only notify success/failure, i.e. after pipeline is complete.
         if pipeline_status in (ExecStatus.SUCCESS, ExecStatus.FAILURE):
             status_str = 'succeeded' if pipeline_status == ExecStatus.SUCCESS else 'failed'
             try:

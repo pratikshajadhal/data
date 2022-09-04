@@ -5,17 +5,17 @@ from http import HTTPStatus
 from uuid import UUID
 
 import pytest
-
-from api_server.app import app
 from fastapi.testclient import TestClient
 
+from api_server.app import app
 from etl.destination import get_postgres, reset_db
-from models.request import ExecStatus
+from models.request import ErrorReason, ExecStatus, JobError
 
 client = TestClient(app)
 
 
-def send_job_status(pipeline: str | UUID, job: str | UUID, status: ExecStatus, http_status: int = 200, response=None):
+def send_job_status(pipeline: str | UUID, job: str | UUID, status: ExecStatus, http_status: int = 200,
+                    error: JobError | None = None, response=None):
     if response is None:
         response = {"message": "OK"}
 
@@ -25,11 +25,20 @@ def send_job_status(pipeline: str | UUID, job: str | UUID, status: ExecStatus, h
     if isinstance(job, UUID):
         job = str(job)
 
+    payload = {
+        "status": status,
+    }
+
+    if error:
+        payload.update({
+            "error": {
+                "reason": error.reason,
+                "details": error.details,
+            }})
+
     res = client.put(
         f"/pipelines/{pipeline}/jobs/{job}",
-        json={
-            "status": status,
-        },
+        json=payload,
     )
 
     assert res.status_code == http_status
@@ -54,7 +63,7 @@ def fixture():
     reset_db()
 
 
-pipeline_status_test_case = namedtuple("pipeline_status_test_case", "pipeline job set_to before after")
+pipeline_status_test_case = namedtuple("pipeline_status_test_case", "pipeline job set_to error before after")
 
 
 class TestUpdateJobStatus:
@@ -71,9 +80,9 @@ class TestUpdateJobStatus:
             '6eef4911-1060-420b-b302-9ea8827a992f',
             ExecStatus.RUNNING,
             HTTPStatus.NOT_FOUND,
-            {
+            response={
                 "detail": "job/pipeline not found",
-            }
+            },
         )
 
     def test_for_nonexistent_job(self):
@@ -82,9 +91,9 @@ class TestUpdateJobStatus:
             '22222222-1060-420b-b302-9ea8827a992f',
             ExecStatus.RUNNING,
             HTTPStatus.NOT_FOUND,
-            {
+            response={
                 "detail": "job/pipeline not found",
-            }
+            },
         )
 
     ####################################################################
@@ -107,33 +116,35 @@ class TestUpdateJobStatus:
         assert previous_job.started_at != job.started_at and job.ended_at is None
 
     @pytest.mark.parametrize("c", [
-            pipeline_status_test_case(
-                '232a13a2-e30a-4596-a910-2e918378573f', '130e91c5-1c2c-4458-b9b0-e15bca96fe98',
-                ExecStatus.RUNNING, ExecStatus.PENDING, ExecStatus.RUNNING,
-            ),
-            pipeline_status_test_case(
-                '332a13a2-e30a-4596-a910-2e918378573f', '430e91c5-1c2c-4458-b9b0-e15bca96fe98',
-                ExecStatus.SUCCESS, ExecStatus.RUNNING, ExecStatus.SUCCESS,
-            ),
-            pipeline_status_test_case(
-                '432a13a2-e30a-4596-a910-2e918378573f', '730e91c5-1c2c-4458-b9b0-e15bca96fe98',
-                ExecStatus.CANCELLED, ExecStatus.RUNNING, ExecStatus.CANCELLED,
-            ),
-            pipeline_status_test_case(
-                '532a13a2-e30a-4596-a910-2e918378573f', '030e91c5-1c2c-4458-b9b0-e15bca96fe98',
-                ExecStatus.FAILURE, ExecStatus.RUNNING, ExecStatus.FAILURE,
-            ),
-            pipeline_status_test_case(
-                '632a13a2-e30a-4596-a910-2e918378573f', 'c30e91c5-1c2c-4458-b9b0-e15bca96fe98',
-                ExecStatus.FAILURE, ExecStatus.RUNNING, ExecStatus.FAILURE,
-            ),
-        ])
+        pipeline_status_test_case(
+            '232a13a2-e30a-4596-a910-2e918378573f', '130e91c5-1c2c-4458-b9b0-e15bca96fe98',
+            ExecStatus.RUNNING, None, ExecStatus.PENDING, ExecStatus.RUNNING,
+        ),
+        pipeline_status_test_case(
+            '332a13a2-e30a-4596-a910-2e918378573f', '430e91c5-1c2c-4458-b9b0-e15bca96fe98',
+            ExecStatus.SUCCESS, None, ExecStatus.RUNNING, ExecStatus.SUCCESS,
+        ),
+        pipeline_status_test_case(
+            '432a13a2-e30a-4596-a910-2e918378573f', '730e91c5-1c2c-4458-b9b0-e15bca96fe98',
+            ExecStatus.CANCELLED, None, ExecStatus.RUNNING, ExecStatus.CANCELLED,
+        ),
+        pipeline_status_test_case(
+            '532a13a2-e30a-4596-a910-2e918378573f', '030e91c5-1c2c-4458-b9b0-e15bca96fe98',
+            ExecStatus.FAILURE, JobError(reason=ErrorReason.GENERAL, details=None),
+            ExecStatus.RUNNING, ExecStatus.FAILURE,
+        ),
+        pipeline_status_test_case(
+            '632a13a2-e30a-4596-a910-2e918378573f', 'c30e91c5-1c2c-4458-b9b0-e15bca96fe98',
+            ExecStatus.FAILURE, JobError(reason=ErrorReason.GENERAL, details=None),
+            ExecStatus.RUNNING, ExecStatus.FAILURE,
+        ),
+    ])
     def test_pipeline_status(self, c: pipeline_status_test_case):
         pipeline = UUID(c.pipeline)
         job = UUID(c.job)
 
         assert get_postgres().pipeline(pipeline).status == c.before
-        send_job_status(pipeline, job, c.set_to)
+        send_job_status(pipeline, job, c.set_to, error=c.error)
         assert get_postgres().pipeline(pipeline).status == c.after
 
     # def test_restarting_one_job_in_non_running_pipeline_sets_pipeline_to_running_again(self):

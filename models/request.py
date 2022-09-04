@@ -2,7 +2,7 @@
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 
 class ExecStatus(str, Enum):
@@ -19,11 +19,17 @@ class ErrorReason(str, Enum):
     SCHEMA_CFG = 'SCHEMA_CFG'
 
 
-class JobStatusInfo(BaseModel):
-    # TODO: If Tyler approves, we can use Enums with pydantic for verification.
-    status: ExecStatus = Field(default=ExecStatus.PENDING, description="Job's last status, can be any of "
-                                                                       "{PENDING, RUNNING, SUCCESS, CANCELLED, "
-                                                                       "FAILURE}.")
+class JobError(BaseModel):
+    reason: ErrorReason = Field(..., description="Enum")
+    details: Optional[object] = Field(..., description="An object about the detail of failure. "
+                                                       "Might include a `description` string attribute.")
 
-    # TODO: Upgrading to 3.10 would allow us to write `object | None`
-    # reason: Optional[object] = Field(default=None, description="Reason for the error (if any).")
+
+class JobStatusInfo(BaseModel):
+    status: ExecStatus
+    error: Optional[JobError] = Field(default=None, description="Required if the job failed.")
+
+    @validator('error', always=True)
+    def error_provided_for_failed_status(cls, v, values):
+        if v is None and values['status'] == ExecStatus.FAILURE:
+            raise ValueError(f'must provide a JobError object for status FAILURE')

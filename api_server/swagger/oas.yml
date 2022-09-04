@@ -8,8 +8,8 @@ info:
     email: "contact@truve.io"
 
 tags:
-- name: "Diag"
-  description: Actions related to server diagnostics
+  - name: "Diag"
+    description: Actions related to server diagnostics
 
 servers:
   - url: 'http://localhost:8000/{apiSelector}'
@@ -24,7 +24,7 @@ paths:
   /health:
     get:
       tags:
-      - "diag"
+        - "diag"
       summary: "Server health check"
       description: "Returns server status and current running version."
       operationId: "diagHealthCheck"
@@ -41,3 +41,130 @@ paths:
                   version:
                     type: string
                     example: 0.1.2
+
+  /pipelines/{pipelineId}/jobs/{jobId}:
+    parameters:
+      - in: path
+        name: pipelineId
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: jobId
+        schema:
+          type: string
+          format: uuid
+        required: true
+    put:
+      summary: Update job status
+      description: "Update the job status in DB and notify truve-api. Also updates other values in job/pipeline row, 
+      e.g. `status`, `started_at`, `ended_at`, `error_reason`, `error_details`."
+      requestBody:
+        required: true
+        content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStatus"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OK"
+        404:
+          description: Pipeline/job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+        422:
+          description: Malformed object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+
+components:
+  schemas:
+    JobStatus:
+      required:
+        - status
+      properties:
+        status:
+          title: Status Enum
+          type: string
+          enum:
+            - PENDING
+            - RUNNING
+            - SUCCESS
+            - CANCELLED
+            - FAILURE
+        error:
+          type: object
+          required:
+            - reason
+          properties:
+            reason:
+              title: Error reason Enum
+              type: string
+              enum:
+                - GENERAL
+                - AUTH
+                - SCHEMA_CFG
+            details:
+              title: Details on The Error
+              type: object
+              properties:
+                description:
+                  title: Description on The Error
+                  description: A string stating why the error occurred.
+                  type: string
+    OK:
+      title: OK
+      required:
+        - msg
+      type: object
+      properties:
+        msg:
+          title: Message
+          type: string
+          enum:
+            - OK
+
+    ValidationError:
+      title: ValidationError
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            type: string
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
