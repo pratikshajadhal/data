@@ -434,6 +434,7 @@ async def listen_lead(request: Request):
     status_code=200
 )
 async def get_latest_pipeline_status(orgId: UUID, tpaIdentifier: str, request: Request):
+    # TODO: Add response models
     if os.environ["SERVER_ENV"] not in ('LOCAL', 'TEST') and request.headers.get("Authorization", "Bearer x").replace('Bearer ','') != os.environ["TRUVE_API_INBOUND_AUTH_TOKEN"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized")
     
@@ -441,14 +442,12 @@ async def get_latest_pipeline_status(orgId: UUID, tpaIdentifier: str, request: R
     if not get_postgres().is_pipeline_exist(orgId, tpaIdentifier):
         raise HTTPException(status_code=404, detail="Path params orgId/tpa not found!")
 
-    # Get Data
+    # Get latest pipeline status for given tpaIdentifier
     latest = get_postgres().get_latest_pipeline_status(tpa_identifier=tpaIdentifier, org_uuid=orgId)
 
+    # Attach error reason and status If the pipeline status FAILURE
     if latest["latest_pipeline_status"] == 'FAILURE':
-        # bring details
-        # TODO:
-        get_postgres().attach_error_reason(latest)
-
+        latest = get_postgres().attach_error_reason(latest)
 
     return {
         "detail": latest
