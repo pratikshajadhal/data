@@ -1,8 +1,6 @@
-import string
 from leaddocket.client import LeadDocketClient
 from etl.datamodel import LeadDocketConfig
 from etl.datamodel import ColumnConfig
-from etl.datamodel import ColumnDefn
 from etl.destination import ETLDestination, S3Destination
 import pandas as pd
 from abc import abstractmethod
@@ -34,13 +32,15 @@ class LeadModelETL(object):
     def load_data(self, trans_df:pd.DataFrame, client_id:str=None):
         dest = self.destination
 
-        dtypes = trans_df.dtypes.to_dict()
-        final_dtypes = {}
-        for key, value in dtypes.items():
-            final_dtypes[key] = self.key_mapper[str(value)]
+        if hasattr(self, 'dtypes'):
+            final_dtypes = self.dtypes
+        else:
+            dtypes = trans_df.dtypes.to_dict()
+            final_dtypes = {}
+            for key, value in dtypes.items():
+                final_dtypes[key] = self.key_mapper[str(value)]
 
         push_id = trans_df["Id"].values[0]
-        
         # If there is no client id parse clientId from url
         if client_id:
             organization_identifier = client_id

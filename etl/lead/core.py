@@ -1,7 +1,3 @@
-from leaddocket.client import LeadDocketClient
-from etl.datamodel import LeadDocketConfig
-from etl.datamodel import ColumnConfig
-from etl.datamodel import ColumnDefn
 from etl.destination import ETLDestination, S3Destination
 import pandas as pd
 from .lead_modeletl import LeadModelETL
@@ -16,7 +12,6 @@ class CoreETL(LeadModelETL):
         return pd.DataFrame(core)
 
     # Override
-    
     def load_data(self, trans_df:pd.DataFrame, client_id:str=None):
         dest = self.destination
 

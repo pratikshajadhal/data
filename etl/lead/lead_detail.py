@@ -1,13 +1,31 @@
-from leaddocket.client import LeadDocketClient
-from etl.datamodel import LeadDocketConfig
-from etl.datamodel import ColumnConfig
-from etl.datamodel import ColumnDefn
-from etl.destination import ETLDestination, S3Destination
+from collections import ChainMap
 import pandas as pd
+import yaml
+from yaml.loader import SafeLoader
+
+from etl.datamodel import LeadDocketConfig, ColumnConfig, DtypesConfig
+from etl.destination import ETLDestination, S3Destination
 from .lead_modeletl import LeadModelETL
 
 
 class LeadDetailETL(LeadModelETL):
+
+    def __init__(self, model_name:str,
+                    ld_config: LeadDocketConfig, 
+                    column_config: ColumnConfig, 
+                    fields,
+                    destination: ETLDestination):
+        super().__init__(model_name,ld_config,column_config,fields,destination)
+        
+        # Get dtypes
+        with open("etl/lead/static_dtypes.yaml", "r") as f:
+            data = yaml.load(f, Loader=SafeLoader)["schemas"]
+            for each in data:
+                if each["name"] == model_name:
+                    data = each["fields"]
+
+        self.dtypes = dict(ChainMap(*data))
+
 
     def extract_data_from_source(self, lead_ids):
         lead_details = self.ld_client.get_lead_details(lead_ids)
