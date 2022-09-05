@@ -1,12 +1,11 @@
 import os
 import json
+import stat
 import uvicorn
 
-from fastapi import FastAPI, File, HTTPException, Request, Depends
+from fastapi import FastAPI, File, HTTPException, Request, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
-from dacite import from_dict
 from uuid import UUID
 
 
@@ -434,9 +433,12 @@ async def listen_lead(request: Request):
     # response_model= Status,
     status_code=200
 )
-async def get_latest_status(orgId: UUID, tpaIdentifier: str):
+async def get_latest_pipeline_status(orgId: UUID, tpaIdentifier: str, request: Request):
+    if os.environ["SERVER_ENV"] not in ('LOCAL', 'TEST') and request.headers.get("Authorization", "Bearer x").replace('Bearer ','') != os.environ["TRUVE_API_INBOUND_AUTH_TOKEN"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized")
+    
     # Check
-    if not get_postgres().check_params(orgId, tpaIdentifier):
+    if not get_postgres().is_pipeline_exist(orgId, tpaIdentifier):
         raise HTTPException(status_code=404, detail="Path params orgId/tpa not found!")
 
     # Get Data
