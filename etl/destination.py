@@ -255,11 +255,11 @@ class PostgresDestination(ETLDestination):
         # Establishing the connection
         super().__init__(**kwargs)
         self.connect = psycopg2.connect(
-            database=os.environ["LOCAL_POSTGRES_DB"],
-            user=os.environ["LOCAL_POSTGRES_USER"],
-            password=os.environ["LOCAL_POSTGRES_PASS"],
-            host=os.environ["LOCAL_POSTGRES_HOST"],
-            port='5432'
+            database=os.environ['DB_SCHEMA'],
+            user=os.environ['DB_CONNECTION_UNAME'],
+            password=os.environ['DB_CONNECTION_PWORD'],
+            host=os.environ['DB_CONNECTION_HOST'],
+            port=os.environ['DB_CONNECTION_PORT'],
         )
         self.connect.autocommit = True
         self.cursor = self.connect.cursor()
@@ -285,7 +285,7 @@ class PostgresDestination(ETLDestination):
                         error_reason_id = CASE WHEN %(reason)s IS NOT NULL
                                                    THEN (SELECT id 
                                                          FROM error_reasons
-                                                         WHERE reason_name = %(status)s) END,
+                                                         WHERE reason_name = %(reason)s) END,
                         updated_at      = now()
                     WHERE j.uuid = %(job)s
                       AND j.pipeline_id = (SELECT pipeline_id FROM pipelines WHERE uuid = %(pipeline)s);
