@@ -435,6 +435,8 @@ async def listen_lead(request: Request):
 )
 async def get_latest_pipeline_status(orgId: UUID, tpaIdentifier: str, request: Request):
     # TODO: Add response models
+    # TODO: Update oas
+    # TODO: test
     if os.environ["SERVER_ENV"] not in ('LOCAL', 'TEST') and request.headers.get("Authorization", "Bearer x").replace('Bearer ','') != os.environ["TRUVE_API_INBOUND_AUTH_TOKEN"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized")
     
