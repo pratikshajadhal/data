@@ -15,6 +15,7 @@ import boto3
 import pandas_redshift as pr
 import awswrangler as wr
 
+from models.response import ErrorData
 from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
 
@@ -271,17 +272,20 @@ class PostgresDestination(ETLDestination):
         self.connect.commit()
 
 
-    def get_latest_pipeline_status(self, tpa_identifier: str, org_uuid: UUID) -> tuple:
+    def get_latest_pipeline_status(self, tpa_identifier: str, org_uuid: UUID) -> dict:
+        """
+            Get latest pipeline_id and status_name
+        """
         latest = dict()
         
         query =f"""
         SELECT
-            p.pipeline_number,
+            p.id,
             ex.status_name 
         FROM pipelines AS p
         JOIN(
                 SELECT tpa_identifier, MAX(pipeline_number) as latest_pipeline_number
-                FROM tpa.pipelines
+                FROM pipelines
                 WHERE tpa_identifier = '{tpa_identifier}'
                 GROUP BY tpa_identifier 
             ) AS p2 
@@ -294,14 +298,15 @@ class PostgresDestination(ETLDestination):
         res = self.cursor.fetchall()[0]
 
         # df = pd.DataFrame(res, columns=['org_pipeline_number', 'status_id'])
-        if res:
-            latest.update({"latest_pipeline_number": res[0], "latest_pipeline_status": res[1]})
-        else:
-            raise 
+        latest.update({"latest_pipeline_id": res[0], "latest_pipeline_status": res[1]})
+
         return latest
 
 
     def is_pipeline_exist(self, org_uuid: str, tpa_identifier: str) -> bool:
+        """
+            Check path params exist in DB.
+        """
         query = f"""
             SELECT COUNT(1)
             FROM pipelines
@@ -314,17 +319,21 @@ class PostgresDestination(ETLDestination):
 
 
     def attach_error_reason(self, latest: dict):
-        # TODO:
         query = f"""
             SELECT
                 j.error_reason_id,
                 j.error_details
-            FROM tpa.pipelines p1
-            JOIN tpa.jobs j 
+            FROM pipelines p1
+            JOIN jobs j 
             ON  p1.id = j.pipeline_id 
+            WHERE p1.id = {latest["latest_pipeline_id"]}
+            order by j.ended_at desc 
+            limit 1
         """
-        pass
-
+        self._execute_query(query)
+        res = self.cursor.fetchall()[0]
+        latest.update({"error_reason_id": res[0], "error_details": res[1]})
+        return latest
 
 # DO NOT use __pg_dest directly. Use get_postgres() instead.
 __pg_dest: Optional[PostgresDestination] = None
