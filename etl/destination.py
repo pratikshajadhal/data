@@ -253,10 +253,10 @@ class PostgresDestination(ETLDestination):
         if server_env == "LOCAL":
             # Establishing the connection
             self.connect = psycopg2.connect(
-                                    database= os.environ["LOCAL_POSTGRES_DB"], 
-                                    user= os.environ["LOCAL_POSTGRES_USER"], 
-                                    password= os.environ["LOCAL_POSTGRES_PASS"],
-                                    host= os.environ["LOCAL_POSTGRES_HOST"],
+                                    database= os.environ["POSTGRES_DB"], 
+                                    user= os.environ["POSTGRES_USER"], 
+                                    password= os.environ["POSTGRES_PASS"],
+                                    host= os.environ["POSTGRES_HOST"],
                                     port= '5432'
             )
             self.connect.autocommit = True
@@ -278,7 +278,7 @@ class PostgresDestination(ETLDestination):
         SELECT
             p.pipeline_number,
             ex.status_name 
-        FROM {os.environ["POSTGRES_PIPELINE_TABLE_PATH"]} AS p
+        FROM pipelines AS p
         JOIN(
                 SELECT tpa_identifier, MAX(pipeline_number) as latest_pipeline_number
                 FROM tpa.pipelines
@@ -286,7 +286,7 @@ class PostgresDestination(ETLDestination):
                 GROUP BY tpa_identifier 
             ) AS p2 
         ON p.pipeline_number = p2.latest_pipeline_number AND p.tpa_identifier = p2.tpa_identifier
-        JOIN {os.environ["POSTGRES_EXEC_TABLE_PATH"]} as ex
+        JOIN exec_statuses as ex
         ON p.status_id = ex.id 
         """
 
@@ -301,15 +301,16 @@ class PostgresDestination(ETLDestination):
         return latest
 
 
-    def check_params(self, org_uuid: str, tpa_identifier: str):
+    def is_pipeline_exist(self, org_uuid: str, tpa_identifier: str) -> bool:
         query = f"""
             SELECT COUNT(1)
-            FROM {os.environ["POSTGRES_PIPELINE_TABLE_PATH"]}
+            FROM pipelines
             WHERE org_uuid = '{org_uuid}' and tpa_identifier = '{tpa_identifier}';
         """
         self._execute_query(query)
-        res = self.cursor.fetchone()
-        return res[0]
+        res = self.cursor.fetchone()[0]
+
+        return 1 if res != 0 else 0
 
 
     def attach_error_reason(self, latest: dict):
