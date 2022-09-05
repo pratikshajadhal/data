@@ -134,7 +134,6 @@ class ModelETL(object):
 
     def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn], project:int) -> pd.DataFrame:
         dest = self.destination
-
         dest_map = {}
 
         col_list = list(trans_df)

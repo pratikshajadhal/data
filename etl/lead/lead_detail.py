@@ -3,7 +3,7 @@ import pandas as pd
 import yaml
 from yaml.loader import SafeLoader
 
-from etl.datamodel import LeadDocketConfig, ColumnConfig, DtypesConfig
+from etl.datamodel import LeadDocketConfig, ColumnConfig
 from etl.destination import ETLDestination, S3Destination
 from .lead_modeletl import LeadModelETL
 
