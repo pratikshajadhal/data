@@ -1,3 +1,4 @@
+-- CMS Standard Models
 CREATE TABLE IF NOT EXISTS CMS_PeopleType (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
@@ -357,7 +358,7 @@ CREATE TABLE IF NOT EXISTS IG_Cities (
   Custom3 varchar(255)
 );
 
-----------------------------------------------
+--Application functionality schemas
 
 CREATE TABLE IF NOT EXISTS APP_Departments (
   Truve_Org_ID int not null,
@@ -407,9 +408,9 @@ CREATE TABLE IF NOT EXISTS APP_Targets (
 
 )
 
---------------------------------------------
+--CRM Standard Models
 
-CREATE TABLE IF NOT EXISTS LD_CaseType (
+CREATE TABLE IF NOT EXISTS CRM_CaseType (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Id int,
@@ -420,14 +421,14 @@ CREATE TABLE IF NOT EXISTS LD_CaseType (
   CustomQuestionOrder varchar(255)
   );
   
-  CREATE TABLE IF NOT EXISTS LD_LeadSource (
+  CREATE TABLE IF NOT EXISTS CRM_LeadSource (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Id int,
   SourceName varchar(255)
   );
     
-  CREATE TABLE IF NOT EXISTS LD_Opportunities (
+  CREATE TABLE IF NOT EXISTS CRM_Opportunities (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Id int,
@@ -483,7 +484,7 @@ CREATE TABLE IF NOT EXISTS LD_CaseType (
   ProcessedBy varchar(255)
   );
   
-  CREATE TABLE IF NOT EXISTS LD_Referrals (
+  CREATE TABLE IF NOT EXISTS CRM_Referrals (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Id int,
@@ -493,7 +494,7 @@ CREATE TABLE IF NOT EXISTS LD_CaseType (
   Outgoing Boolean
   );
   
-  CREATE TABLE IF NOT EXISTS LD_Statuses (
+  CREATE TABLE IF NOT EXISTS CRM_Status (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Id int,
@@ -502,10 +503,10 @@ CREATE TABLE IF NOT EXISTS LD_CaseType (
   Substatuses varchar(255)
   );
   
-  CREATE TABLE IF NOT EXISTS LD_Users (
+  CREATE TABLE IF NOT EXISTS CRM_Users (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Id int,
+  UserID int,
   FirstName varchar(255),
   LastName varchar(255),
   Email varchar(255),
