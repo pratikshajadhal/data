@@ -40,5 +40,5 @@ class TSMTable:
 
 @dataclass
 class SSTM:
-    org_id: int
+    org_id: str
     tsm: List[TSMTable]
