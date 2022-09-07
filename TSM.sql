@@ -407,3 +407,110 @@ CREATE TABLE IF NOT EXISTS APP_Targets (
 
 
 )
+
+--------------------------------------------
+
+CREATE TABLE IF NOT EXISTS LD_CaseType (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  TypeName varchar(255),
+  TypeNameShort varchar(255),
+  Code varchar(255),
+  IsMassTort boolean,
+  CustomQuestionOrder varchar(255)
+  );
+  
+  CREATE TABLE IF NOT EXISTS LD_LeadSource (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  SourceName varchar(255)
+  );
+    
+  CREATE TABLE IF NOT EXISTS LD_Opportunities (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  FirstName varchar(255),
+  MiddleName varchar(255),
+  LastName varchar(255),
+  Address1 varchar(255),
+  Address2 varchar(255),
+  City varchar(255),
+  State varchar(255),
+  Zip varchar(255),
+  HomePhone varchar(255),
+  WorkPhone varchar(255),
+  MobilePhone varchar(255),
+  Email varchar(255),
+  Gender varchar(255),
+  Language varchar(255),
+  Birthdate timestamp,
+  PreferredContactMethod varchar(255),
+  LeadStatus varchar(255),
+  SubStatus varchar(255),
+  Office varchar(255),
+  MarketingSource varchar(255),
+  MarketingSourceDetails varchar(255),
+  ContactSource varchar(255),
+  Summary varchar(255),
+  InjuryInformation varchar(255),
+  IncidentDate timestamp,
+  CreatedDate timestamp,
+  LeadId int,
+  Note varchar(255),
+  ReferredBy varchar(255),
+  SeverityLevel varchar(255),
+  County varchar(255),
+  AppointmentLocation varchar(255),
+  AppointmentScheduledDate timestamp,
+  Code varchar(255),
+  ReferringUrl varchar(255),
+  CurrentUrl varchar(255),
+  UTM varchar(255),
+  ClientId varchar(255),
+  ClickId varchar(255),
+  Keywords varchar(255),
+  Campaign varchar(255),
+  Processed boolean,
+  ProcessedDate timestamp,
+  ProcessedByName varchar(255),
+  OpportunityTypeId int,
+  DisregardReason varchar(255),
+  IsBeingEdited boolean,
+  CustomFields varchar(255),
+  AssignedTo varchar(255),
+  ProcessedBy varchar(255)
+  );
+  
+  CREATE TABLE IF NOT EXISTS LD_Referrals (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  Name varchar(255),
+  Type varchar(255),
+  Code varchar(255),
+  Outgoing Boolean
+  );
+  
+  CREATE TABLE IF NOT EXISTS LD_Statuses (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  Status varchar(255),
+  StatusName varchar(255),
+  Substatuses varchar(255)
+  );
+  
+  CREATE TABLE IF NOT EXISTS LD_Users (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  FirstName varchar(255),
+  LastName varchar(255),
+  Email varchar(255),
+  Code varchar(255),
+  LD_Roles varchar(255),
+  LD_Permissions varchar(255)
+  );
