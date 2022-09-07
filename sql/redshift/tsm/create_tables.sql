@@ -511,6 +511,6 @@ CREATE TABLE IF NOT EXISTS CRM_CaseType (
   LastName varchar(255),
   Email varchar(255),
   Code varchar(255),
-  LD_Roles varchar(255),
-  LD_Permissions varchar(255)
+  CRM_Roles varchar(255),
+  CRM_Permissions varchar(255)
   );
