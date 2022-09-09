@@ -15,9 +15,7 @@ class FileVineClient(object):
 
     def __init__(self, org_id:str, user_id:str):
         # TODO Remove this hardcoded env variable
-        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE", "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f")
-        if self.api_key == "":
-            self.api_key = "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f"
+        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE")
         self.org_id = org_id
         self.base_url = "https://api.filevine.io/"
         self.api_timestamp = "2021-08-18T12:37:03.438Z"

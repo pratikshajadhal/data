@@ -63,3 +63,4 @@ dist/
 *.parquet
 sstm_input_data/
 
+notebooks/.ipynb_checkpoints/
