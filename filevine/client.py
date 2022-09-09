@@ -15,7 +15,7 @@ class FileVineClient(object):
 
     def __init__(self, org_id:str, user_id:str):
         # TODO Remove this hardcoded env variable
-        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE", "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f")
+        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE")
         if self.api_key == "":
             self.api_key = "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f"
         self.org_id = org_id
