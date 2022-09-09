@@ -34,6 +34,8 @@ class TSMBuilder(metaclass=abc.ABCMeta):
     def add_default_columns(self, df: SP_DATAFRAME):
         #df = df.withColumn("date_ingested", F.current_timestamp())
         df = df.withColumn("Client_Org_ID", df["Client_Org_ID"].cast(StringType()))
+        df = df.withColumn("Truve_Org_ID", df["Truve_Org_ID"].cast(IntegerType()))
+        
         return df
 
     def _read_tsm(self, tsm_table_name: str) -> SP_DATAFRAME:
@@ -41,9 +43,9 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         # As of now, read from local. Need to remove 
         #contact_df = self.spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
-        #return (self.build_peopletypes(contact_df))["CMS_PeopleType"]
+        # return (self.build_peopletypes(contact_df))["CMS_PeopleType"]
 
-        return self.spark.read.parquet("s3://dev-truve-devops-05-databr-bucketetlprocesseddata-h2m2xopoctot/peopletypes")
+        return self.spark.read.parquet("s3://dev-truve-devops-05-databr-bucketetlprocesseddata-h2m2xopoctot/cms_peopletype")
         #"s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/contact/historical_contacts.parquet"
 
     def _get_table_config(self, table_name) -> List[TSMTableField]:
@@ -106,6 +108,12 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         person_type_df = person_type_df.withColumn("People_Type_Id", F.row_number().over(window))
         
         person_type_df = self.add_default_columns(person_type_df)
+
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            person_type_df = person_type_df.withColumn(field.name, person_type_df[field.name].cast(cls))
+
 
         return {table_name : person_type_df}
 
@@ -184,7 +192,17 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         contact_type_df = self.add_default_columns(contact_type_df)
         
         contact_df = contact_df.withColumn("Team_ID", lit(1).cast(IntegerType()))
+
+        for field in self._get_table_config("CMS_People"):
+            if field.name == "People_Type_ID":
+                continue
+            cls = self._get_dtype_mapping(field.data_type)
+            contact_df = contact_df.withColumn(field.name, contact_df[field.name].cast(cls))
         
+        
+        #for field in self._get_table_config("CMS_PeoplePeopleTypes"):
+        #    cls = self._get_dtype_mapping(field.data_type)
+        #    contact_type_df = contact_type_df.withColumn(field.name, contact_type_df[field.name].cast(cls))
         
         return {"CMS_People" : contact_df, "CMS_PeoplePeopleTypes" : contact_type_df}
 
@@ -224,6 +242,11 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         project_df.printSchema()
 
         self.add_default_columns(project_df)
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            project_df = project_df.withColumn(field.name, project_df[field.name].cast(cls))
+
         project_df.show(10)
         return {table_name : project_df}
 
@@ -248,6 +271,11 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         projecttype_df.printSchema()
 
         projecttype_df = self.add_default_columns(projecttype_df)
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            projecttype_df = projecttype_df.withColumn(field.name, projecttype_df[field.name].cast(cls))
+
         return {table_name: projecttype_df}
 
     def build_phasemaster(self, projecttypedf: SP_DATAFRAME):
@@ -282,6 +310,11 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         phase_master_df = self.add_default_columns(df=phase_master_df)
 
         phase_master_df.show()
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            phase_master_df = phase_master_df.withColumn(field.name, phase_master_df[field.name].cast(cls))
+
         return {"CMS_Phases" : phase_master_df}
 
     def build_casefigures(self, meds_df: SP_DATAFRAME):
@@ -374,15 +407,15 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 if __name__ == "__main__":
     print("Hi")
     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
-    builder = TSMBuilder("sstm.yaml", spark=spark)
+    builder = TSMBuilder("confs/sstm.yaml", spark=spark)
     
     #builder = TSMBuilder("sstm.yaml", spark=spark)
-    #contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
-    #result = builder.build_peopletypes(contact_df=contact_df)
-    #print(result["CMS_PeopleType"].printSchema())
-    #result = builder.build_peoplemaster(contact_df=contact_df)
-    #print(result)
-    #exit()
+    contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
+    result = builder.build_peopletypes(contact_df=contact_df)
+    print(result["CMS_PeopleType"].printSchema())
+    result = builder.build_peoplemaster(contact_df=contact_df)
+    print(result)
+    exit()
     
     '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")

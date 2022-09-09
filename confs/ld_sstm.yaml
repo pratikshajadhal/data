@@ -1,6 +1,6 @@
 org_id: aliawadlaw
 tsm:
-  - name: LD_Contact
+  - name: CRM_Contact
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -268,7 +268,7 @@ tsm:
         source_entity_name: contact
         source_field: CustomFields
         type: data
-  - name: LD_LeadDetail
+  - name: CRM_LeadDetail
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -704,7 +704,7 @@ tsm:
         source_entity_name: leaddetail
         source_field: Settlements
         type: data
-  - name: LD_CaseType
+  - name: CRM_CaseType
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -764,7 +764,7 @@ tsm:
         source_entity_name: casetype
         source_field: CustomQuestionOrder
         type: data
-  - name: LD_LeadSource
+  - name: CRM_LeadSource
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -792,7 +792,7 @@ tsm:
         source_entity_name: leadsource
         source_field: SourceName
         type: data
-  - name: LD_Opportunities
+  - name: CRM_Opportunities
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -1212,7 +1212,7 @@ tsm:
         source_entity_name: opportunities
         source_field: ProcessedBy
         type: data
-  - name: LD_Referrals
+  - name: CRM_Referrals
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -1264,7 +1264,7 @@ tsm:
         source_entity_name: referrals
         source_field: Outgoing
         type: data
-  - name: LD_Statuses
+  - name: CRM_Status
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -1308,7 +1308,7 @@ tsm:
         source_entity_name: statuses
         source_field: Substatuses
         type: data
-  - name: LD_users
+  - name: CRM_Users
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -1320,7 +1320,7 @@ tsm:
       transform:
         source: etl
         type: org_id
-    - name: Id
+    - name: UserID
       data_type: int
       transform:
         source: etl
@@ -1360,7 +1360,7 @@ tsm:
         source_entity_name: users
         source_field: Code
         type: data
-    - name: LD_Roles
+    - name: CRM_Roles
       data_type: string
       transform:
         source: etl
@@ -1368,7 +1368,7 @@ tsm:
         source_entity_name: users
         source_field: Roles
         type: data
-    - name: LD_Permissions
+    - name: CRM_Permissions
       data_type: string
       transform:
         source: etl
@@ -1376,7 +1376,7 @@ tsm:
         source_entity_name: users
         source_field: Permissions
         type: data
-  - name: LD_LeadRow
+  - name: CRM_LeadRow
     fields:
     - name: Truve_Org_ID
       data_type: int

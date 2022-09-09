@@ -97,7 +97,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
             return StructType.fromJson(json.load(f))
     
     def build_contact(self, df: SP_DATAFRAME):
-        table_name = "LD_Contact"
+        table_name = "CRM_Contact"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
@@ -126,7 +126,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_leaddetail(self, df: SP_DATAFRAME):
-        table_name = "LD_LeadDetail"
+        table_name = "CRM_LeadDetail"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
@@ -155,7 +155,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_leadraw(self, df: SP_DATAFRAME):
-        table_name = "LD_LeadRow"
+        table_name = "CRM_LeadRow"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
@@ -184,7 +184,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_leadsource(self, df: SP_DATAFRAME):
-        table_name = "LD_LeadSource"
+        table_name = "CRM_LeadSource"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
@@ -213,7 +213,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_casetype(self, df: SP_DATAFRAME):
-        table_name = "LD_CaseType"
+        table_name = "CRM_CaseType"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
@@ -242,22 +242,27 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_opportunities(self, df: SP_DATAFRAME):
-        table_name = "LD_Opportunities"
+        table_name = "CRM_Opportunities"
         df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
     def build_referrals(self, df: SP_DATAFRAME):
-        table_name = "LD_Referrals"
+        table_name = "CRM_Referrals"
         df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
     def build_statuses(self, df: SP_DATAFRAME):
-        table_name = "LD_Statuses"
+        table_name = "CRM_Status"
+        df = self.transform(df=df, table_name=table_name)
+        return {table_name : df}
+
+    def build_users(self, df: SP_DATAFRAME):
+        table_name = "CRM_Users"
         df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
     def build_casetype(self, df: SP_DATAFRAME):
-        table_name = "LD_CaseType"
+        table_name = "CRM_CaseType"
         df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
