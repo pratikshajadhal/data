@@ -514,3 +514,18 @@ CREATE TABLE IF NOT EXISTS CRM_CaseType (
   CRM_Roles varchar(255),
   CRM_Permissions varchar(255)
   );
+  
+  
+  CREATE TABLE IF NOT EXISTS case_value_clustering (
+  final_value double not null,
+clusters_2 int not null,
+clusters_3 int not null,
+clusters_4 int not null,
+clusters_5 int not null,
+clusters_6 int not null,
+clusters_7 int not null,
+clusters_lower_bound int,
+clusters_upper_bound int,
+
+  primary key (final_value)
+  );
