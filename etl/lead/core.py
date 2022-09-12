@@ -1,7 +1,9 @@
 from etl.destination import ETLDestination, S3Destination
 import pandas as pd
 from .lead_modeletl import LeadModelETL
+from utils import get_logger
 
+logger = get_logger(__name__)
 
 class CoreETL(LeadModelETL):
     def extract_data_from_source(self):
@@ -14,11 +16,15 @@ class CoreETL(LeadModelETL):
     # Override
     def load_data(self, trans_df:pd.DataFrame, client_id:str=None):
         dest = self.destination
-
-        dtypes = trans_df.dtypes.to_dict()
-        final_dtypes = {}
-        for key, value in dtypes.items():
-            final_dtypes[key] = self.key_mapper[str(value)]
+        if hasattr(self, 'dtypes'):
+            logger.info("Using custom schema not inferring! ")
+            final_dtypes = self.dtypes
+        else:
+            logger.info("Schema inferring! ")
+            dtypes = trans_df.dtypes.to_dict()
+            final_dtypes = {}
+            for key, value in dtypes.items():
+                final_dtypes[key] = self.key_mapper[str(value)]
 
         push_id = f"bulk_{self.model_name}"
 
