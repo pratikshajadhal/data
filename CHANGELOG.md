@@ -2,20 +2,11 @@
 
 <br/>
 
-# 0.1.15
+# 0.1.16
 
-Original Commit ID: b737fe6
+Original Commit ID: 75813cc
 
 ## Changes
-Merged in infra&#x2F;sql-schemas (pull request #52)
+Merged in f&#x2F;ldSchema (pull request #62)
 
-Fix: Schema Updates
-
-* change non-enum pks to serial
-
-* Merged development into infra&#x2F;sql-schemas
-* change uuid type
-
-* change default value for job started_at
-
-* bump patch version
+Update version from.15 to .16
