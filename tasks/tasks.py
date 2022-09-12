@@ -24,7 +24,7 @@ def make_fv_subscription(s3_conf_file_path: str,
     # Since conf file in s3 is deleted, currently we are using base yaml
 
     # selected_field_config = load_config(file_path="tasks/src.yaml")
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
 
     # -- Get org_id, user_id from yaml
     org_id = selected_field_config.org_id
