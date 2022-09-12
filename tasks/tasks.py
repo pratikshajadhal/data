@@ -85,13 +85,18 @@ def run_lead_historical(s3_conf_file_path: str):
 
     start_statuses_etl(s3_conf_file_path= s3_conf_file_path)
     start_leadsource_etl(s3_conf_file_path= s3_conf_file_path)
+    start_referrals_etl(s3_conf_file_path= s3_conf_file_path)
+    start_users_etl(s3_conf_file_path= s3_conf_file_path)
     start_case_type_etl(s3_conf_file_path= s3_conf_file_path)
+
+    # # Need to get statuses
+    # TODO:
+    # statuses = get_preneed_statuses(s3_conf_file_path)
+    
     start_lead_row_etl(s3_conf_file_path= s3_conf_file_path)
     start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path)
     start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path)
     start_opport_etl(s3_conf_file_path= s3_conf_file_path)
-    start_referrals_etl(s3_conf_file_path= s3_conf_file_path)
-    start_users_etl(s3_conf_file_path= s3_conf_file_path)
 
     
 def run_fv_historical():

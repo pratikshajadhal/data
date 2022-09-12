@@ -1,15 +1,12 @@
-from typing import List
-from leaddocket.client import LeadDocketClient
-from etl.datamodel import LeadDocketConfig
-from etl.datamodel import ColumnConfig
-from etl.datamodel import ColumnDefn
-from etl.destination import ETLDestination, S3Destination
+from collections import ChainMap
 import pandas as pd
+import yaml
+from yaml.loader import SafeLoader
+from etl.datamodel import LeadDocketConfig, ColumnConfig
+from etl.destination import ETLDestination
 from .lead_modeletl import LeadModelETL
 
-
 class LeadContactETL(LeadModelETL):
-
     def extract_data_from_source(self, contact_id:int):
         return self.ld_client.get_contact(contact_id)
 

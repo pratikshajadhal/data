@@ -52,7 +52,8 @@ def start_lead_row_etl(s3_conf_file_path):
                         ld_config=ld_config,
                         column_config=section, 
                         fields=section.fields,
-                        destination=S3Destination(org_id=ld_config.org_name))
+                        destination=S3Destination(org_id=ld_config.org_name),
+                        has_custom_defined_schema=True)
 
     statuses = lead_row.extract_lead_metadata()
 
@@ -76,7 +77,8 @@ def start_lead_detail_etl(s3_conf_file_path, lead_ids:list = None, client_id = N
                                 ld_config=ld_config,
                                 column_config=section, 
                                 fields=section.fields,
-                                destination=S3Destination(org_id=ld_config.org_name))
+                                destination=S3Destination(org_id=ld_config.org_name),
+                                has_custom_defined_schema=True)
 
     if lead_ids is None:
         lead_ids = lead_detail.extract_lead_metadata()
@@ -104,7 +106,8 @@ def start_lead_contact_etl(s3_conf_file_path, contact_ids:list = None, client_id
                     ld_config=ld_config,
                     column_config=section, 
                     fields=section.fields,
-                    destination=S3Destination(org_id=ld_config.org_name))
+                    destination=S3Destination(org_id=ld_config.org_name),
+                    has_custom_defined_schema=True)
 
     if contact_ids is None:
         contact_ids = contact_etl.extract_lead_metadata()
@@ -129,7 +132,8 @@ def start_opport_etl(s3_conf_file_path, opport_ids:list = None, client_id = None
                     ld_config=ld_config,
                     column_config=section, 
                     fields=section.fields,
-                    destination=S3Destination(org_id=ld_config.org_name))
+                    destination=S3Destination(org_id=ld_config.org_name),
+                    has_custom_defined_schema=True)
 
     if opport_ids is None:
         opport_ids  = opport_etl.extract_lead_metadata()
@@ -192,3 +196,30 @@ def start_statuses_etl(s3_conf_file_path):
     transformed = core_etl.eliminate_nonyaml(core_df)
     core_etl.load_data(trans_df=transformed)
     
+
+def get_preneed_statuses(s3_conf_file_path: str):
+    selected_field_config = load_lead_config(file_path=s3_conf_file_path)
+    ld_config = LeadDocketConfig(selected_field_config.org_name, selected_field_config.base_url)
+    section = selected_field_config.table_leadstatuses[0] 
+    core_etl = CoreETL(model_name=section.name, 
+                ld_config=ld_config,
+                column_config=section, 
+                fields=section.fields,
+                destination=S3Destination(org_id=ld_config.org_name))
+
+    return core_etl.get_statuses()
+
+
+def get_preneed_lead_ids(s3_conf_file_path: str):
+    """
+        # TODO:
+        All of the lead_id can get and then give as params but will be problematic if we run paralel.
+    """
+    selected_field_config = load_lead_config(file_path=s3_conf_file_path)
+    ld_config = LeadDocketConfig(selected_field_config.org_name, selected_field_config.base_url)
+    section = selected_field_config.table_leadstatuses[0] 
+    core_etl = CoreETL(model_name=section.name, 
+                ld_config=ld_config,
+                column_config=section, 
+                fields=section.fields,
+                destination=S3Destination(org_id=ld_config.org_name))
