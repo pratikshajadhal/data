@@ -302,7 +302,7 @@ async def lead_webhook_handler(request: Request, clientId:str):
     event_type = incoming_json["EventType"]
     logger.info(f"Got LeadDocket Webhook Request {event_type}")
     #TODO: Find appropriate yaml file based on clientId(org_name)
-    s3_conf_file_path = "src-lead.yaml" 
+    s3_conf_file_path = "confs/src-lead.yaml" 
 
     event_type = incoming_json.get("EventType")
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
@@ -353,7 +353,7 @@ async def add_tasks(request: Request):
 
     from tasks.tasks import run_lead_historical
     # TODO:
-    parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
+    parsed_conf_path = 'confs/src-lead.yaml' # It will parsed from request body.
     run_lead_historical(s3_conf_file_path=parsed_conf_path)
     # task_type = from_dict(data=task_json, data_class=TruveDataTask)
 

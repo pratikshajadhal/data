@@ -35,15 +35,15 @@ def load_config(file_path: str) -> SelectedConfig:
         return from_dict(data=data, data_class=SelectedConfig)
 
 # def get_yaml_of_org(org_id: int) -> SelectedConfig:
-#     return load_config("src.yaml")
+#     return load_config("confs/src.yaml")
 def get_yaml_of_org(org_id, client='fv'):
     """
         This is a temp function. It will change soon! TODO:
     """
     if client == 'fv':
-        return load_config("src.yaml")
+        return load_config("confs/src.yaml")
     elif client == 'ld':
-        return load_lead_config("src-lead.yaml")
+        return load_lead_config("confs/src-lead.yaml")
 
 def get_config_of_section(selected_config:SelectedConfig, section_name:str, project_type_id:int=None, is_core:bool=False):
     if is_core:
@@ -168,7 +168,7 @@ def split_s3_bucket_key(s3_path:str):
 
 if __name__ == "__main__":
 
-    config = load_config(file_path="src.yaml")
+    config = load_config(file_path="confs/src.yaml")
     print(get_config_of_section(config, section_name="intake", project_type_id=18764))
 
     #print(config.projectTypes)

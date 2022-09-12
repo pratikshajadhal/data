@@ -73,7 +73,7 @@ def handle_collection_object(wb_input:FVWebhookInput, selected_field_config:Sele
 def handle_wb_input(wb_input:FVWebhookInput):
     logger.debug("inside handle_wb_input()")
 
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     
 
     if wb_input.entity == "Project":
