@@ -133,14 +133,15 @@ def find_yaml(s3_path: str, download_path: str):
     s3_client = None
     server_env = os.environ["SERVER_ENV"]
     
-    if server_env == "LOCAL":
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id = os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key = os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
-        )
-    else:
-        s3_client = boto3.client('s3')
+    # if server_env == "LOCAL":
+
+    #     s3_client = boto3.client(
+    #         's3',
+    #         aws_access_key_id = os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
+    #         aws_secret_access_key = os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
+    #     )
+    # else:
+    #     s3_client = boto3.client('s3')
 
     # Split s3 path: s3://dev-data-api-01-buckets-buckettruverawdata-8d0qeyh8pnrf/confs/filevine/config_6586.yaml
     bucket_name, key_name = split_s3_bucket_key(s3_path=s3_path)
