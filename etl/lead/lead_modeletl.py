@@ -83,7 +83,6 @@ class LeadModelETL(object):
 
         return lead_df
 
-
     @abstractmethod
     def transform(self):
         pass

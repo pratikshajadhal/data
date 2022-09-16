@@ -29,6 +29,21 @@ class LeadRowETL(LeadModelETL):
 
         return {}
 
+    def trigger_row(self, lead_row_chunks):
+        """
+            Function to trigger conccurent run of lead_detail etl. 
+            If each lead detail have Contact or Opportunity id then also trigger contact and opport etl
+        """
+        for each_ex in lead_row_chunks:
+            try:
+                transformed = self.transform(each_ex[0])
+                df = self.eliminate_nonyaml(transformed)
+                self.load_data(trans_df=df)
 
+            except Exception as e:
+                print("="*100)
+                print(e)
+                print(f"Problem occurs")
+      
 
 
