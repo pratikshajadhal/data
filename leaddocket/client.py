@@ -4,10 +4,10 @@ import os
 import json 
 import logging
 import pandas as pd
-import yaml
+import time
 from dacite import from_dict
-from utils import get_logger
 
+from utils import get_logger
 logger = get_logger(__name__)
 from dotenv import load_dotenv
 
@@ -30,9 +30,14 @@ class LeadDocketClient(object):
         if response.status_code != 200:
             logging.error(response.text)
             logging.error(response.status_code)
+            if response.status_code == 429:
+                logger.warn("429 sleeping 30 secs")
+                time.sleep(15)
             if response.status_code == 404:
                 return None
             raise
+            
+            
         return json.loads(response.text)
 
     def get_row_lead_iteratively(self, endpoint, status, page=1):
