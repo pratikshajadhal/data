@@ -235,7 +235,6 @@ def start_collection_etl(project_type, section_name):
             chunk = 10
 
             chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
-            
             thread_count = 10
             processed_chunk_list = 0
 
