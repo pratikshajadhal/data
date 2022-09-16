@@ -231,7 +231,6 @@ def start_collection_etl(project_type, section_name):
             chunk = 10
 
             chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
-            
             thread_count = 10
             processed_chunk_list = 0
 
@@ -259,7 +258,8 @@ def start_collection_etl(project_type, section_name):
 
 if __name__ == "__main__":
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
-    
+
+    # Will be moving soon!    
     # Historical scripts - - -
     # from tasks.hist_helper import *
     # start_statuses_etl(s3_conf_file_path="confs/src-lead.yaml")
@@ -267,8 +267,7 @@ if __name__ == "__main__":
     # start_referrals_etl(s3_conf_file_path="confs/src-lead.yaml")
     # start_users_etl(s3_conf_file_path="confs/src-lead.yaml")
     # start_case_type_etl(s3_conf_file_path="confs/src-lead.yaml")
-
+    
+    # # ...
     # start_lead_row_etl("confs/src-lead.yaml")
     # start_lead_detail_etl("confs/src-lead.yaml")
-    # start_lead_contact_etl("confs/src-lead.yaml")
-    # start_opport_etl("confs/src-lead.yaml")
