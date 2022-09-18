@@ -291,16 +291,22 @@ async def lead_webhook_handler(request: Request, clientId:str):
         - Contact Added
         - Contact Edited
         - Opportunity Added.
+
+    Example:
+    {
+        "EventType": "Lead Created", "EventTypeId": 1, "EventByUser": "Abraham Patricio", "ContactId": 10721, "ContactFirstName": "ERICK", "ContactMiddleName": null, "ContactLastName": "TIDD", "ContactFullName": "ERICK TIDD", "ContactAddress1": null, "ContactAddress2": null, "ContactCity": null, "ContactCounty": null, "ContactState": "GA", "ContactZip": null, "ContactHomePhone": "", "ContactWorkPhone": "", "ContactMobilePhone": "", "ContactEmail": null, "ContactPreferredContactMethod": null, "ContactBirthdate": null, "ContactDeceased": false, "ContactMinor": false, "ContactGender": null, "ContactLanguage": "English", "ContactCreatedDate": "2022-07-15T02:30:11.483", "ContactCreatedBy": "Abraham Patricio", "ContactCode": null, "ContactTimezone": "Eastern Standard Time", "ContactNotes": null, "LeadId": 10678, "LeadCode": null, "OpportunityId": 2705, "OpportunityName": "Walker/LosDefensores", "OpportunityCreatedDate": "2022-07-15T02:15:11.543", "OpportunityProcessedDate": "2022-07-15T02:30:11.797", "LeadCaseType": "Motor Vehicle Collision - MVC", "LeadCaseTypeCode": "18764", "LeadStatus": "Rejected", "LeadSubstatus": "Not A Case - At Fault", "LeadSeverityLevel": "No Case", "LeadSeverityLevelId": 1, "LeadSummary": "----All posted information----\r\nSentBy : json\r\nDateOfIncident : 12/14/2021\r\nInvoiceId : 74995\r\nInvoicePackageId : 211650\r\nPackageId : 2874\r\nFullName : ERICK TIDD\r\nFirstName : ERICK\r\nLastName : TIDD\r\nHomePhoneNum : 678-770-6899\r\nWorkPhoneNum : 470-699-3335\r\nPrimaryPhoneNum : 678-770-6899\r\nPrimaryPhoneNumType : Cell\r\nOtherPhoneNum1 : 470-699-3335\r\nOtherPhoneNum1Type : Cell\r\nIncidentState : GA\r\nIncidentCity : GAINESVILLE", "LeadInjuryInformation": null, "LeadReferredBy": null, "LeadMarketingSource": "Walker/Los Defensores", "LeadMarketingSourceDetails": null, "ReferringUrl": null, "CurrentUrl": null, "UTM": null, "ClientId": null, "ClickId": null, "Keywords": null, "Campaign": null, "LeadContactSource": "Walker/Los Defensores", "LeadCreatedDate": "2022-07-15T02:15:00", "LastStatusChangeDate": "2022-07-15T02:30:11.56", "LeadIntakeName": "Ali Awad", "LeadIntakeCode": "17316234", "LeadIntakeEmail": "attorney@aliawadlaw.com", "LeadCreatorName": "Abraham Patricio", "LeadCreatorCode": "abraham2", "LeadCreatorEmail": "Abraham@aliawadlaw.com", "Qualified Lead": "No", "Were You At Fault?": "No"
+    }
+
     """
     incoming_json = await request.json()
     event_type = incoming_json["EventType"]
     logger.info(f"Got LeadDocket Webhook Request {event_type}")
     #TODO: Find appropriate yaml file based on clientId(org_name)
-    s3_conf_file_path = "src-lead.yaml" 
+    s3_conf_file_path = "confs/src-lead.yaml" 
 
     event_type = incoming_json.get("EventType")
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
-        # #Extract Metadata
+        # Extract Metadata
         lead_id = incoming_json.get("LeadId")
 
         # Update Lead Detail
@@ -315,10 +321,6 @@ async def lead_webhook_handler(request: Request, clientId:str):
         start_lead_contact_etl(s3_conf_file_path= s3_conf_file_path, contact_ids=[contact_id], client_id=clientId)
     
     elif event_type == 'Contact Edited':
-        print("=======Contact Edited, incoming contact edited is:")
-        print(incoming_json)
-        print("="*20)
-        # #Extract Metadata
         contact_id = incoming_json.get("ContactId")
 
         # Update Contact ETL
@@ -351,7 +353,7 @@ async def add_tasks(request: Request):
 
     from tasks.tasks import run_lead_historical
     # TODO:
-    parsed_conf_path = 'src-lead.yaml' # It will parsed from request body.
+    parsed_conf_path = 'confs/src-lead.yaml' # It will parsed from request body.
     run_lead_historical(s3_conf_file_path=parsed_conf_path)
     # task_type = from_dict(data=task_json, data_class=TruveDataTask)
 
