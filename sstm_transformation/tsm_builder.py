@@ -374,25 +374,48 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         return {table_name : intake_df}
 
-    def build_casesummary(self, casesummary_df: SP_DATAFRAME):
+    def build_casesummary(self, casesummary_df: SP_DATAFRAME, df_project_vitals: SP_DATAFRAME, df_project: SP_DATAFRAME):
         table_name = "CMS_CaseDetails"
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         casesummary_df = casesummary_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+
+        #Parse PhaseID 
+        df_project = df_project.withColumn("phaseId", F.regexp_replace(col("phaseId"), "'", '"'))\
+                    .withColumn("phaseId", F.regexp_replace(col("phaseId"), "None", 'null'))
         
+        df_project = df_project.withColumn("phaseId", F.from_json(col("phaseId"), MapType(StringType(), StringType()), {"mode" : "FAILFAST"}))
+        df_project = df_project.withColumn("phaseId", df_project.phaseId.getItem("native"))
+        
+
         table_fields = self._get_table_config(table_name)
 
         for field in table_fields:
             cls = self._get_dtype_mapping(field.data_type)
             if field.transform and field.transform.type == "data":
-                casesummary_df = casesummary_df.withColumn(field.name, casesummary_df[field.transform.source_field])
+                if field.transform.source_entity_name == "casesummary":
+                    casesummary_df = casesummary_df.withColumn(field.name, casesummary_df[field.transform.source_field])
             elif not field.transform:
                 casesummary_df = casesummary_df.withColumn(field.name, lit(None).cast(cls))
+
+        casesummary_df = casesummary_df.join(df_project.select("projectId", "phaseId"), how="left", on=["projectId"])
+        casesummary_df = casesummary_df.drop("Case_Phase_ID").withColumnRenamed("phaseId", "Case_Phase_ID")
 
         col_list = [field.name for field in table_fields]
         
         casesummary_df = casesummary_df.select(*col_list)
 
         casesummary_df = self.add_default_columns(df=casesummary_df)
+
+        #Case_Created_Date column deriviation from Project Vitals 
+        df_project_vitals = df_project_vitals.filter(df_project_vitals.fieldName == 'createDate') \
+                        .withColumn("projectId", df_project_vitals.projectId.cast(IntegerType())) \
+                        .withColumnRenamed("projectId","Case_ID").select("Case_ID", "value")
+                        
+
+        
+        casesummary_df = casesummary_df.join(df_project_vitals, how="left", on=["Case_ID"]) \
+            .drop("Case_Create_Date") \
+            .withColumnRenamed("value", "Case_Create_Date")
 
         for field in table_fields:
             cls = self._get_dtype_mapping(field.data_type)
@@ -410,13 +433,14 @@ if __name__ == "__main__":
     builder = TSMBuilder("confs/sstm.yaml", spark=spark)
     
     #builder = TSMBuilder("sstm.yaml", spark=spark)
+    '''
     contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
     result = builder.build_peopletypes(contact_df=contact_df)
     print(result["CMS_PeopleType"].printSchema())
     result = builder.build_peoplemaster(contact_df=contact_df)
     print(result)
     exit()
-    
+    '''
     '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")
     project_df.printSchema()
@@ -441,16 +465,35 @@ if __name__ == "__main__":
     print(builder.build_casefigures(meds_df=meds_df))
     exit()
     '''
-    
+    '''
     intake_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/intake.parquet")
     intake_df.printSchema()
     print(builder.build_intakesummary(intake_df=intake_df))
     exit()
-    
-    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
-    casesummary_df.printSchema()
-    result = builder.build_casesummary(casesummary_df=casesummary_df)
-    df = result["CMS_CaseDetails"]
-    df.write.mode('append').parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_output_data/casesummary12.parquet")
+    '''
 
-    print(df.count())
+    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
+    project_vital_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project_vitals.parquet")
+    df_project = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project.parquet")
+
+    #casesummary_df.select("actualsettlementamount").show()
+    #exit()
+
+    #df_project.select("phaseId").show()
+
+    #exit()
+    
+    project_vital_df = project_vital_df.withColumn("input_file", F.input_file_name())
+    project_vital_df = project_vital_df.withColumn('projectId', F.element_at(F.split(F.col('input_file'), '/'), -2))
+
+
+
+    casesummary_df.printSchema()
+
+    result = builder.build_casesummary(casesummary_df=casesummary_df, df_project_vitals=project_vital_df, df_project=df_project)
+    result["CMS_CaseDetails"].show()
+    
+    #df = result["CMS_CaseDetails"]
+    #df.write.mode('append').parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_output_data/casesummary12.parquet")
+
+    #print(df.count())

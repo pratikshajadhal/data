@@ -111,6 +111,8 @@ def start_project_etl():
                                 primary_key_column="projectId")
 
             project_list = project_etl.extract_data_from_source()
+
+            #project_list = project_list
         
             project_etl.get_schema_of_model()
 
@@ -139,6 +141,8 @@ def start_project_etl():
                     thread_list.append(t)
                     processed_chunk_list += 1
                     count += 1
+                    #import time
+                    #time.sleep(5)
                 else:
                     for t in thread_list:
                         t.join()
@@ -260,15 +264,3 @@ def start_collection_etl(project_type, section_name):
 if __name__ == "__main__":
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
     
-    # Historical scripts - - -
-    # from tasks.hist_helper import *
-    # start_statuses_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_leadsource_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_referrals_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_users_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_case_type_etl(s3_conf_file_path="confs/src-lead.yaml")
-
-    # start_lead_row_etl("confs/src-lead.yaml")
-    # start_lead_detail_etl("confs/src-lead.yaml")
-    # start_lead_contact_etl("confs/src-lead.yaml")
-    # start_opport_etl("confs/src-lead.yaml")
