@@ -247,7 +247,7 @@ tsm:
         type: data
     - name: Case_Type_ID
       data_type: int
-    - name: Case_Create_Date
+    - name: Case_Create_Date #Special case. Need to be deduced from Project Vitals Subentity
       data_type: date
     - name: Date_of_Incident
       data_type: date
@@ -371,6 +371,12 @@ tsm:
       data_type: string
     - name: Case_Phase_ID
       data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: project
+        source_field: phaseId
+        type: data
     - name: Custom1
       data_type: string  
     - name: Custom2

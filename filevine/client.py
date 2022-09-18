@@ -167,10 +167,24 @@ class FileVineClient(object):
 
     def get_projecttypes_phases(self, project_type_id):
         return self.get_entity(f"core/projecttypes/{project_type_id}/phases")
+
+    def get_project_vital(self, project_id):
+        end_point = f"core/projects/{project_id}/vitals"
+        vital_data = self.make_request(end_point)
+        return vital_data
+
         
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
+    vital_list = fv_client.get_project_vital(8266838)
+    import pandas as pd 
+    vital_df = pd.DataFrame(vital_list)
+    print(vital_df.dtypes)
+    print(vital_df)
+    exit()
+    print(json.dumps(fv_client.get_project_vital(8266838)))
+    exit()
     #print(fv_client.get_contacts(project_id=10561860))
     #print(fv_client.get_section_data(10568297, "intake"))
     print(json.dumps(fv_client.get_collections(5965342, "meds")))
