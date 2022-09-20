@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from itertools import islice
 import boto3, botocore
 import json
@@ -105,7 +106,7 @@ def load_lead_config(file_path:str) -> LeadSelectedConfig:
 
 def get_logger(__name__):
     logger = logging.getLogger(__name__)
-    
+
     if len(logger.handlers) > 0:
         return logger
 
@@ -122,6 +123,7 @@ def get_logger(__name__):
     logger.addHandler(handler)
 
     return logger
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 def find_yaml(s3_path: str, download_path: str):
