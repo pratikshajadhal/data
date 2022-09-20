@@ -65,6 +65,8 @@ class LeadModelETL(object):
             organization_identifier = client_id
         else:
             organization_identifier = (self.base_url.split(".")[0]).split("//")[1]
+
+        # try:
         if isinstance(dest, S3Destination):
             dest.load_data(data_df= trans_df,
                             section="leaddocket",
@@ -73,6 +75,8 @@ class LeadModelETL(object):
                             push_id = push_id,
                             organization_identifier = organization_identifier,
                             entity= "lead")
+
+
                             
 
     def eliminate_nonyaml(self, lead_df:pd.DataFrame):
