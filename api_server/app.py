@@ -308,9 +308,11 @@ async def lead_webhook_handler(request: Request, clientId:str):
     if event_type == 'Lead Edited' or event_type == 'Lead Created' or event_type == 'Lead Status Changed':
         # Extract Metadata
         lead_id = incoming_json.get("LeadId")
-
         # Update Lead Detail
         start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
+
+        # Update lead row
+        start_lead_row_etl(s3_conf_file_path=s3_conf_file_path, lead_payload= incoming_json)
 
 
     elif event_type == 'Contact Added':
