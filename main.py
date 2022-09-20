@@ -261,13 +261,5 @@ if __name__ == "__main__":
 
     # Will be moving soon!    
     # Historical scripts - - -
-    # from tasks.hist_helper import *
-    # start_statuses_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_leadsource_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_referrals_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_users_etl(s3_conf_file_path="confs/src-lead.yaml")
-    # start_case_type_etl(s3_conf_file_path="confs/src-lead.yaml")
-    
-    # # ...
-    # start_lead_row_etl("confs/src-lead.yaml")
-    # start_lead_detail_etl("confs/src-lead.yaml")
+    # from tasks.tasks import *
+    # run_lead_historical("confs/src-lead.yaml")
