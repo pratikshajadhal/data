@@ -1,11 +1,6 @@
-from collections import ChainMap
-from http import client
 import pandas as pd
-import yaml
-from yaml.loader import SafeLoader
+import time
 
-from etl.datamodel import LeadDocketConfig, ColumnConfig
-from etl.destination import ETLDestination, S3Destination
 from .lead_modeletl import LeadModelETL
 from .lead_opport import LeadOpportETL
 from .lead_contact import LeadContactETL
@@ -80,6 +75,8 @@ class LeadDetailETL(LeadModelETL):
             """
                 Function to trigger conccurent run of lead_detail etl. 
                 If each lead detail have Contact or Opportunity id then also trigger contact and opport etl
+
+                As the program runs concurently, loading data into s3 might be a problem for s3 session. Need to add sleep unfortunately.
             """
             for idx, lead_id in enumerate(lead_ids):
                 try:
@@ -88,12 +85,15 @@ class LeadDetailETL(LeadModelETL):
                         contact_df = contact_obj.transform(lead["Contact"])
                         transformed = contact_obj.eliminate_nonyaml(contact_df)
                         contact_obj.load_data(trans_df=transformed, client_id=client_id)
+                        time.sleep(2)
+
                     if lead.get("Opportunity"):
                         opport_id = lead.get("Opportunity").get("Id")
                         extracted = opport_obj.extract_data_from_source(opport_id)
                         opport_df = opport_obj.transform(extracted)
                         transformed = opport_obj.eliminate_nonyaml(opport_df)
                         opport_obj.load_data(trans_df=transformed, client_id=client_id)
+                        time.sleep(2)
 
                     
                     lead_detail_df = self.transform(lead)
@@ -103,4 +103,3 @@ class LeadDetailETL(LeadModelETL):
                 except Exception as e:
                     print("="*100)
                     print(e)
-                    print(f"Problem occurs in lead_id: {lead}, client_id: {client_id}")
