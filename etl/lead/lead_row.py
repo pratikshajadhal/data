@@ -13,6 +13,30 @@ class LeadRowETL(LeadModelETL):
         # Using this statuses get all lead row table.
         return self.ld_client.get_lead_row(statuses)
 
+
+    def extract_data_from_webhook_incoming(self, lead_payload:dict) -> dict:
+        # Copied from old lambda function.
+        new = dict()
+
+        new['Id'] =  lead_payload.get("LeadId") 
+        new['ContactId'] = lead_payload.get('ContactId')
+        new['PhoneNumber'] = lead_payload.get("PhoneNumber")
+        new['MobilePhone'] = lead_payload.get('ContactMobilePhone')
+        new['HomePhone'] = lead_payload.get('ContactHomePhone')
+        new['WorkPhone'] = lead_payload.get('ContactWorkPhone')
+        new['PreferredContactMethod'] = lead_payload.get("PreferredContactMethod")
+        new['Email'] = lead_payload.get('ContactEmail')
+        new['FirstName'] = lead_payload.get('ContactFirstName')
+        new['LastName'] = lead_payload.get('ContactLastName')
+        new['StatusId'] = lead_payload.get('ContactId')
+        new['StatusName'] = lead_payload.get('LeadStatus')
+        new['SubStatusId'] = lead_payload.get('ContactId')
+        new['SubStatusName'] = lead_payload.get('ContactId')
+        new['CaseType'] = lead_payload.get('LeadCaseType')
+        new['Code'] = lead_payload.get('ContactCode')                     ##LeadCode also available in event body
+        new['LastStatusChangeDate'] = lead_payload.get('LastStatusChangeDate')
+        return new
+
     def extract_lead_metadata(self):
         # Get all status
         return self.ld_client.get_statuses()
@@ -31,8 +55,7 @@ class LeadRowETL(LeadModelETL):
 
     def trigger_row(self, lead_row_chunks):
         """
-            Function to trigger conccurent run of lead_detail etl. 
-            If each lead detail have Contact or Opportunity id then also trigger contact and opport etl
+            Function to trigger conccurent run of leadrow etl. 
         """
         for each_ex in lead_row_chunks:
             try:
@@ -43,7 +66,6 @@ class LeadRowETL(LeadModelETL):
             except Exception as e:
                 print("="*100)
                 print(e)
-                print(f"Problem occurs")
       
 
 
