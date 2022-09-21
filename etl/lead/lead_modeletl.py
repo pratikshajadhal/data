@@ -65,6 +65,8 @@ class LeadModelETL(object):
             organization_identifier = client_id
         else:
             organization_identifier = (self.base_url.split(".")[0]).split("//")[1]
+
+        # try:
         if isinstance(dest, S3Destination):
             dest.load_data(data_df= trans_df,
                             section="leaddocket",
@@ -73,6 +75,8 @@ class LeadModelETL(object):
                             push_id = push_id,
                             organization_identifier = organization_identifier,
                             entity= "lead")
+
+
                             
 
     def eliminate_nonyaml(self, lead_df:pd.DataFrame):
@@ -82,7 +86,6 @@ class LeadModelETL(object):
                 lead_df.drop([each_field], axis = 1, inplace = True)
 
         return lead_df
-
 
     @abstractmethod
     def transform(self):
