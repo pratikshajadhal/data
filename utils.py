@@ -1,4 +1,3 @@
-from asyncio.log import logger
 from itertools import islice
 import boto3, botocore
 import json
