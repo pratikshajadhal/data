@@ -1,12 +1,11 @@
 import os
 import json
+
 import uvicorn
-
-from fastapi import FastAPI, File, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from dacite import from_dict
 
-from api_server.config import FVWebhookInput, TruveDataTask
+from api_server.config import FVWebhookInput,  FVContactWebhookInput
 from api_server.helper import handle_wb_input
 from etl.helper import get_fv_etl_object, get_ld_etl_object
 from filevine.client import FileVineClient
@@ -132,31 +131,35 @@ async def fv_webhook_handler(request: Request):
     '''
     Function to handle webhooks for filevine
 
-    Sample Payload 
-    Project initial event data:  {'Timestamp': 1654733926323, 
-                        'Object': 'Project', 
-                        'Event': 'PhaseChanged', 
-                        'ObjectId': {'ProjectTypeId': 18764, 'PhaseId': 176616}, 
-                        'OrgId': 6586, 
-                        'ProjectId': 10146521, 
-                        'UserId': 48697, 
-                        'Other': {'PhaseName': 'Demand Pending'}}
+    Sample Payload
+    Project initial event data:  
+    {
+        'Timestamp': 1654733926323,
+        'Object': 'Project',
+        'Event': 'PhaseChanged',
+        'ObjectId': {'ProjectTypeId': 18764, 'PhaseId': 176616},
+        'OrgId': 6586,
+        'ProjectId': 10146521,
+        'UserId': 48697,
+        'Other': {'PhaseName': 'Demand Pending'}
+    }
 
     Form Event data:
-    {'Timestamp': 1654741352640, 
-    'Object': 'Form', 
-    'Event': 'Updated', 
-    'ObjectId': {'ProjectTypeId': 18764, 'SectionSelector': 'intake'}, 
-    'OrgId': 6586, 
-    'ProjectId': 10561086, 
-    'UserId': 26712, 
-    'Other': {}}
+    {
+        'Timestamp': 1654741352640,
+        'Object': 'Form',
+        'Event': 'Updated',
+        'ObjectId': {'ProjectTypeId': 18764, 'SectionSelector': 'intake'},
+        'OrgId': 6586,
+        'ProjectId': 10561086,
+        'UserId': 26712,
+        'Other': {}
+    }
 
     Meds Event Data
 
     '''
     event_json = await request.json()
-
     logger.info(f"Got FV Webhook Request {event_json}")
     
     #Extract Metadata
@@ -164,7 +167,6 @@ async def fv_webhook_handler(request: Request):
     
     if entity == "Project":
         #In case of project webhook, Handling will be different
-        
         event_name = event_json["Event"]
         
         if event_name != "PhaseChanged":
@@ -183,6 +185,29 @@ async def fv_webhook_handler(request: Request):
             section = None
             event_name = event_json["Event"]
             event_time = event_json["Timestamp"]
+
+    elif entity == "Contact":
+        #  {'Timestamp': 1664144392853, 'Object': 'Contact', 'Event': 'Updated', 'ObjectId': {'PersonId': 35633825}, 'OrgId': 6586, 'ProjectId': None, 'UserId': 56907, 'Other': {}}
+        #  {'Timestamp': 1664238262647, 'Object': 'Contact', 'Event': 'Updated', 'ObjectId': {'PersonId': 35643917}, 'OrgId': 6586, 'ProjectId': None, 'UserId': 66137, 'Other': {}}
+        person_id = event_json["ObjectId"].get("PersonId")
+        org_id = event_json.get("OrgId")
+        project_id = event_json.get("ProjectId")
+        entity = event_json.get("Object")
+        event_name = event_json.get("Event")
+        event_time = event_json.get("Timestamp")
+        user_id = event_json.get("user_id")
+
+        wh_input = FVContactWebhookInput(
+            person_id=person_id,
+            org_id=org_id,
+            event_name=event_name,
+            event_timestamp=event_time,
+            entity=entity,
+            project_id=project_id,
+            user_id=user_id,
+            webhook_body=event_json
+            )
+
     else:
         project_type_id = event_json["ObjectId"]["ProjectTypeId"]
         org_id = event_json["OrgId"]
@@ -192,16 +217,19 @@ async def fv_webhook_handler(request: Request):
         event_name = event_json["Event"]
         event_time = event_json["Timestamp"]
 
-    wh_input = FVWebhookInput(project_type_id=project_type_id,
-                org_id=org_id,
-                project_id=project_id,
-                entity=entity,
-                event_name=event_name,
-                event_timestamp=event_time,
-                user_id=None,
-                section=section,
-                webhook_body=event_json
-                )
+    # Create Input dataclass
+    if 'wh_input' not in locals():
+        wh_input = FVWebhookInput(
+            project_type_id=project_type_id,
+            org_id=org_id,
+            project_id=project_id,
+            entity=entity,
+            event_name=event_name,
+            event_timestamp=event_time,
+            user_id=None,
+            section=section,
+            webhook_body=event_json
+        )
 
     try:
         response = handle_wb_input(wb_input=wh_input)
