@@ -1,9 +1,9 @@
-from typing import Dict
-import requests
 import os
 import json 
-import logging
 
+import requests
+import logging
+from typing import Dict, Optional
 from dotenv import load_dotenv
 from utils import get_logger
 
@@ -124,10 +124,23 @@ class FileVineClient(object):
         contact_list = raw_contact_items
         return contact_list
 
-    def get_single_contact(self):
-        contact_metadata = self.make_request("core/contacts")
+    def get_single_contact(self, person_id: Optional[int]) -> dict:
+        """_summary_:Function to get single contact.
+
+        Only webhook incoming data uses person_id to fetch single contact.
         
-        return contact_metadata["items"]
+        Args:
+            person_id (Optional[int]):
+
+        Returns:
+            dict: _description_
+        """
+        
+        if person_id is None:
+            return self.make_request("core/contacts")["items"]
+        return self.make_request(f"core/contacts/{person_id}")
+        
+        # return contact_metadata["items"]
 
     def get_section_data(self, project_id:int, section_name:str):
         end_point = f"core/projects/{project_id}/forms/{section_name}"

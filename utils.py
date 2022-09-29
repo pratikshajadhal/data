@@ -104,6 +104,18 @@ def load_lead_config(file_path:str) -> LeadSelectedConfig:
         return from_dict(data=data, data_class=LeadSelectedConfig)
 
 def get_logger(__name__):
+    # logging.basicConfig(filename="historical_logs",
+    #                 filemode='a',
+    #                 format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+    #                 datefmt='%H:%M:%S',
+    #                 level=logging.INFO)
+
+
+    # logger = logging.getLogger('HistoricalLogs')
+    # return logger
+
+    # - - - - - - - - - - - - - - - - - - - - - 
+
     logger = logging.getLogger(__name__)
 
     if len(logger.handlers) > 0:

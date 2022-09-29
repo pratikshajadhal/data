@@ -1,4 +1,5 @@
-from typing import Dict
+from optparse import Option
+from typing import Dict, Optional
 
 import pandas as pd
 
@@ -10,7 +11,7 @@ class ContactETL(ModelETL):
 
     def get_filtered_schema(self, source_schema:Dict) -> Dict:
         flattend_map = {}
-        
+
         for field in source_schema:
             print(field)
             field_data_type = field["value"]
@@ -27,8 +28,6 @@ class ContactETL(ModelETL):
     def get_schema_of_model(self) -> Dict:
         contact_schema = self.fv_client.get_contact_metadata()
         
-        distinct_data_type = {}
-        
         self.source_schema = contact_schema
 
         self.persist_source_schema()
@@ -40,13 +39,11 @@ class ContactETL(ModelETL):
         project_list = [project_data["projectId"]["native"] for project_data in project_data_list]
         return project_list
 
-    def extract_data_from_source(self, project_list:list[int]=[], bring_one:bool=False):
-        final_contact_list = []
+    def extract_data_from_source(self, project_list:list[int]=[], bring_one: bool = False, person_id: Optional[int] = None):
         if not bring_one:
-            contact_list = self.fv_client.get_contacts()
-        else:
-            contact_list = self.fv_client.get_single_contact()
-        return contact_list
+            return self.fv_client.get_contacts()
+        return self.fv_client.get_single_contact(person_id)
+
 
 
     def get_snapshot(self, project_type_id):

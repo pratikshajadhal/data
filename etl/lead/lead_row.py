@@ -1,18 +1,14 @@
-from collections import ChainMap
 import pandas as pd
-import yaml
-from yaml.loader import SafeLoader
-
-from etl.datamodel import LeadDocketConfig, ColumnConfig
-from etl.destination import ETLDestination
 from .lead_modeletl import LeadModelETL
 
-class LeadRowETL(LeadModelETL):
+from utils import get_logger
+logger = get_logger(__name__)
 
+
+class LeadRowETL(LeadModelETL):
     def extract_data_from_source(self, statuses:list):
         # Using this statuses get all lead row table.
         return self.ld_client.get_lead_row(statuses)
-
 
     def extract_data_from_webhook_incoming(self, lead_payload:dict) -> dict:
         # Copied from old lambda function.
@@ -64,8 +60,9 @@ class LeadRowETL(LeadModelETL):
                 self.load_data(trans_df=df)
 
             except Exception as e:
-                print("="*100)
-                print(e)
+                logger.warn("=" * 60)
+                logger.error(e)
+
       
 
 

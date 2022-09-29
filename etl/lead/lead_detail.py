@@ -5,6 +5,8 @@ from .lead_modeletl import LeadModelETL
 from .lead_opport import LeadOpportETL
 from .lead_contact import LeadContactETL
 
+from utils import get_logger
+logger = get_logger(__name__)
 
 class LeadDetailETL(LeadModelETL):
 
@@ -101,5 +103,5 @@ class LeadDetailETL(LeadModelETL):
                     self.load_data(trans_df=transformed_detail_df, client_id=client_id)
 
                 except Exception as e:
-                    print("="*100)
-                    print(e)
+                    logger.warn("=" * 60)
+                    logger.error(e)
