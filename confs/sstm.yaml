@@ -539,6 +539,43 @@ tsm:
       data_type: string  
     - name: Custom3
       data_type: string      
+  - name: CMS_CaseTypes
+    fields:
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: string
+      transform:
+        source: etl
+        type: org_id
+    - name: Practice_Type_ID
+      data_type: int
+    - name: Case_Type_ID
+      data_type: int
+    - name: Case_Type_Name
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: casesummary
+        source_field: caseType
+        type: data
+    - name: Case_Type_Category
+      data_type: string
+    - name: Case_Type_Sub_Category
+      data_type: string
+    - name: Custom1
+      data_type: string  
+    - name: Custom2
+      data_type: string  
+    - name: Custom3
+      data_type: string      
 
+      
+    
+    
 
     
