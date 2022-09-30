@@ -374,6 +374,47 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         return {table_name : intake_df}
 
+    def build_casetypes(self, casesummary_df: SP_DATAFRAME, processed_project_df: SP_DATAFRAME):
+        table_name = "CMS_CaseTypes"
+        casesummary_df = casesummary_df.withColumn("Case_ID", F.col("projectId")).join(processed_project_df.select("Case_ID", "Practice_Type_ID"), on=["Case_ID"])
+        
+        casetype_df = (casesummary_df.select("caseType", "Practice_Type_ID").distinct().where(F.col("caseType").isNotNull()))
+
+        casetype_df = casetype_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        casetype_df = casetype_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+
+        #window = Window.orderBy(col('monotonically_increasing_id'))
+        window = Window.partitionBy("Practice_Type_ID").orderBy("caseType")
+
+        #casetype_df = casetype_df.withColumn('Case_Type_ID', monotonically_increasing_id())
+        casetype_df = casetype_df.withColumn("Case_Type_ID",F.row_number().over(window))
+
+        casetype_df = casetype_df.withColumn('Case_Type_Name', F.col('caseType'))
+
+
+        table_fields = self._get_table_config(table_name)
+
+        col_list = [field.name for field in table_fields]
+        
+        self.add_default_columns(df=casetype_df)
+        
+        print(casetype_df.schema.fields)
+        df_col_list = [field.name for field in casetype_df.schema.fields]
+        
+        for col in col_list:
+            if col not in df_col_list:
+                casetype_df = casetype_df.withColumn(col, lit(None).cast(StringType()))
+
+        
+        casetype_df = casetype_df.select(*col_list)
+
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            casetype_df = casetype_df.withColumn(field.name, casetype_df[field.name].cast(cls))
+
+        return {table_name: casetype_df}
+
     def build_casesummary(self, casesummary_df: SP_DATAFRAME, df_project_vitals: SP_DATAFRAME, df_project: SP_DATAFRAME):
         table_name = "CMS_CaseDetails"
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
@@ -441,11 +482,17 @@ if __name__ == "__main__":
     print(result)
     exit()
     '''
-    '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")
     project_df.printSchema()
-    print(builder.build_casemaster(project_df))
-    '''
+    result = builder.build_casemaster(project_df)
+    processed_project_df = result["CMS_Cases"]
+
+    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
+    
+    builder.build_casetypes(casesummary_df=casesummary_df, processed_project_df=processed_project_df)
+
+    exit()
+
     '''
     projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
     projecttype_df.printSchema()
