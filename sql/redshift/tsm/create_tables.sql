@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS CMS_People (
   --Team_ID int, --JS removed 'not null' Reason: this can be null if there is no team structure. Removed references since reference captured below under foreign key. DC removed and moved it to CMS_PeopleRoleAssignments
   --People_Type_ID int, --JS added, DC removed since one person can have multiple type_id assignments
   First_Name varchar(255) not null, -- JS added 'not'
-  Middle_Name varchar(255), -- JS removed 'null'
-  Last_Name varchar(255) not null, -- JS added 'not'
+  Middle_Name varchar(255), -- JS removed 'null',
+  Last_Name varchar(255), -- JS added 'not', Shiv Removed it after checking Last_Name is null in Filevine
   Date_of_Birth date,
   Gender varchar(50),
   Custom1 varchar(255),
@@ -166,8 +166,8 @@ CREATE TABLE IF NOT EXISTS CMS_InsuranceMaster (
   Insurance_Sub_Type varchar(255), --removed 'not null'
   Insurance_Limit1_Type varchar(255),
   Insurance_Limit2_Type varchar(255),
-  Limit_Value1 decimal(10,10),
-  Limit_Value2 decimal(10,10),
+  Limit_Value1 decimal(10,4),
+  Limit_Value2 decimal(10,4),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -186,9 +186,9 @@ CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
   Plaintiff_Full_Name varchar(255),
   Case_Marketing_Source varchar(255),
   Case_Source_Name varchar(255),
-  Attorney_Fee_Percentage decimal(10,10),
+  Attorney_Fee_Percentage decimal(10,4),
   Estimated_Settlement_Date date, --Revised the name from Projected_Settlement_Date
-  Estimated_Settlement_Amount decimal(10,10), --Revised the name from Projected_Settlement_Amount
+  Estimated_Settlement_Amount decimal(10,4), --Revised the name from Projected_Settlement_Amount
   --Actual_Settlement_Date date, --JS removed this should be part of case figure type
   --Actual_Settlement_Amount decimal(8,2), --JS removed this should be part of case figure value
   If_Case_Settled_Presuit varchar(50),
@@ -231,12 +231,12 @@ CREATE TABLE IF NOT EXISTS CMS_CaseFigures (
   Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
-  Case_Figure_ID int,
+  Case_Figure_ID varchar(255),
   Figure_Type varchar(255),
   Figure_Sub_Type varchar(255), --JS added
   Figure_Date date,
   Figure_Status varchar(255),
-  Value decimal(10,10),
+  Value decimal(10,4),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS CMS_IntakeDetails (
   Date_of_Incident date,
   Date_of_Signup date, --JS Added
   DUI_or_HitandRun varchar(50),
-  Referral_Fee_Percentage decimal (10,10) , --JS revised from Referral_Fee_ID int
+  Referral_Fee_Percentage decimal (10,4) , --JS revised from Referral_Fee_ID int
   If_Case_Referred_In varchar(50),
   If_Qualified_Case varchar(50),
   If_VIP_Lead varchar(50),
@@ -456,7 +456,7 @@ CREATE TABLE IF NOT EXISTS APP_Targets (
   Quarter int not null,
   Month int not null,
   Week int not null,
-  Target decimal(10,10),
+  Target decimal(10,4),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
