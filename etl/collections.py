@@ -2,9 +2,7 @@ from typing import Dict
 
 import pandas as pd
 
-from .datamodel import ETLDestination, ETLSource, RedshiftConfig
 from .modeletl import ModelETL
-from filevine import client
 from utils import get_logger
 
 logger = get_logger(__name__)
@@ -13,6 +11,7 @@ class CollectionETL(ModelETL):
 
     def get_filtered_schema(self, source_schema:Dict) -> Dict:
         flattend_map = {}
+        # print(source_schema)
         for field in source_schema:
             field_data_type = field["customFieldType"]
             field_name = field["fieldSelector"].replace("custom.", "")
@@ -39,6 +38,7 @@ class CollectionETL(ModelETL):
 
         self.persist_source_schema()
 
+
         return form_schema
 
     def get_projects(self) -> list[int]:
@@ -51,6 +51,7 @@ class CollectionETL(ModelETL):
         for index, project in enumerate(project_list):
             logger.debug(f"Getting {self.entity_type} for project {project} {index}")
             section_data = self.fv_client.get_collections(project_id=project, collection_name=self.model_name)
+            # print(section_data)
             if not section_data:
                 continue
             for section in section_data:
@@ -72,7 +73,8 @@ class CollectionETL(ModelETL):
                     return snapshot_data[0]                    
         return {}
         
-    def trigger_etl(self, project_list:list[int], dest_col_format):
+    def trigger_etl(self, project_list:list[int],
+                    dest_col_format):
         for project in project_list:
             form_data_list = self.extract_data_from_source(project_list=[project])
 
@@ -83,7 +85,6 @@ class CollectionETL(ModelETL):
                 continue
             
             self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
-
             #count = count + 1
 
             #print("Total processed {}".format(count))
