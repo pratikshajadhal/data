@@ -1,0 +1,140 @@
+17:11:27,121 uvicorn.error INFO Will watch for changes in these directories: ['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api']
+17:11:27,122 uvicorn.error INFO Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+17:11:27,139 uvicorn.error INFO Started reloader process [15584] using watchgod
+17:11:29,310 uvicorn.error INFO Started server process [26960]
+17:11:29,310 uvicorn.error INFO Waiting for application startup.
+17:11:29,312 uvicorn.error INFO Application startup complete.
+17:13:15,704 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:13:17,784 uvicorn.error INFO Started server process [1192]
+17:13:17,785 uvicorn.error INFO Waiting for application startup.
+17:13:17,786 uvicorn.error INFO Application startup complete.
+17:13:20,773 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:13:22,603 uvicorn.error INFO Started server process [29164]
+17:13:22,603 uvicorn.error INFO Waiting for application startup.
+17:13:22,605 uvicorn.error INFO Application startup complete.
+17:15:16,350 HistoricalLogs INFO Got LeadDocket Webhook Request Lead Created
+17:15:16,443 HistoricalLogs INFO Hitting URL https://aliawadlaw.leaddocket.com/api/leads/10678
+17:15:17,550 uvicorn.error ERROR Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Python\Python392\lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 375, in run_asgi
+    result = await app(self.scope, self.receive, self.send)
+  File "C:\Python\Python392\lib\site-packages\uvicorn\middleware\proxy_headers.py", line 75, in __call__
+    return await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\fastapi\applications.py", line 208, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\applications.py", line 112, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\errors.py", line 181, in __call__
+    raise exc
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\errors.py", line 159, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\cors.py", line 84, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\exceptions.py", line 82, in __call__
+    raise exc
+  File "C:\Python\Python392\lib\site-packages\starlette\exceptions.py", line 71, in __call__
+    await self.app(scope, receive, sender)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 656, in __call__
+    await route.handle(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 259, in handle
+    await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 61, in app
+    response = await func(request)
+  File "C:\Python\Python392\lib\site-packages\fastapi\routing.py", line 226, in app
+    raw_response = await run_endpoint_function(
+  File "C:\Python\Python392\lib\site-packages\fastapi\routing.py", line 159, in run_endpoint_function
+    return await dependant.call(**values)
+  File "C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apý\latest\data-api\api_server\app.py", line 340, in lead_webhook_handler
+    start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
+  File "C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apý\latest\data-api\tasks\hist_helper.py", line 175, in start_lead_detail_etl
+    print(3 / 0)
+ZeroDivisionError: division by zero
+17:16:06,315 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:16:08,479 uvicorn.error INFO Started server process [38248]
+17:16:08,480 uvicorn.error INFO Waiting for application startup.
+17:16:08,482 uvicorn.error INFO Application startup complete.
+17:16:12,196 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:16:13,472 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:16:15,506 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:16:17,61 uvicorn.error INFO Started server process [3368]
+17:16:17,62 uvicorn.error INFO Waiting for application startup.
+17:16:17,63 uvicorn.error INFO Application startup complete.
+17:16:18,26 uvicorn.error WARNING WatchGodReload detected file change in '['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api\\tasks\\hist_helper.py']'. Reloading...
+17:16:19,725 uvicorn.error INFO Started server process [39828]
+17:16:19,726 uvicorn.error INFO Waiting for application startup.
+17:16:19,738 uvicorn.error INFO Application startup complete.
+17:16:21,429 HistoricalLogs INFO Got LeadDocket Webhook Request Lead Created
+17:16:21,521 HistoricalLogs INFO Hitting URL https://aliawadlaw.leaddocket.com/api/leads/10678
+17:16:22,399 uvicorn.error ERROR Exception in ASGI application
+Traceback (most recent call last):
+  File "C:\Python\Python392\lib\site-packages\uvicorn\protocols\http\httptools_impl.py", line 375, in run_asgi
+    result = await app(self.scope, self.receive, self.send)
+  File "C:\Python\Python392\lib\site-packages\uvicorn\middleware\proxy_headers.py", line 75, in __call__
+    return await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\fastapi\applications.py", line 208, in __call__
+    await super().__call__(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\applications.py", line 112, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\errors.py", line 181, in __call__
+    raise exc
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\errors.py", line 159, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Python\Python392\lib\site-packages\starlette\middleware\cors.py", line 84, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\exceptions.py", line 82, in __call__
+    raise exc
+  File "C:\Python\Python392\lib\site-packages\starlette\exceptions.py", line 71, in __call__
+    await self.app(scope, receive, sender)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 656, in __call__
+    await route.handle(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 259, in handle
+    await self.app(scope, receive, send)
+  File "C:\Python\Python392\lib\site-packages\starlette\routing.py", line 61, in app
+    response = await func(request)
+  File "C:\Python\Python392\lib\site-packages\fastapi\routing.py", line 226, in app
+    raw_response = await run_endpoint_function(
+  File "C:\Python\Python392\lib\site-packages\fastapi\routing.py", line 159, in run_endpoint_function
+    return await dependant.call(**values)
+  File "C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apý\latest\data-api\api_server\app.py", line 340, in lead_webhook_handler
+    start_lead_detail_etl(s3_conf_file_path= s3_conf_file_path, lead_ids=[lead_id], client_id=clientId)
+  File "C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apý\latest\data-api\tasks\hist_helper.py", line 176, in start_lead_detail_etl
+    print(3 / 0)
+ZeroDivisionError: division by zero
+18:21:21,592 uvicorn.error INFO Shutting down
+18:21:21,632 uvicorn.error INFO Stopping reloader process [15584]
+18:21:47,135 uvicorn.error INFO Will watch for changes in these directories: ['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api']
+18:21:47,136 uvicorn.error INFO Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+18:21:47,144 uvicorn.error INFO Started reloader process [23656] using watchgod
+18:21:48,838 uvicorn.error INFO Started server process [4260]
+18:21:48,839 uvicorn.error INFO Waiting for application startup.
+18:21:48,840 uvicorn.error INFO Application startup complete.
+18:22:30,407 HistoricalLogs INFO Got FV Webhook Request {'Timestamp': 1664464547226, 'Object': 'Project', 'Event': 'PhaseChanged', 'ObjectId': {'ProjectTypeId': 18764, 'PhaseId': 103018}, 'OrgId': 6586, 'ProjectId': 10037648, 'UserId': 58692, 'Other': {'PhaseName': 'Ready For Demand'}}
+18:22:30,452 HistoricalLogs INFO PhaseChanged event filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:22:36,690 HistoricalLogs INFO S3 Upload successful for s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:22:40,505 uvicorn.error INFO Shutting down
+18:22:40,596 uvicorn.error INFO Stopping reloader process [23656]
+18:22:45,847 uvicorn.error INFO Will watch for changes in these directories: ['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api']
+18:22:45,847 uvicorn.error INFO Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+18:22:45,857 uvicorn.error INFO Started reloader process [23056] using watchgod
+18:22:47,528 uvicorn.error INFO Started server process [34764]
+18:22:47,529 uvicorn.error INFO Waiting for application startup.
+18:22:47,530 uvicorn.error INFO Application startup complete.
+18:23:55,873 HistoricalLogs INFO Got FV Webhook Request {'Timestamp': 1664464547226, 'Object': 'Project', 'Event': 'PhaseChanged', 'ObjectId': {'ProjectTypeId': 18764, 'PhaseId': 103018}, 'OrgId': 6586, 'ProjectId': 10037648, 'UserId': 58692, 'Other': {'PhaseName': 'Ready For Demand'}}
+18:23:55,919 HistoricalLogs INFO PhaseChanged event filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:24:05,528 HistoricalLogs INFO S3 Upload successful for s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:24:16,684 uvicorn.error INFO Shutting down
+18:24:16,785 uvicorn.error INFO Waiting for application shutdown.
+18:24:16,786 uvicorn.error INFO Application shutdown complete.
+18:24:16,786 uvicorn.error INFO Finished server process [34764]
+18:24:16,900 uvicorn.error INFO Stopping reloader process [23056]
+18:24:19,139 uvicorn.error INFO Will watch for changes in these directories: ['C:\\Users\\mert.seven\\Desktop\\Projects\\Truve\\shiv-apý\\latest\\data-api']
+18:24:19,140 uvicorn.error INFO Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+18:24:19,149 uvicorn.error INFO Started reloader process [35700] using watchgod
+18:24:20,727 uvicorn.error INFO Started server process [36212]
+18:24:20,728 uvicorn.error INFO Waiting for application startup.
+18:24:20,730 uvicorn.error INFO Application startup complete.
+18:24:21,649 HistoricalLogs INFO Got FV Webhook Request {'Timestamp': 1664464547226, 'Object': 'Project', 'Event': 'PhaseChanged', 'ObjectId': {'ProjectTypeId': 18764, 'PhaseId': 103018}, 'OrgId': 6586, 'ProjectId': 10037648, 'UserId': 58692, 'Other': {'PhaseName': 'Ready For Demand'}}
+18:24:21,706 HistoricalLogs INFO PhaseChanged event filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:24:24,377 HistoricalLogs INFO S3 Upload successful for s3://dev-truve-devops-05-databricks-bucketetlrawdata-wu3m2thgf3o/filevine/6586/18764/10037648/phases/1664464547226.parquet
+18:24:35,234 uvicorn.error INFO Shutting down
+18:24:35,325 uvicorn.error INFO Stopping reloader process [35700]
