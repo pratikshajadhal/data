@@ -12,7 +12,6 @@ class ContactETL(ModelETL):
         flattend_map = {}
         
         for field in source_schema:
-            print(field)
             field_data_type = field["value"]
             field_name = field["selector"].replace("custom.", "")
             if field_name in self.column_config.fields:
