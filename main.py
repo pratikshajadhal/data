@@ -264,3 +264,4 @@ def start_collection_etl(project_type, section_name):
 
 if __name__ == "__main__":
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+    # start_collection_etl(18764, "insurance")
