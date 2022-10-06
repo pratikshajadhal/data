@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+from os.path import dirname, join
 from uuid import UUID
 
 import uvicorn
@@ -54,6 +56,28 @@ async def loadVersion():
         serverSourceVersion = f.read().strip()
 
     print('\n\n  data-api v%s\n=====================\n\n' % serverSourceVersion, flush=True)
+
+
+@app.on_event("startup")
+async def load_db_scripts():
+    pipelines_sql_dir = join(dirname(sys.argv[0]), '../sql/postgres/pipelines')
+    filenames = []
+    try:
+        filenames.append(join(pipelines_sql_dir, os.environ['DB_SCRIPT_CREATE_TABLES']))
+    except KeyError:
+        logger.info('no create table script was provided')
+
+    try:
+        filenames.extend(join(pipelines_sql_dir, filename) for filename in os.environ['DB_SCRIPTS'].split(' '))
+    except KeyError:
+        logger.info('no extra db scripts were provided')
+
+    with get_postgres().connect as conn:
+        with conn.cursor() as curs:
+            for filename in filenames:
+                with open(filename) as f:
+                    logger.info(f'executing db script {filename}')
+                    curs.execute(f.read())
 
 
 @app.get("/diag/health", status_code=200)
