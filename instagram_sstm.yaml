@@ -1,6 +1,6 @@
-org_id: 6586
+org_id: "6586"
 tsm:
-  - name: PeopleType
+  - name: CMS_PeopleType
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -30,7 +30,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string
-  - name: Peoples
+  - name: CMS_People
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -91,7 +91,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string    
-  - name: Cases  
+  - name: CMS_Cases  
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -135,7 +135,7 @@ tsm:
         source_entity_name: project
         source_field: incidentDate
         type: data
-  - name: PracticeTypes
+  - name: CMS_PracticeTypes
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -169,7 +169,7 @@ tsm:
       data_type: string
     - name: Custom3
       data_type: string
-  - name: Phases
+  - name: CMS_Phases
     fields: 
     - name: Truve_Org_ID
       data_type: int
@@ -217,7 +217,7 @@ tsm:
       data_type: string  
     - name: Custom3
       data_type: string
-  - name: CaseDetails
+  - name: CMS_CaseDetails
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -225,7 +225,7 @@ tsm:
         source: internal
         type: key
     - name: Client_Org_ID
-      data_type: int
+      data_type: string
       transform:
         source: etl
         type: org_id
@@ -308,11 +308,11 @@ tsm:
     - name: Case_Status_ID
       data_type: int
     - name: Case_Marketing_Source
-      data_type: int
+      data_type: string
     - name: Case_Source_Name
       data_type: string
     - name: Attorney_Fee_Percentage
-      data_type: float
+      data_type: double
       transform:
         source: etl
         source_entity_type: form
@@ -328,7 +328,7 @@ tsm:
         source_field: projectedsettlementdate
         type: data    
     - name: Projected_Settlement_Amount
-      data_type: float
+      data_type: double
       transform:
         source: etl
         source_entity_type: form
@@ -344,7 +344,7 @@ tsm:
         source_field: settlementdate
         type: data    
     - name: Actual_Settlement_Amount
-      data_type: float
+      data_type: double
       transform:
         source: etl
         source_entity_type: form
@@ -352,7 +352,7 @@ tsm:
         source_field: actualsettlementamount
         type: data
     - name: If_Case_Settled_Presuit
-      data_type: boolean
+      data_type: string
       transform:
         source: etl
         source_entity_type: form
@@ -360,7 +360,7 @@ tsm:
         source_field: caseSettledPresuit
         type: data
     - name: If_VIP_Case
-      data_type: boolean
+      data_type: string
       transform:
         source: etl
         source_entity_type: form
@@ -368,7 +368,7 @@ tsm:
         source_field: vIPCase
         type: data
     - name: If_Case_Referred_Out
-      data_type: boolean
+      data_type: string
     - name: Case_Phase_ID
       data_type: int
     - name: Custom1
@@ -381,7 +381,7 @@ tsm:
       data_type: string      
     - name: Custom5
       data_type: string      
-  - name: CaseFigures
+  - name: CMS_CaseFigures
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -389,7 +389,7 @@ tsm:
         source: internal
         type: key
     - name: Client_Org_ID
-      data_type: int
+      data_type: string
       transform:
         source: etl
         type: org_id
@@ -430,7 +430,7 @@ tsm:
     - name: Figure_Status
       data_type: string
     - name: Value
-      data_type: float
+      data_type: double
       transform:
         source: etl
         source_entity_type: collection
@@ -443,7 +443,7 @@ tsm:
       data_type: string  
     - name: Custom3
       data_type: string      
-  - name: IntakeDetails
+  - name: CMS_IntakeDetails
     fields:
     - name: Truve_Org_ID
       data_type: int
@@ -451,7 +451,7 @@ tsm:
         source: internal
         type: key
     - name: Client_Org_ID
-      data_type: int
+      data_type: string
       transform:
         source: etl
         type: org_id
@@ -521,20 +521,12 @@ tsm:
         source_entity_name: intake
         source_field: referralfee
         type: data
-    - name: Referral_Fee
-      data_type: double
-      transform:
-        source: etl
-        source_entity_type: form
-        source_entity_name: intake
-        source_field: referralfee
-        type: data
     - name: If_Case_Referred_In
-      data_type: boolean
+      data_type: string
     - name: If_Qualified_Case
-      data_type: boolean
+      data_type: string
     - name: If_VIP_Lead
-      data_type: boolean
+      data_type: string
     - name: Custom1
       data_type: string  
     - name: Custom2

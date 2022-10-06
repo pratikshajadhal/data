@@ -13,7 +13,7 @@ create table if not exists error_reasons (
 );
 
 create table if not exists pipelines (
-    id int,
+    id serial,
     uuid uuid not null unique,
     org_uuid uuid not null,
     tpa_identifier varchar(50) not null,
@@ -29,7 +29,7 @@ create table if not exists pipelines (
 );
 
 create table if not exists jobs (
-    id int,
+    id serial,
     uuid uuid unique not null,
     pipeline_id int not null references pipelines(id),
     job_identifier varchar(50) not null,

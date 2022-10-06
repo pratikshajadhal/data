@@ -1,6 +1,7 @@
-CREATE TABLE IF NOT EXISTS PeopleType (
+-- CMS Standard Models
+CREATE TABLE IF NOT EXISTS CMS_PeopleType (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   People_Type_ID int not null,
   People_Type varchar(255) not null,
   People_Sub_Type varchar(255),
@@ -10,7 +11,7 @@ CREATE TABLE IF NOT EXISTS PeopleType (
   primary key (People_Type_ID)
 );
 
-CREATE TABLE IF NOT EXISTS Teams (
+CREATE TABLE IF NOT EXISTS CMS_Teams (
   Truve_Org_ID int not null,
   Client_Org_ID int not null,
   Team_ID int not null,
@@ -24,15 +25,14 @@ CREATE TABLE IF NOT EXISTS Teams (
 );
 
 
-CREATE TABLE IF NOT EXISTS PeopleMaster (
+CREATE TABLE IF NOT EXISTS CMS_People (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   People_ID int not null,
-  People_Type_ID int not null references PeopleType(People_Type_ID),
-  Team_ID int not null references Teams(Team_ID),
-  First_Name varchar(255) not null,
-  Middle_Name varchar(255) not null,
-  Last_Name varchar(255) not null,
+  Team_ID int not null references CMS_Teams(Team_ID),
+  First_Name varchar(255) null,
+  Middle_Name varchar(255) null,
+  Last_Name varchar(255) null,
   Date_of_Birth date,
   Gender varchar(50),
   Custom1 varchar(255),
@@ -41,9 +41,19 @@ CREATE TABLE IF NOT EXISTS PeopleMaster (
   primary key (People_ID)
 );
 
-CREATE TABLE IF NOT EXISTS CaseTypes (
+CREATE TABLE IF NOT EXISTS CMS_PeoplePeopleTypes (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  People_ID int not null references CMS_People(People_ID),
+  People_Type_ID int not null references CMS_PeopleType(People_Type_ID),
+  primary key (People_ID, People_Type_ID)
+);
+
+
+
+CREATE TABLE IF NOT EXISTS CMS_CaseTypes (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Case_Type_ID int not null,
   Case_Type_Name varchar(255) not null unique,
   Case_Type_Category varchar(255),
@@ -56,9 +66,9 @@ CREATE TABLE IF NOT EXISTS CaseTypes (
 );
 
 
-CREATE TABLE IF NOT EXISTS PracticeTypes (
+CREATE TABLE IF NOT EXISTS CMS_PracticeTypes (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Practice_Type_ID int not null,
   Practice_Type_Name varchar(255) not null,
   Custom1 varchar(255),
@@ -67,17 +77,15 @@ CREATE TABLE IF NOT EXISTS PracticeTypes (
   primary key (Practice_Type_ID)
 );
 
-
-CREATE TABLE IF NOT EXISTS PhaseMaster (
+CREATE TABLE IF NOT EXISTS CMS_Phases (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Phase_ID int not null,
   Phase_Name varchar(255) not null unique,
-  Phase_Order int not null unique,
+  Phase_Order int,
   Phase_Category varchar(255),
   Phase_Sub_Category varchar(255),
-  Practice_Type_ID int not null references PracticeTypes (Practice_Type_ID),
-  Case_Type_ID int not null references CaseTypes (Case_Type_ID),
+  Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -86,12 +94,12 @@ CREATE TABLE IF NOT EXISTS PhaseMaster (
 
 
 
-CREATE TABLE IF NOT EXISTS StatusMaster (
+CREATE TABLE IF NOT EXISTS CMS_StatusMaster (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Status_ID int not null,
-  Practice_Type_ID int not null references PracticeTypes (Practice_Type_ID),
-  Case_Type_ID int not null references CaseTypes (Case_Type_ID),
+  Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
+  Case_Type_ID int not null references CMS_CaseTypes (Case_Type_ID),
   Status_Name varchar(255) not null,
   Sub_Status_Name varchar(255),
   Custom1 varchar(255),
@@ -101,9 +109,20 @@ CREATE TABLE IF NOT EXISTS StatusMaster (
 );
 
 
-CREATE TABLE IF NOT EXISTS InsuranceMaster (
+CREATE TABLE IF NOT EXISTS CMS_Cases (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Case_ID int not null,
+  Practice_Type_ID int not null references CMS_PracticeTypes (Practice_Type_ID),
+  Is_Archived boolean,
+  Date_of_Incident date,
+  primary key (Case_ID)
+);
+
+
+CREATE TABLE IF NOT EXISTS CMS_InsuranceMaster (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Insurance_ID int not null,
   Insurance_Name varchar(255) not null,
   Insurance_Type varchar(255) not null,
@@ -119,36 +138,35 @@ CREATE TABLE IF NOT EXISTS InsuranceMaster (
 );
 
 
-CREATE TABLE IF NOT EXISTS CaseSummary (
+CREATE TABLE IF NOT EXISTS CMS_CaseDetails (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
-  Practice_Type_ID int not null references PracticeTypes(Practice_Type_ID),
-  Case_Type_ID int not null references CaseTypes(Case_Type_ID),
-  Case_Create_Date date not null,
-  Date_of_Incident date not null,
+  Case_Type_ID int references CMS_CaseTypes(Case_Type_ID),
+  Case_Create_Date date,
+  Date_of_Incident date,
   Case_Name varchar(255),
   Plaintiff_Full_Name varchar(255),
-  Attorney_ID int references PeopleMaster (People_ID),
-  Prelitigation_Paralegal_ID int references PeopleMaster (People_ID),
-  Litigation_Paralegal_ID int references PeopleMaster (People_ID),
-  CaseManager_ID int references PeopleMaster (People_ID),
-  Cocounsel_ID int references PeopleMaster (People_ID),
-  Case_Team_ID int not null references Teams (Team_ID),
-  Case_Status_ID int not null references StatusMaster (Status_ID),
-  Insurance_ID int not null references InsuranceMaster (Insurance_ID),
+  Attorney_ID int references CMS_People (People_ID),
+  Prelitigation_Paralegal_ID int references CMS_People (People_ID),
+  Litigation_Paralegal_ID int references CMS_People (People_ID),
+  CaseManager_ID int references CMS_People (People_ID),
+  Cocounsel_ID int references CMS_People (People_ID),
+  Case_Team_ID int references CMS_Teams (Team_ID),
+  Case_Status_ID int references CMS_StatusMaster (Status_ID),
+  Insurance_ID int references CMS_InsuranceMaster (Insurance_ID),
   Case_Marketing_Source varchar(255),
   Case_Source_Name varchar(255),
   Attorney_Fee_Percentage decimal(3,2),
   Projected_Settlement_Date date,
-  Projected_Settlement_Amount date,
+  Projected_Settlement_Amount decimal(8,2),
   Actual_Settlement_Date date,
-  Actual_Settlement_Amount date,
+  Actual_Settlement_Amount decimal(8,2),
   If_Case_Settled_Presuit varchar(50),
   If_VIP_Case varchar(50),
   If_Case_Referred_Out varchar(50),
-  Case_Phase_ID int not null references PhaseMaster (Phase_ID),
+  Case_Phase_ID int references CMS_Phases (Phase_ID),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -158,12 +176,12 @@ CREATE TABLE IF NOT EXISTS CaseSummary (
 );
 
 
-CREATE TABLE IF NOT EXISTS CaseFigures (
+CREATE TABLE IF NOT EXISTS CMS_CaseFigures (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
-  Case_Figure_ID int not null,
+  Case_Figure_ID int,
   Figure_Type varchar(255),
   Figure_Date date,
   Figure_Status varchar(255),
@@ -171,22 +189,20 @@ CREATE TABLE IF NOT EXISTS CaseFigures (
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
-  primary key (Case_Figure_ID),
-  foreign key (Parent_Case_ID, Case_ID) references CaseSummary (Parent_Case_ID, Case_ID)
+  foreign key (Parent_Case_ID, Case_ID) references CMS_CaseDetails (Parent_Case_ID, Case_ID)
 );
 
-CREATE TABLE IF NOT EXISTS IntakeSummary (
+CREATE TABLE IF NOT EXISTS CMS_IntakeDetails (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
   Intake_ID int not null,
-  Person_Performing_Intake_ID int not null references PeopleMaster (People_ID),
-  Intake_Source varchar(255) not null DEFAULT 'None',
+  Person_Performing_Intake_ID int,
+  Intake_Source varchar(255),
   Date_of_Intake date,
   Date_of_Incident date,
   DUI_or_HitandRun varchar(50),
-  Referral_Fee_ID int not null references CaseFigures (Case_Figure_ID),
+  Referral_Fee_ID int ,
   If_Case_Referred_In varchar(50),
   If_Qualified_Case varchar(50),
   If_VIP_Lead varchar(50),
@@ -194,31 +210,31 @@ CREATE TABLE IF NOT EXISTS IntakeSummary (
   Custom2 varchar(255),
   Custom3 varchar(255),
   primary key (Intake_ID),
-  foreign key (Parent_Case_ID, Case_ID) references CaseSummary (Parent_Case_ID, Case_ID)
+  foreign key (Parent_Case_ID, Case_ID) references CMS_CaseDetails (Parent_Case_ID, Case_ID)
 );
 
 
 
-CREATE TABLE IF NOT EXISTS PhaseChanges (
+CREATE TABLE IF NOT EXISTS CMS_PhaseChanges (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Parent_Case_ID int not null,
   Case_ID int not null,
-  Phase_ID int not null references PhaseMaster (Phase_ID),
+  Phase_ID int not null references CMS_Phases (Phase_ID),
   Phase_Change_Date date not null,
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
-  foreign key (Parent_Case_ID, Case_ID) references CaseSummary (Parent_Case_ID, Case_ID)
+  foreign key (Parent_Case_ID, Case_ID) references CMS_CaseDetails (Parent_Case_ID, Case_ID)
 );
 
 
 --Social Media Standard Models
 
 --Instagram
-CREATE TABLE IF NOT EXISTS igPosts (
+CREATE TABLE IF NOT EXISTS IG_Posts (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Post_ID varchar(255) not null,
   PostDate timestamp not null,
   Caption text,
@@ -235,9 +251,9 @@ CREATE TABLE IF NOT EXISTS igPosts (
 );
 
 
-CREATE TABLE IF NOT EXISTS igDates (
+CREATE TABLE IF NOT EXISTS IG_Dates (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Date_Date date not null,
   Followers int,
   Posts int,
@@ -246,9 +262,9 @@ CREATE TABLE IF NOT EXISTS igDates (
 );
 
 
-CREATE TABLE IF NOT EXISTS igHashtags (
+CREATE TABLE IF NOT EXISTS IG_Hashtags (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Hashtag varchar(255) not null,
   Hashtag_Date date,
   Posts int,
@@ -259,9 +275,9 @@ CREATE TABLE IF NOT EXISTS igHashtags (
 );
 
 
-CREATE TABLE IF NOT EXISTS igMediaTypes (
+CREATE TABLE IF NOT EXISTS IG_MediaTypes (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Media_Type varchar(255) not null,
   Media_Type_Date date,
   Posts int,
@@ -271,9 +287,9 @@ CREATE TABLE IF NOT EXISTS igMediaTypes (
 );
 
 
-CREATE TABLE IF NOT EXISTS igCountries (
+CREATE TABLE IF NOT EXISTS IG_Countries (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Country varchar(255) not null,
   Countries_Date date,
   Followers int,
@@ -283,9 +299,9 @@ CREATE TABLE IF NOT EXISTS igCountries (
 );
 
 
-CREATE TABLE IF NOT EXISTS igAges (
+CREATE TABLE IF NOT EXISTS IG_Ages (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Age varchar(255) not null,
   Ages_Date date,
   Followers int,
@@ -295,9 +311,9 @@ CREATE TABLE IF NOT EXISTS igAges (
 );
 
 
-CREATE TABLE IF NOT EXISTS igGender (
+CREATE TABLE IF NOT EXISTS IG_Gender (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Gender varchar(255) not null,
   Gender_Date date,
   Followers int,
@@ -307,9 +323,9 @@ CREATE TABLE IF NOT EXISTS igGender (
 );
 
 
-CREATE TABLE IF NOT EXISTS igLocales (
+CREATE TABLE IF NOT EXISTS IG_Locales (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Locale varchar(255) not null,
   Locale_Date date,
   Followers int,
@@ -319,9 +335,9 @@ CREATE TABLE IF NOT EXISTS igLocales (
 );
 
 
-CREATE TABLE IF NOT EXISTS igHours (
+CREATE TABLE IF NOT EXISTS IG_Hours (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   Hour varchar(255) not null,
   Hours_Date date,
   Posts int,
@@ -331,9 +347,9 @@ CREATE TABLE IF NOT EXISTS igHours (
 );
 
 
-CREATE TABLE IF NOT EXISTS igCities (
+CREATE TABLE IF NOT EXISTS IG_Cities (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
   City varchar(255) not null,
   Cities_Date date,
   Followers int,
@@ -342,11 +358,10 @@ CREATE TABLE IF NOT EXISTS igCities (
   Custom3 varchar(255)
 );
 
-----------------------------------------------
+--Application functionality schemas
 
-CREATE TABLE IF NOT EXISTS Departments (
+CREATE TABLE IF NOT EXISTS APP_Departments (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   department_id int not null,
   deparment_name varchar(255) not null unique,
   Custom1 varchar(255),
@@ -357,15 +372,14 @@ CREATE TABLE IF NOT EXISTS Departments (
 
 
 
-CREATE TABLE IF NOT EXISTS TeamsforTargets (
+CREATE TABLE IF NOT EXISTS APP_TeamsforTargets (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   Team_ID int not null,
   Team_Name varchar(255) not null unique,
   Team_Type varchar(255),
   Team_Sub_Type varchar(255),
-  Team_member_id int references PeopleMaster(people_id),
-  department_id int references Departments(department_id),
+  Team_member_id int references CMS_People(people_id),
+  department_id int references APP_Departments(department_id),
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
@@ -375,12 +389,11 @@ CREATE TABLE IF NOT EXISTS TeamsforTargets (
 
 
 
-CREATE TABLE IF NOT EXISTS Targets (
+CREATE TABLE IF NOT EXISTS APP_Targets (
   Truve_Org_ID int not null,
-  Client_Org_ID int not null,
   Target_ID int not null,
-  deparment_id int not null references Departments(department_id),  
-  Team_member_id int not null references PeopleMaster(people_id),
+  deparment_id int not null references APP_Departments(department_id),  
+  Team_member_id int not null references CMS_People(people_id),
   Year int not null,
   Quarter int not null,
   Month int not null,
@@ -394,3 +407,225 @@ CREATE TABLE IF NOT EXISTS Targets (
 
 
 )
+
+--CRM Standard Models
+
+CREATE TABLE IF NOT EXISTS CRM_Contact (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  FirstName varchar(255),
+  MiddleName varchar(255),
+  LastName varchar(255),
+  Address1 varchar(255),
+  Address2 varchar(255),
+  City varchar(255),
+  State varchar(255),
+  Zip varchar(255),
+  County varchar(255),
+  HomePhone varchar(255),
+  MobilePhone varchar(255),
+  WorkPhone varchar(255),
+  Email varchar(255),
+  PreferredContactMethod varchar(255),
+  Birthdate timestamp,
+  Longitude varchar(255),
+  Latitude varchar(255),
+  SubscribeToMailingList boolean,
+  BadAddress boolean,
+  Deceased boolean,
+  Gender varchar(255),
+  Minor boolean,
+  Language varchar(255),
+  Code varchar(255),
+  DoNotText boolean,
+  CreatedOn timestamp,
+  CreatedBy varchar(255),
+  PendingGeocode boolean,
+  LeadIds varchar(255),
+  CustomFields varchar(255)
+);
+-----------------------
+CREATE TABLE IF NOT EXISTS CRM_LeadDetail (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  Summary varchar(max),
+  InjuryInformation varchar(255),
+  Status varchar(255),
+  SubStatus varchar(255),
+  SeverityLevel varchar(255),
+  Code varchar(255),
+  Contact int,
+  PracticeArea int,
+  MarketingSource varchar(255),
+  ContactSource varchar(255),
+  TalkedToOtherAttorneys varchar(255),
+  FoundUsNotes varchar(255),
+  UTM varchar(255),
+  CurrentUrl varchar(255),
+  ReferringUrl varchar(255),
+  ClickId varchar(255),
+  ClientId varchar(255),
+  Keywords varchar(255),
+  Campaign varchar(255),
+  AppointmentLocation varchar(255),
+  Office varchar(255),
+  OfficeCode varchar(255),
+  ReferredTo varchar(255),
+  ReferredByName varchar(255),
+  ReferredBy varchar(255),
+  CreatedDate timestamp,
+  IncidentDate timestamp,
+  RejectedDate timestamp,
+  ReferredDate timestamp,
+  AssignedDate timestamp,
+  AppointmentScheduledDate timestamp,
+  ChaseDate timestamp,
+  SignedUpDate timestamp,
+  CaseClosedDate timestamp,
+  LostDate timestamp,
+  UnderReviewDate timestamp,
+  PendingSignupDate timestamp,
+  HoldDate timestamp,
+  Intake int,
+  Paralegal varchar(255),
+  Investigator varchar(255),
+  Attorney int,
+  AssignedTo varchar(255),
+  Creator int,
+  RelatedContacts varchar(max),
+  Messages varchar(max),
+  Notes varchar(max),
+  Opportunity varchar(255),
+  PhoneCall varchar(255),
+  CustomFields varchar(max),
+  Settlements varchar(255)
+  );
+  ---------------------
+  CREATE TABLE IF NOT EXISTS CRM_LeadRow (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  ContactId int,
+  PhoneNumber varchar(255),
+  MobilePhone varchar(255),
+  HomePhone varchar(255),
+  WorkPhone varchar(255),
+  PreferredContactMethod varchar(255),
+  Email varchar(255),
+  FirstName varchar(255),
+  LastName varchar(255),
+  StatusId int,
+  StatusName varchar(255),
+  SubStatusId varchar(255),
+  SubStatusName varchar(255),
+  CaseType varchar(255),
+  Code varchar(255),
+  LastStatusChangeDate timestamp
+   );
+
+CREATE TABLE IF NOT EXISTS CRM_CaseType (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  TypeName varchar(255),
+  TypeNameShort varchar(255),
+  Code varchar(255),
+  IsMassTort boolean,
+  CustomQuestionOrder varchar(255)
+  );
+  
+  CREATE TABLE IF NOT EXISTS CRM_LeadSource (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  SourceName varchar(255)
+  );
+    
+  CREATE TABLE IF NOT EXISTS CRM_Opportunities (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  FirstName varchar(255),
+  MiddleName varchar(255),
+  LastName varchar(255),
+  Address1 varchar(255),
+  Address2 varchar(255),
+  City varchar(255),
+  State varchar(255),
+  Zip varchar(255),
+  HomePhone varchar(255),
+  WorkPhone varchar(255),
+  MobilePhone varchar(255),
+  Email varchar(255),
+  Gender varchar(255),
+  Language varchar(255),
+  Birthdate timestamp,
+  PreferredContactMethod varchar(255),
+  LeadStatus varchar(255),
+  SubStatus varchar(255),
+  Office varchar(255),
+  MarketingSource varchar(255),
+  MarketingSourceDetails varchar(255),
+  ContactSource varchar(255),
+  Summary varchar(max),
+  InjuryInformation varchar(255),
+  IncidentDate timestamp,
+  CreatedDate timestamp,
+  LeadId int,
+  Note varchar(max),
+  ReferredBy varchar(255),
+  SeverityLevel varchar(255),
+  County varchar(255),
+  AppointmentLocation varchar(255),
+  AppointmentScheduledDate timestamp,
+  Code varchar(255),
+  ReferringUrl varchar(255),
+  CurrentUrl varchar(255),
+  UTM varchar(255),
+  ClientId varchar(255),
+  ClickId varchar(255),
+  Keywords varchar(255),
+  Campaign varchar(255),
+  Processed boolean,
+  ProcessedDate timestamp,
+  ProcessedByName varchar(255),
+  OpportunityTypeId int,
+  DisregardReason varchar(255),
+  IsBeingEdited boolean,
+  CustomFields varchar(255),
+  AssignedTo varchar(255),
+  ProcessedBy varchar(255)
+  );
+  
+  CREATE TABLE IF NOT EXISTS CRM_Referrals (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  Name varchar(255),
+  Type varchar(255),
+  Code varchar(255),
+  Outgoing Boolean
+  );
+  
+  CREATE TABLE IF NOT EXISTS CRM_Status (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Id int,
+  Status varchar(255),
+  StatusName varchar(255),
+  Substatuses varchar(max)
+  );
+  
+  CREATE TABLE IF NOT EXISTS CRM_Users (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  UserID int,
+  FirstName varchar(255),
+  LastName varchar(255),
+  Email varchar(255),
+  Code varchar(255),
+  CRM_Roles varchar(max),
+  CRM_Permissions varchar(max)
+  );

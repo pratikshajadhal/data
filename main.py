@@ -26,7 +26,7 @@ from tasks.tasks import make_fv_subscription
 load_dotenv()
 
 def start_contact_etl():
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -61,7 +61,7 @@ def start_contact_etl():
 
 
 def start_projecttype_etl():
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -94,7 +94,7 @@ def start_projecttype_etl():
         model_etl.load_data_to_destination(trans_df=transformed_data, schema=dest_col_format, project=None)
 
 def start_project_etl():
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -111,6 +111,8 @@ def start_project_etl():
                                 primary_key_column="projectId")
 
             project_list = project_etl.extract_data_from_source()
+
+            #project_list = project_list
         
             project_etl.get_schema_of_model()
 
@@ -139,6 +141,8 @@ def start_project_etl():
                     thread_list.append(t)
                     processed_chunk_list += 1
                     count += 1
+                    #import time
+                    #time.sleep(5)
                 else:
                     for t in thread_list:
                         t.join()
@@ -147,7 +151,7 @@ def start_project_etl():
             
 
 def start_form_etl(project_type, form_name):
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -203,7 +207,7 @@ def start_form_etl(project_type, form_name):
                 
 
 def start_collection_etl(project_type, section_name):
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 
@@ -231,7 +235,6 @@ def start_collection_etl(project_type, section_name):
             chunk = 10
 
             chunk_list = [project_list[i * chunk:(i + 1) * chunk] for i in range((len(project_list) + chunk - 1) // chunk )]
-            
             thread_count = 10
             processed_chunk_list = 0
 
@@ -259,3 +262,4 @@ def start_collection_etl(project_type, section_name):
 
 if __name__ == "__main__":
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+    

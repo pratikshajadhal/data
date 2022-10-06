@@ -132,9 +132,8 @@ class ModelETL(object):
         return pd.DataFrame(transformed_record_list)
 
 
-    def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn], project:int) -> pd.DataFrame:
+    def load_data_to_destination(self, trans_df:pd.DataFrame, schema:list[ColumnDefn], project:int, extra_params:Dict={}) -> pd.DataFrame:
         dest = self.destination
-
         dest_map = {}
 
         col_list = list(trans_df)
@@ -151,7 +150,8 @@ class ModelETL(object):
                         section=self.entity_type, 
                         entity=self.model_name,
                         dtype=dest_map,
-                        project=project
+                        project=project,
+                        extra_params=extra_params
                         )
 
         

@@ -1,9 +1,9 @@
-from typing import Dict
-import requests
 import os
 import json 
-import logging
 
+import requests
+import logging
+from typing import Dict, Optional
 from dotenv import load_dotenv
 from utils import get_logger
 
@@ -15,9 +15,7 @@ class FileVineClient(object):
 
     def __init__(self, org_id:str, user_id:str):
         # TODO Remove this hardcoded env variable
-        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE", "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f")
-        if self.api_key == "":
-            self.api_key = "fvpk_f722dca1-73bb-9095-79fe-0a3069636a3f"
+        self.api_key = os.environ.get("LOCAL_TPA_API_KEY_FILEVINE")
         self.org_id = org_id
         self.base_url = "https://api.filevine.io/"
         self.api_timestamp = "2021-08-18T12:37:03.438Z"
@@ -126,10 +124,23 @@ class FileVineClient(object):
         contact_list = raw_contact_items
         return contact_list
 
-    def get_single_contact(self):
-        contact_metadata = self.make_request("core/contacts")
+    def get_single_contact(self, person_id: Optional[int]) -> dict:
+        """_summary_:Function to get single contact.
+
+        Only webhook incoming data uses person_id to fetch single contact.
         
-        return contact_metadata["items"]
+        Args:
+            person_id (Optional[int]):
+
+        Returns:
+            dict: _description_
+        """
+        
+        if person_id is None:
+            return self.make_request("core/contacts")["items"]
+        return self.make_request(f"core/contacts/{person_id}")
+        
+        # return contact_metadata["items"]
 
     def get_section_data(self, project_id:int, section_name:str):
         end_point = f"core/projects/{project_id}/forms/{section_name}"
@@ -169,10 +180,24 @@ class FileVineClient(object):
 
     def get_projecttypes_phases(self, project_type_id):
         return self.get_entity(f"core/projecttypes/{project_type_id}/phases")
+
+    def get_project_vital(self, project_id):
+        end_point = f"core/projects/{project_id}/vitals"
+        vital_data = self.make_request(end_point)
+        return vital_data
+
         
 
 if __name__ == "__main__":
     fv_client = FileVineClient("6586", "31958")
+    vital_list = fv_client.get_project_vital(8266838)
+    import pandas as pd 
+    vital_df = pd.DataFrame(vital_list)
+    print(vital_df.dtypes)
+    print(vital_df)
+    exit()
+    print(json.dumps(fv_client.get_project_vital(8266838)))
+    exit()
     #print(fv_client.get_contacts(project_id=10561860))
     #print(fv_client.get_section_data(10568297, "intake"))
     print(json.dumps(fv_client.get_collections(5965342, "meds")))

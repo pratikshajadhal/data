@@ -1,11 +1,12 @@
-from leaddocket.client import LeadDocketClient
-from etl.datamodel import LeadDocketConfig
-from etl.datamodel import ColumnConfig
-from etl.datamodel import ColumnDefn
-from etl.destination import ETLDestination, S3Destination
 import pandas as pd
-from .lead_modeletl import LeadModelETL
+import time
 
+from .lead_modeletl import LeadModelETL
+from .lead_opport import LeadOpportETL
+from .lead_contact import LeadContactETL
+
+from utils import get_logger
+logger = get_logger(__name__)
 
 class LeadDetailETL(LeadModelETL):
 
@@ -72,4 +73,35 @@ class LeadDetailETL(LeadModelETL):
         return {}
 
 
+    def trigger_etl(self, lead_ids:list[int], client_id: str or None, contact_obj:LeadContactETL, opport_obj:LeadOpportETL):
+            """
+                Function to trigger conccurent run of lead_detail etl. 
+                If each lead detail have Contact or Opportunity id then also trigger contact and opport etl
 
+                As the program runs concurently, loading data into s3 might be a problem for s3 session. Need to add sleep unfortunately.
+            """
+            for idx, lead_id in enumerate(lead_ids):
+                try:
+                    lead = self.extract_data_from_source(lead_id)
+                    if lead.get("Contact"):
+                        contact_df = contact_obj.transform(lead["Contact"])
+                        transformed = contact_obj.eliminate_nonyaml(contact_df)
+                        contact_obj.load_data(trans_df=transformed, client_id=client_id)
+                        time.sleep(2)
+
+                    if lead.get("Opportunity"):
+                        opport_id = lead.get("Opportunity").get("Id")
+                        extracted = opport_obj.extract_data_from_source(opport_id)
+                        opport_df = opport_obj.transform(extracted)
+                        transformed = opport_obj.eliminate_nonyaml(opport_df)
+                        opport_obj.load_data(trans_df=transformed, client_id=client_id)
+                        time.sleep(2)
+
+                    
+                    lead_detail_df = self.transform(lead)
+                    transformed_detail_df = self.eliminate_nonyaml(lead_detail_df)
+                    self.load_data(trans_df=transformed_detail_df, client_id=client_id)
+
+                except Exception as e:
+                    logger.warn("=" * 60)
+                    logger.error(e)

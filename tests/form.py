@@ -58,7 +58,7 @@ def test_fv_webhook_collections():
     # TODO add tests cases
 
 def test_snapshot_intake():
-    selected_field_config = load_config(file_path="src.yaml")
+    selected_field_config = load_config(file_path="confs/src.yaml")
     print(selected_field_config.projectTypes[0])
     fv_config = FileVineConfig(org_id=selected_field_config.org_id, user_id=selected_field_config.user_id)
 

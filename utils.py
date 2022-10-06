@@ -37,15 +37,15 @@ def load_config(file_path: str) -> SelectedConfig:
         return from_dict(data=data, data_class=SelectedConfig)
 
 # def get_yaml_of_org(org_id: int) -> SelectedConfig:
-#     return load_config("src.yaml")
+#     return load_config("confs/src.yaml")
 def get_yaml_of_org(org_id, client='fv'):
     """
         This is a temp function. It will change soon! TODO:
     """
     if client == 'fv':
-        return load_config("src.yaml")
+        return load_config("confs/src.yaml")
     elif client == 'ld':
-        return load_lead_config("src-lead.yaml")
+        return load_lead_config("confs/src-lead.yaml")
 
 def get_config_of_section(selected_config:SelectedConfig, section_name:str, project_type_id:int=None, is_core:bool=False):
     if is_core:
@@ -106,6 +106,18 @@ def load_lead_config(file_path:str) -> LeadSelectedConfig:
         return from_dict(data=data, data_class=LeadSelectedConfig)
 
 def get_logger(__name__):
+    # logging.basicConfig(filename="historical_logs",
+    #                 filemode='a',
+    #                 format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+    #                 datefmt='%H:%M:%S',
+    #                 level=logging.INFO)
+
+
+    # logger = logging.getLogger('HistoricalLogs')
+    # return logger
+
+    # - - - - - - - - - - - - - - - - - - - - - 
+
     logger = logging.getLogger(__name__)
 
     if len(logger.handlers) > 0:
@@ -134,15 +146,6 @@ def find_yaml(s3_path: str, download_path: str):
 
     s3_client = None
     server_env = os.environ["SERVER_ENV"]
-
-    if server_env == "LOCAL":
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id = os.environ["LOCAL_AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key = os.environ["LOCAL_AWS_SECRET_ACCESS_KEY"]
-        )
-    else:
-        s3_client = boto3.client('s3')
 
     # Split s3 path: s3://dev-data-api-01-buckets-buckettruverawdata-8d0qeyh8pnrf/confs/filevine/config_6586.yaml
     bucket_name, key_name = split_s3_bucket_key(s3_path=s3_path)
@@ -269,7 +272,7 @@ def determine_pipeline_status_from_jobs(jobs: list[Job]) -> Optional[ExecStatus]
 
 if __name__ == "__main__":
 
-    config = load_config(file_path="src.yaml")
+    config = load_config(file_path="confs/src.yaml")
     print(get_config_of_section(config, section_name="intake", project_type_id=18764))
 
     #print(config.projectTypes)

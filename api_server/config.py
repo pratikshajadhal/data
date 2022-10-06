@@ -21,6 +21,17 @@ class FVWebhookInput:
     webhook_body:Dict
 
 @dataclass
+class FVContactWebhookInput:
+    person_id: int
+    org_id:int
+    event_name:str
+    event_timestamp:str
+    entity:str
+    project_id:int
+    user_id:int
+    webhook_body:Dict
+
+@dataclass
 class TruveDataTask:
     source: source_type
     task_type: task_type
