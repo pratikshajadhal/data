@@ -75,7 +75,9 @@ def handle_collection_object(
     print(wb_input.section)
     print("----")
 
-    needed_collection_sections = ["negotiations", "meds"]
+    needed_collection_sections = ["negotiations", "meds", "insurance"]
+
+    
     if wb_input.section not in needed_collection_sections:
         raise Exception("Unhandled collection section type")
 
