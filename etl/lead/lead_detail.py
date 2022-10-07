@@ -27,7 +27,14 @@ class LeadDetailETL(LeadModelETL):
 
 
     def transform(self, leads):
+        needed_custom_fields = ["Qualified Lead", "Were You At Fault?", "Was anyone else in the vehicle with you?",
+                            "Treatment at Hospital", "Did you seek any other doctors/treatment?"]
+        for needed in needed_custom_fields:
+            leads[((needed.lower().replace('?', ''))).replace(' ', '_')] = None
+
+
         for key, value in leads.items():
+
             if key == "Contact" or key =="Intake" or key == 'Creator' or key == "PracticeArea":
                 leads[key] = leads[key].get("Id")
             
@@ -35,7 +42,9 @@ class LeadDetailETL(LeadModelETL):
                 custom_fields = list()
                 for each_custom_field in value:
                     custom_fields.append(each_custom_field["CustomFieldId"])
-
+                    
+                    if each_custom_field["Name"] in needed_custom_fields:
+                        leads[((needed.lower().replace('?', ''))).replace(' ', '_')] = each_custom_field.get("Value")
 
                 leads[key] = value
                 # leads[key] = ",".join( map( str, custom_fields ))
@@ -53,7 +62,7 @@ class LeadDetailETL(LeadModelETL):
             elif isinstance(value, dict):
                 leads[key] = value.get("Id")
 
-        
+
         return pd.DataFrame([leads])
 
 
@@ -83,19 +92,19 @@ class LeadDetailETL(LeadModelETL):
             for idx, lead_id in enumerate(lead_ids):
                 try:
                     lead = self.extract_data_from_source(lead_id)
-                    if lead.get("Contact"):
-                        contact_df = contact_obj.transform(lead["Contact"])
-                        transformed = contact_obj.eliminate_nonyaml(contact_df)
-                        contact_obj.load_data(trans_df=transformed, client_id=client_id)
-                        time.sleep(2)
+                    # if lead.get("Contact"):
+                    #     contact_df = contact_obj.transform(lead["Contact"])
+                    #     transformed = contact_obj.eliminate_nonyaml(contact_df)
+                    #     contact_obj.load_data(trans_df=transformed, client_id=client_id)
+                    #     time.sleep(2)
 
-                    if lead.get("Opportunity"):
-                        opport_id = lead.get("Opportunity").get("Id")
-                        extracted = opport_obj.extract_data_from_source(opport_id)
-                        opport_df = opport_obj.transform(extracted)
-                        transformed = opport_obj.eliminate_nonyaml(opport_df)
-                        opport_obj.load_data(trans_df=transformed, client_id=client_id)
-                        time.sleep(2)
+                    # if lead.get("Opportunity"):
+                    #     opport_id = lead.get("Opportunity").get("Id")
+                    #     extracted = opport_obj.extract_data_from_source(opport_id)
+                    #     opport_df = opport_obj.transform(extracted)
+                    #     transformed = opport_obj.eliminate_nonyaml(opport_df)
+                    #     opport_obj.load_data(trans_df=transformed, client_id=client_id)
+                    #     time.sleep(2)
 
                     
                     lead_detail_df = self.transform(lead)

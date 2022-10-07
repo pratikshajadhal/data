@@ -107,7 +107,8 @@ class S3Destination(ETLDestination):
         wr.s3.to_parquet(
                 df=phase_df,
                 path=f"{s3_path}",
-                boto3_session=self.s3_session
+                boto3_session=self.s3_session,
+                use_threads=8
         )
 
         logger.info(f"S3 Upload successful for {s3_path}")
@@ -117,9 +118,7 @@ class S3Destination(ETLDestination):
         
         logger.info(f"Uploading data to destination in following {s3_key}")
 
-        print("---"*30)
-        print(kwargs["dtype"])
-        print(data_df)
+        # print(data_df)
 
         #Temp code 
         #data_df.to_parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
