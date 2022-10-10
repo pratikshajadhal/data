@@ -156,6 +156,13 @@ async def fv_webhook_handler(request: Request):
         'Other': {}
     }
 
+    {
+        "Timestamp": 1664810864545, "Object": "CollectionItem", 
+        "Event": "Created",
+        "ObjectId": {"ProjectTypeId": 18764, "SectionSelector": "negotiations", "ItemId": "28764154-462e-4e19-9bcd-ea5a6e3a999c"},
+        "OrgId": 6586, "ProjectId": 7570832, "UserId": 41681, "Other": {}
+    }
+
     Meds Event Data
 
     '''
