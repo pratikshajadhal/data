@@ -59,7 +59,6 @@ class LeadModelETL(object):
             for key, value in dtypes.items():
                 final_dtypes[key] = self.key_mapper[str(value)]
 
-        print(final_dtypes)
         push_id = trans_df["Id"].values[0]
         # If there is no client id parse clientId from url
         if client_id:
@@ -77,8 +76,6 @@ class LeadModelETL(object):
                             organization_identifier = organization_identifier,
                             entity= "lead")
 
-
-                            
 
     def eliminate_nonyaml(self, lead_df:pd.DataFrame):
         for each_field in  lead_df.columns.values.tolist():
