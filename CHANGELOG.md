@@ -2,11 +2,11 @@
 
 <br/>
 
-# 0.1.22
+# 0.1.23
 
-Original Commit ID: 55dc9ac
+Original Commit ID: e6771b5
 
 ## Changes
-Merged in f&#x2F;lead-static-schema (pull request #74)
+Merged in f&#x2F;conf-update-2 (pull request #75)
 
-F&#x2F;lead static schema
+Update schema changed for leaddocket
