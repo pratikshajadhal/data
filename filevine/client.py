@@ -1,5 +1,6 @@
 import os
-import json 
+import json
+import time 
 
 import requests
 import logging
@@ -21,6 +22,7 @@ class FileVineClient(object):
         self.api_timestamp = "2021-08-18T12:37:03.438Z"
         self.user_id = user_id
         self.api_hash = None
+        self.session_info = self.generate_session()
 
     def generate_api_hash(self):
         return "567a20d5f3ff434a3e1926f86853bcdb"
@@ -40,8 +42,13 @@ class FileVineClient(object):
 		}
         response = requests.post(url, headers={"Content-Type" : "application/json"}, data=json.dumps(data))
         if response.status_code != 200:
-            logger.error("Unable to generate tokens")
+
+            if response.status_code == 429:
+                # if response.json["Error"] == ''
+                logger.error(f"Unable to generate tokens status_code: {response.status_code}")
+
             raise Exception("Token genreation error")
+
         return json.loads(response.text)
 
 
@@ -70,6 +77,7 @@ class FileVineClient(object):
 
     def make_request(self, end_point:str, query_param:Dict={}):
         session_info = self.generate_session()
+        # session_info = self.session_info
         url = f"{self.base_url}{end_point}"
         logger.debug("Hitting URL {}".format(url))
         headers = {"x-fv-sessionid" : session_info["refreshToken"], 
@@ -80,6 +88,10 @@ class FileVineClient(object):
             logging.error(response.status_code)
             if response.status_code == 404:
                 return None
+            elif response.status_code == 429:
+                logging.warning("Too many request, waiting")
+                time.sleep(30)
+                self.make_request(end_point=end_point, query_param=query_param)
             raise
         
         return json.loads(response.text)

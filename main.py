@@ -214,14 +214,16 @@ def start_collection_etl(project_type, section_name):
     #Handle Contact Entity
     for section in selected_field_config.projectTypes[0].sections:
         if section.name == section_name:
-            form_etl = CollectionETL(model_name=section_name, 
-                            source=None, 
-                            entity_type="collections",
-                            project_type=18764,
-                            destination=S3Destination(org_id=fv_config.org_id), 
-                            fv_config=fv_config, 
-                            column_config=section, 
-                            primary_key_column="id")
+            form_etl = CollectionETL(
+                model_name=section_name, 
+                source=None, 
+                entity_type="collections",
+                project_type=18764,
+                destination=S3Destination(org_id=fv_config.org_id), 
+                fv_config=fv_config, 
+                column_config=section, 
+                primary_key_column="id"
+            )
 
             project_list = form_etl.get_projects()
 
@@ -262,4 +264,4 @@ def start_collection_etl(project_type, section_name):
 
 if __name__ == "__main__":
     uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
-    
+    # start_collection_etl(18764, "insurance")

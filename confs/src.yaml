@@ -624,6 +624,74 @@ projectTypes:
       - nameOfProvider
       - originalBillAmount
       - reducedBillAmount
+    - name: insurance
+      fields:
+      - insurer
+      - adjuster
+      - policynumber
+      - claimnumber
+      - policylimits
+      - fileattachment
+      - insurancetype
+      - insured
+      - coverageIssuesIfAny
+      - multiplePoliciesWithCarrier
+      - numberOfVehiclePolicies
+      - doPoliciesStack
+      - uMCoverageType
+      - uMPolicyApplicability
+      - 10DayLOROutToCarrier
+      - seekingSubrogationReimbursem
+      - healthInsuranceType
+      - doesEmployerClaimToBeSelf
+      - form5500Received
+      - form5500
+      - planSummaryReceived
+      - planSummary
+      - disavowsGACommonFundMade
+      - memberID
+      - groupNumber
+      - hasTheClaimBeenSetUpWith
+      - dateLORSentToInsuranceCar
+      - decPageReceivedFromCarrier
+      - haveWeReceivedAnItemizatio
+      - dateItemizationWasRequested
+      - itemizationOfHealthBenefits
+      - dateClaimSetUpWithCMS
+      - dateProofOfRepSentToCMS
+      - proofOfRepresentation
+      - conditionalPaymentLetterRec
+      - conditionalPaymentLetter
+      - updatedConditionalPaymentLe
+      - areWeDisputingAnyMedicare
+      - dateCMSChargesDisputed
+      - cMSDisputeOfChargesLetter
+      - dateOfCMSResponseToDisput
+      - cMSResponseToChargeDispute
+      - noticeOfFinalSettlementAnd
+      - demandForFinalAmount
+      - finalDemandReceivedFromCMS
+      - finalDemandFromCMS
+      - otherVendorHandlingMedicaid
+      - dateLORSentToMedicaid
+      - lORToMedicaid
+      - dateMedicaidSAcknowledgemen
+      - medicaidAcknowledgementOfRe
+      - itemizationOfBenefitsReceiv
+      - medicaidItemizationOfBenefi
+      - dateFinalMedicaidLienReque
+      - requestForFinalLien
+      - dateMedicaidFinalLienRecei
+      - medicaidFinalLien
+      - vendorHandlingMedicaidSubro
+      - policyLimits_1
+      - medpayPolicyLimits
+      - otherMedpayLimitsAmount
+      - otherPolicyLimits
+      - liabilityInsuranceDocuments
+      - liabilityAccepted
+      - lORDocGen
+      - describeLiabilityIssue
   - id: 18561
     sections:
     - name: casesummary

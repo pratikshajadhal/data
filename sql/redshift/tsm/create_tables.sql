@@ -629,3 +629,10 @@ CREATE TABLE IF NOT EXISTS CRM_CaseType (
   CRM_Roles varchar(max),
   CRM_Permissions varchar(max)
   );
+
+  -- Update from Buse
+  CREATE TABLE IF NOT EXISTS ML_CaseValueClusteringKNN (
+  Case_ID int not null,
+  Neighborhood_Out_Of_2 boolean
+  primary key (Case_ID) references CMS_Cases (Case_ID)
+  );
