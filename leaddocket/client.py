@@ -28,7 +28,7 @@ class LeadDocketClient(object):
         logger.info("Hitting URL {}".format(url))
         response = requests.get(url, headers=self.headers, params=query_param)
         if response.status_code != 200:
-
+            logger.warn(response.text)
             logger.warn(f"(-) failed endpoint is: {end_point} ")
             if response.status_code == 429:
                 logger.warn("(-) status 429, sleeping 30 secs")
