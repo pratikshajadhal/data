@@ -2,11 +2,11 @@
 
 <br/>
 
-# 0.1.23
+# 0.1.24
 
-Original Commit ID: e6771b5
+Original Commit ID: c55c8f6
 
 ## Changes
-Merged in f&#x2F;conf-update-2 (pull request #75)
+Merged in f&#x2F;conf-update-2 (pull request #76)
 
-Update schema changed for leaddocket
+F&#x2F;conf update 2
