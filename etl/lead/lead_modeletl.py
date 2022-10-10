@@ -59,6 +59,7 @@ class LeadModelETL(object):
             for key, value in dtypes.items():
                 final_dtypes[key] = self.key_mapper[str(value)]
 
+        print(final_dtypes)
         push_id = trans_df["Id"].values[0]
         # If there is no client id parse clientId from url
         if client_id:
