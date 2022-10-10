@@ -500,7 +500,12 @@ CREATE TABLE IF NOT EXISTS CRM_LeadDetail (
   Opportunity varchar(255),
   PhoneCall varchar(255),
   CustomFields varchar(max),
-  Settlements varchar(255)
+  Settlements varchar(255),
+  qualified_lead varchar(255),
+  were_you_at_fault varchar(255),
+  was_anyone_else_in_the_vehicle_with_you varchar(255),
+  treatment_at_hospital varchar(255),
+  did_you_seek_any_other_doctors_treatment varchar(255)
   );
   ---------------------
   CREATE TABLE IF NOT EXISTS CRM_LeadRow (
