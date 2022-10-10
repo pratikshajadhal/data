@@ -104,11 +104,11 @@ table_leaddetail:
     - PhoneCall
     - CustomFields
     - Settlements
-    - qualified_lead
-    - were_you_at_fault
-    - was_anyone_else_in_the_vehicle_with_you
-    - treatment_at_hospital
-    - did_you_seek_any_other_doctors/treatment
+    - QualifiedLead
+    - WereYouAtFault
+    - Wasanyoneelseinthevehiclewithyou
+    - TreatmentatHospital
+    - Didyouseekanyotherdoctorstreatment
 
 table_contact:
   - name: Contact
