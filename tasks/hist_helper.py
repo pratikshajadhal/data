@@ -141,10 +141,11 @@ def start_lead_detail_etl(s3_conf_file_path, lead_ids:list = None, client_id = N
     if lead_ids is None:
         # This is historical run
         lead_ids = lead_detail.extract_lead_metadata()
+        # lead_ids = [9503, 8744, 11300, 4237]
         number_of_chunk = 10
         # It is an elegant way to break a list into one line of code to split a list into multiple lists in Python.Auxiliary Space: O(1)
         lead_id_chunks = [lead_ids[i * number_of_chunk:(i + 1) * number_of_chunk] for i in range((len(lead_ids) + number_of_chunk - 1) // number_of_chunk )]
-        thread_count = 8
+        thread_count = 10
 
         count = 0
         thread_list = []

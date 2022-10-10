@@ -30,8 +30,12 @@ class LeadDetailETL(LeadModelETL):
         needed_custom_fields = ["Qualified Lead", "Were You At Fault?", "Was anyone else in the vehicle with you?",
                             "Treatment at Hospital", "Did you seek any other doctors/treatment?"]
         for needed in needed_custom_fields:
-            leads[((needed.lower().replace('?', ''))).replace(' ', '_')] = None
-
+            # Chaning functions is not working ???
+            fixed_name = needed.replace(" ", "")
+            fixed_name = fixed_name.replace("/", "")
+            fixed_name = fixed_name.replace("?", "")
+            # fixed_name = ((needed.lower().replace('?', ''))).replace(' ', '_')
+            leads[fixed_name] = None
 
         for key, value in leads.items():
 
@@ -39,12 +43,16 @@ class LeadDetailETL(LeadModelETL):
                 leads[key] = leads[key].get("Id")
             
             if key == "CustomFields":
+
                 custom_fields = list()
                 for each_custom_field in value:
                     custom_fields.append(each_custom_field["CustomFieldId"])
                     
                     if each_custom_field["Name"] in needed_custom_fields:
-                        leads[((needed.lower().replace('?', ''))).replace(' ', '_')] = each_custom_field.get("Value")
+                        fixed_name = each_custom_field["Name"].replace(" ", "")
+                        fixed_name = fixed_name.replace("/", "")
+                        fixed_name = fixed_name.replace("?", "")
+                        leads[fixed_name] = each_custom_field.get("Value")
 
                 leads[key] = value
                 # leads[key] = ",".join( map( str, custom_fields ))
@@ -61,7 +69,6 @@ class LeadDetailETL(LeadModelETL):
 
             elif isinstance(value, dict):
                 leads[key] = value.get("Id")
-
 
         return pd.DataFrame([leads])
 
