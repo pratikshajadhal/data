@@ -2,11 +2,11 @@
 
 <br/>
 
-# 0.1.21
+# 0.1.22
 
-Original Commit ID: 9b79a7c
+Original Commit ID: 55dc9ac
 
 ## Changes
-Merged in f&#x2F;lead-new-customfields (pull request #73)
+Merged in f&#x2F;lead-static-schema (pull request #74)
 
-Update customfields
+F&#x2F;lead static schema
