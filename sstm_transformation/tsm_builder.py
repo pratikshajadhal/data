@@ -42,7 +42,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         # TODO read dependent TSM table from S3. 
         
         # As of now, read from local. Need to remove 
-        #contact_df = self.spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
+        # contact_df = self.spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
         # return (self.build_peopletypes(contact_df))["CMS_PeopleType"]
 
         return self.spark.read.parquet("s3://dev-truve-devops-05-databr-bucketetlprocesseddata-h2m2xopoctot/cms_peopletype")
@@ -109,7 +109,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         person_type_df = self.add_default_columns(person_type_df)
 
-
+        
         for field in table_fields:
             cls = self._get_dtype_mapping(field.data_type)
             person_type_df = person_type_df.withColumn(field.name, person_type_df[field.name].cast(cls))
@@ -148,7 +148,9 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                         ])
         """
         table_fields = self._get_table_config("CMS_People")
+        print(table_fields)
 
+        
         #table_schema = self._load_table_schema("PeopleMaster")
 
         
@@ -164,12 +166,12 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         #Populate people type
         people_type_df = self._read_tsm(tsm_table_name="PeopleType")
 
-        people_type_col_name = self._get_col_name(table_fields=table_fields, tsm_col_name="People_Type_ID")
+        people_type_col_name = "personTypes" #self._get_col_name(table_fields=table_fields, tsm_col_name="People_Type_ID")
 
-        contact_type_df = (contact_df.select("People_ID", people_type_col_name.name))
+        contact_type_df = (contact_df.select("People_ID", people_type_col_name))
         
         
-        contact_type_df = contact_type_df.withColumn("People_Type",explode(split(col(people_type_col_name.name),'\\|'))).select("People_ID", "People_Type")
+        contact_type_df = contact_type_df.withColumn("People_Type",explode(split(col(people_type_col_name),'\\|'))).select("People_ID", "People_Type")
         contact_type_df.printSchema()
         people_type_df.printSchema()
         contact_type_df = contact_type_df.join(people_type_df, on=["People_Type"], how="left").select("People_ID", "People_Type_ID")
@@ -191,7 +193,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         contact_df = self.add_default_columns(contact_df)
         contact_type_df = self.add_default_columns(contact_type_df)
         
-        contact_df = contact_df.withColumn("Team_ID", lit(1).cast(IntegerType()))
+        contact_type_df = contact_type_df.withColumn("Team_ID", lit(1).cast(IntegerType()))
 
         for field in self._get_table_config("CMS_People"):
             if field.name == "People_Type_ID":
@@ -204,14 +206,20 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         #    cls = self._get_dtype_mapping(field.data_type)
         #    contact_type_df = contact_type_df.withColumn(field.name, contact_type_df[field.name].cast(cls))
         
-        return {"CMS_People" : contact_df, "CMS_PeoplePeopleTypes" : contact_type_df}
+        return {"CMS_People" : contact_df, "CMS_PeopleRoleAssignments" : contact_type_df}
 
-    def build_casemaster(self, project_df: SP_DATAFRAME):
+    def build_casemaster(self, 
+                        project_df: SP_DATAFRAME, 
+                        processed_casetype_df: SP_DATAFRAME, 
+                        df_project_vitals: SP_DATAFRAME, 
+                        df_casesummary: SP_DATAFRAME):
         table_name = "CMS_Cases"
         project_df = project_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         project_df = project_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)).cast(StringType()))
         
         table_fields = self._get_table_config(table_name)
+
+        project_df = project_df.join(df_casesummary.select("projectId", "caseType"), on=["projectId"])
 
         
         for field in table_fields:
@@ -219,6 +227,8 @@ class TSMBuilder(metaclass=abc.ABCMeta):
                 project_df = project_df.withColumn(field.name, project_df[field.transform.source_field])
             elif not field.transform:
                 project_df = project_df.withColumn(field.name, lit(None).cast(StringType()))
+
+        project_df = project_df.withColumn("Case_Type_Name", F.col("caseType"))
 
         project_df.select("Practice_Type_ID").show()
         
@@ -232,14 +242,31 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         project_df = project_df.withColumn("Case_ID", project_df["Case_ID"].cast(IntegerType()))
 
         project_df = project_df.withColumn("Practice_Type_ID", project_df["Practice_Type_ID"].cast(IntegerType()))
-        project_df = project_df.withColumn("Is_Archived", project_df["Is_Archived"].cast(BooleanType()))
-        project_df = project_df.withColumn("Incident_Date", project_df["Incident_Date"].cast(DateType()))
-        
-        
+        project_df = project_df.withColumn("Date_of_Incident", project_df["Date_of_Incident"].cast(DateType()))
+
+        df_project_vitals.show()
+
+        #Case_Created_Date column deriviation from Project Vitals 
+        df_project_vitals = df_project_vitals.filter(df_project_vitals.fieldName == 'createDate') \
+                        .withColumn("projectId", df_project_vitals.projectId.cast(IntegerType())) \
+                        .withColumnRenamed("projectId","Case_ID").select("Case_ID", "value")
+                        
+
+        project_df = project_df.join(df_project_vitals, how="left", on=["Case_ID"]) \
+            .drop("Case_Create_Date") \
+            .withColumnRenamed("value", "Case_Create_Date")
+
+        project_df = project_df.drop("Case_Type_ID")
+        project_df = project_df.join(processed_casetype_df.select("Case_Type_ID", "Practice_Type_ID", "Case_Type_Name"), on=["Practice_Type_ID", "Case_Type_Name"])
+
         # TODO Change datatype here
-        col_list = ["Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]
-        project_df = project_df.select("Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date")
-        project_df.printSchema()
+        # col_list = ["Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]
+        # project_df = project_df.select("Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date")
+        # project_df.printSchema()
+
+        col_list = [field.name for field in table_fields]
+        
+        project_df = project_df.select(*col_list)
 
         self.add_default_columns(project_df)
 
@@ -374,6 +401,61 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         return {table_name : intake_df}
 
+    def build_casetypes(self, casesummary_df: SP_DATAFRAME, project_df: SP_DATAFRAME):
+        table_name = "CMS_CaseTypes"
+
+        project_df = project_df.withColumn("projectTypeId", F.regexp_replace(F.col("projectTypeId"), "'", '"'))\
+                    .withColumn("projectTypeId", F.regexp_replace(F.col("projectTypeId"), "None", 'null'))
+
+        
+        project_df = project_df.withColumn("Practice_Type_ID", F.from_json(F.col("projectTypeId"), MapType(StringType(), StringType()), {"mode" : "FAILFAST"}))
+        
+        project_df = project_df.withColumn("Practice_Type_ID", project_df.Practice_Type_ID.getItem("native"))
+
+        
+        project_df = project_df.withColumn("Case_ID", project_df["projectId"].cast(IntegerType()))
+
+        project_df = project_df.withColumn("Practice_Type_ID", project_df["Practice_Type_ID"].cast(IntegerType()))
+
+        casesummary_df = casesummary_df.withColumn("Case_ID", F.col("projectId")).join(project_df.select("Case_ID", "Practice_Type_ID"), on=["Case_ID"])
+        
+        casetype_df = (casesummary_df.select("caseType", "Practice_Type_ID").distinct().where(F.col("caseType").isNotNull()))
+
+        casetype_df = casetype_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        casetype_df = casetype_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+
+        #window = Window.orderBy(col('monotonically_increasing_id'))
+        window = Window.partitionBy("Practice_Type_ID").orderBy("caseType")
+
+        #casetype_df = casetype_df.withColumn('Case_Type_ID', monotonically_increasing_id())
+        casetype_df = casetype_df.withColumn("Case_Type_ID",F.row_number().over(window))
+
+        casetype_df = casetype_df.withColumn('Case_Type_Name', F.col('caseType'))
+
+
+        table_fields = self._get_table_config(table_name)
+
+        col_list = [field.name for field in table_fields]
+        
+        self.add_default_columns(df=casetype_df)
+        
+        print(casetype_df.schema.fields)
+        df_col_list = [field.name for field in casetype_df.schema.fields]
+        
+        for col in col_list:
+            if col not in df_col_list:
+                casetype_df = casetype_df.withColumn(col, lit(None).cast(StringType()))
+
+        
+        casetype_df = casetype_df.select(*col_list)
+
+
+        for field in table_fields:
+            cls = self._get_dtype_mapping(field.data_type)
+            casetype_df = casetype_df.withColumn(field.name, casetype_df[field.name].cast(cls))
+
+        return {table_name: casetype_df}
+
     def build_casesummary(self, casesummary_df: SP_DATAFRAME, df_project_vitals: SP_DATAFRAME, df_project: SP_DATAFRAME):
         table_name = "CMS_CaseDetails"
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
@@ -432,20 +514,30 @@ if __name__ == "__main__":
     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
     builder = TSMBuilder("confs/sstm.yaml", spark=spark)
     
-    #builder = TSMBuilder("sstm.yaml", spark=spark)
     '''
+    #builder = TSMBuilder("sstm.yaml", spark=spark)
     contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/historical_contacts.parquet")
     result = builder.build_peopletypes(contact_df=contact_df)
-    print(result["CMS_PeopleType"].printSchema())
+    #print(result)
+    #print(result["CMS_PeopleType"].printSchema())
     result = builder.build_peoplemaster(contact_df=contact_df)
-    print(result)
+    print(result["CMS_People"].show())
     exit()
     '''
+
     '''
     project_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/project.parquet")
     project_df.printSchema()
-    print(builder.build_casemaster(project_df))
+    result = builder.build_casemaster(project_df)
+    processed_project_df = result["CMS_Cases"]
+
+    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
+    
+    builder.build_casetypes(casesummary_df=casesummary_df, processed_project_df=processed_project_df)
+
+    exit()
     '''
+
     '''
     projecttype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/projecttypes.parquet")
     projecttype_df.printSchema()
@@ -459,12 +551,14 @@ if __name__ == "__main__":
     print(phase_df)
     exit()
     '''
+
     '''
     meds_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/meds.parquet")
     meds_df.printSchema()
     print(builder.build_casefigures(meds_df=meds_df))
     exit()
     '''
+
     '''
     intake_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/intake.parquet")
     intake_df.printSchema()
@@ -475,7 +569,16 @@ if __name__ == "__main__":
     casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
     project_vital_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project_vitals.parquet")
     df_project = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project.parquet")
+    
+    processed_case_types = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casetypes/")
 
+    project_vital_df = project_vital_df.withColumn("input_file", F.input_file_name())
+    project_vital_df = project_vital_df.withColumn('projectId', F.element_at(F.split(F.col('input_file'), '/'), -2))
+
+    builder.build_casemaster(project_df=df_project, processed_casetype_df=processed_case_types, df_project_vitals=project_vital_df, df_casesummary=casesummary_df)
+   
+    #builder.build_casetypes(casesummary_df=casesummary_df, project_df=df_project)
+    exit()
     #casesummary_df.select("actualsettlementamount").show()
     #exit()
 
@@ -483,9 +586,7 @@ if __name__ == "__main__":
 
     #exit()
     
-    project_vital_df = project_vital_df.withColumn("input_file", F.input_file_name())
-    project_vital_df = project_vital_df.withColumn('projectId', F.element_at(F.split(F.col('input_file'), '/'), -2))
-
+    
 
 
     casesummary_df.printSchema()
