@@ -291,8 +291,8 @@ tsm:
       transform:
         source: etl
         source_entity_type: form
-        source_entity_name: casesummary
-        source_field: attorneysFeesAmount
+        source_entity_name: intake
+        source_field: attorneyFeePercentage
         type: data
     - name: Estimated_Settlement_Date
       data_type: date
@@ -344,7 +344,7 @@ tsm:
         source: etl
         source_entity_type: form
         source_entity_name: casesummary
-        source_field: paralegal
+        source_field: initialParalegal
         type: data
     - name: Litigation_Paralegal_ID
       data_type: int
@@ -352,7 +352,7 @@ tsm:
         source: etl
         source_entity_type: form
         source_entity_name: casesummary
-        source_field: paralegal
+        source_field: casemanager
         type: data                
     - name: CaseManager_ID
       data_type: int
@@ -360,7 +360,7 @@ tsm:
         source: etl
         source_entity_type: form
         source_entity_name: casesummary
-        source_field: casemanager
+        source_field: paralegal
         type: data
     - name: Cocounsel_ID
       data_type: int
