@@ -28,32 +28,38 @@ class LDBuilder(metaclass=abc.ABCMeta):
         df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
         table_fields = self._get_table_config(table_name)
-
         
         for field in table_fields:
             if field.transform and field.transform.type == "data":
                 df = df.withColumn(field.name, df[field.transform.source_field])
             elif not field.transform:
                 df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
+            
+        
+        # df = self.add_default_columns(df)
         col_list = [field.name for field in table_fields]
         
         df = df.select(*col_list)
 
-        df.show(n=100)
-        
-
         for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
+            dtype = self._get_dtype_mapping(field.data_type)
+            df = df.withColumn(field.name, df[field.name].cast(dtype))
+
+        df.show(n=100)
 
         return df
         
 
     def _get_dtype_mapping(self, data_type):
-        d_map = {"string" : StringType(), "date" : DateType(), "int" : IntegerType(), "timestamp" : TimestampType(), "boolean" : BooleanType(), "float" : DoubleType(), "double" : DecimalType(10,4)}
+        d_map = {
+            "string": StringType(),
+            "date": DateType(),
+            "int": IntegerType(),
+            "timestamp": TimestampType(),
+            "boolean": BooleanType(),
+            "float": DoubleType(),
+            "double": DecimalType(10,4)
+        }
         return d_map[data_type]
 
     def _get_truve_org(self, fv_org_id: str) -> int:
@@ -83,6 +89,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
             if table.name == table_name:
                 return table.fields
 
+
     def _get_schema_of_table(self, table_name) -> SP_DATAFRAME:
         return None
 
@@ -97,31 +104,9 @@ class LDBuilder(metaclass=abc.ABCMeta):
             return StructType.fromJson(json.load(f))
     
     def build_contact(self, df: SP_DATAFRAME):
-        table_name = "CRM_Contact"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
-        
-        table_fields = self._get_table_config(table_name)
-
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
+        table_name = "CRM_Contacts"
+        df = self.transform(df, table_name)
+        df.show(100)
 
         return {table_name : df}
 
@@ -213,32 +198,8 @@ class LDBuilder(metaclass=abc.ABCMeta):
         return {table_name : df}
 
     def build_casetype(self, df: SP_DATAFRAME):
-        table_name = "CRM_CaseType"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
-        
-        table_fields = self._get_table_config(table_name)
-
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
-
+        table_name = "CRM_CaseTypes"
+        df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
     def build_opportunities(self, df: SP_DATAFRAME):
@@ -256,37 +217,21 @@ class LDBuilder(metaclass=abc.ABCMeta):
         df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
-    def build_users(self, df: SP_DATAFRAME):
-        table_name = "CRM_Users"
+    def build_status_changes(self, df: SP_DATAFRAME):
+        table_name = "CRM_StatusChanges"
         df = self.transform(df=df, table_name=table_name)
         return {table_name : df}
 
-    def build_casetype(self, df: SP_DATAFRAME):
-        table_name = "CRM_CaseType"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
-        
-        table_fields = self._get_table_config(table_name)
+    def build_practice_type(self, df: SP_DATAFRAME):
+        table_name = "CRM_PracticeTypes"
+        df = self.transform(df=df, table_name=table_name)
+        return {table_name : df}
 
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
+    def build_users(self, df: SP_DATAFRAME):
+        table_name = "CRM_Users"
+        df = self.transform(df=df, table_name=table_name)
+        df = df.withColumn("Full_Name", F.concat_ws(' ', df.First_Name, df.Last_Name))
+        df.show(100)
 
         return {table_name : df}
 
@@ -295,6 +240,10 @@ if __name__ == "__main__":
     print("Hi")
     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
     builder = LDBuilder("ld_sstm.yaml", spark=spark)
+
+    ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+    ld_users_df = builder.build_statuses(df=ld_users_df)
+    (ld_users_df["LD_Statuses"]).printSchema()
     
     '''
     ld_contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_contact.parquet")
