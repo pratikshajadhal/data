@@ -829,7 +829,7 @@ tsm:
         source: etl
         type: org_id
     - name: Practice_Type_ID
-      data_type: string
+      data_type: int
       transform:
         source: etl
         source_entity_type: core
@@ -837,7 +837,7 @@ tsm:
         source_field: Code
         type: data
     - name: Practice_Type_Name
-      data_type: int
+      data_type: string
       transform:
         source: etl
         source_entity_type: core
