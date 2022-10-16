@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS CMS_Cases ( --JS This is similar to the Projects tabl
   Case_ID int not null, --JS This is the project_id field from Filevine
   Case_Name varchar(255), --JS Added
   Practice_Type_ID int not null, --JS removed 'not null references CMS_PracticeTypes (Practice_Type_ID)'
-  Case_Type_ID int not null, --JS added
+  --Case_Type_ID int not null, --JS added. Shiv Removed it as Case_Type_ID is already present in CaseDetails
   Case_Status_ID int, --JS Added
   --Is_Archived boolean, --JS removed
   Date_of_Incident date,
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS CMS_Cases ( --JS This is similar to the Projects tabl
   primary key (Client_Org_ID, Parent_Case_ID, Case_ID), ----JS added Client_Org_ID, Parent_Case_ID
   foreign key (Client_Org_ID, Practice_Type_ID) references CMS_PracticeTypes (Client_Org_ID, Practice_Type_ID), --JS added
   foreign key (Client_Org_ID, Case_Status_ID) references CMS_StatusMaster (Client_Org_ID, Status_ID), --JS added
-  foreign key (Client_Org_ID, Practice_Type_ID, Case_Type_ID) references CMS_CaseTypes (Client_Org_ID, Practice_Type_ID, Case_Type_ID) -- DC added Practice_Type_ID too
+  --foreign key (Client_Org_ID, Practice_Type_ID, Case_Type_ID) references CMS_CaseTypes (Client_Org_ID, Practice_Type_ID, Case_Type_ID) -- DC added Practice_Type_ID too. Shiv Removed it as Case_Type_ID is alredy present in Case_Details
 );
 
 

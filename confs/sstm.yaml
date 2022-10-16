@@ -238,8 +238,6 @@ tsm:
         source_entity_name: project
         source_field: projectTypeId
         type: data
-    - name: Case_Type_ID
-      data_type: int
     - name: Case_Status_ID
       data_type: int
     - name: Date_of_Incident
@@ -280,6 +278,8 @@ tsm:
         source_entity_name: casesummary
         source_field: projectId
         type: data
+    - name: Practice_Type_ID
+      data_type: int
     - name: Plaintiff_Full_Name
       data_type: string
     - name: Case_Marketing_Source

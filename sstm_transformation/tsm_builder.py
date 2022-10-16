@@ -456,15 +456,31 @@ class TSMBuilder(metaclass=abc.ABCMeta):
 
         return {table_name: casetype_df}
 
-    def build_casesummary(self, casesummary_df: SP_DATAFRAME, df_project_vitals: SP_DATAFRAME, df_project: SP_DATAFRAME):
+    def build_casesummary(self, 
+                        casesummary_df: SP_DATAFRAME, 
+                        df_project_vitals: SP_DATAFRAME, 
+                        df_project: SP_DATAFRAME, 
+                        df_processed_casetype: SP_DATAFRAME,
+                        df_intake: SP_DATAFRAME
+                        ):
         table_name = "CMS_CaseDetails"
         casesummary_df = casesummary_df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
         casesummary_df = casesummary_df.withColumn("Client_Org_ID", lit(self._get_truve_org(self.config.org_id)))
 
+        df_project = df_project.withColumn("projectTypeId", F.regexp_replace(F.col("projectTypeId"), "'", '"'))\
+                    .withColumn("projectTypeId", F.regexp_replace(F.col("projectTypeId"), "None", 'null'))
+
+        df_project = df_project.withColumn("Practice_Type_ID", F.from_json(F.col("projectTypeId"), MapType(StringType(), StringType()), {"mode" : "FAILFAST"}))
+        
+        df_project = df_project.withColumn("Practice_Type_ID", df_project.Practice_Type_ID.getItem("native"))
+
+        df_project = df_project.withColumn("Practice_Type_ID", df_project["Practice_Type_ID"].cast(IntegerType()))
+
+                        
         #Parse PhaseID 
         df_project = df_project.withColumn("phaseId", F.regexp_replace(col("phaseId"), "'", '"'))\
                     .withColumn("phaseId", F.regexp_replace(col("phaseId"), "None", 'null'))
-        
+
         df_project = df_project.withColumn("phaseId", F.from_json(col("phaseId"), MapType(StringType(), StringType()), {"mode" : "FAILFAST"}))
         df_project = df_project.withColumn("phaseId", df_project.phaseId.getItem("native"))
         
@@ -479,8 +495,22 @@ class TSMBuilder(metaclass=abc.ABCMeta):
             elif not field.transform:
                 casesummary_df = casesummary_df.withColumn(field.name, lit(None).cast(cls))
 
-        casesummary_df = casesummary_df.join(df_project.select("projectId", "phaseId"), how="left", on=["projectId"])
+        casesummary_df = casesummary_df.drop('Practice_Type_ID')
+        casesummary_df = casesummary_df.join(df_project.select("projectId", "Practice_Type_ID"), on=["projectId"])
+
+
+        casesummary_df.select('Practice_Type_ID').show()
+
+        casesummary_df = casesummary_df.join(df_intake.select('projectId', 'attorneyFeePercentage'), on=['projectId']).withColumnRenamed('attorneyFeePercentage', 'Attorney_Fee_Percentage')
+        casesummary_df = casesummary_df.join(df_project.select("projectId", "phaseId", "projectTypeId"), how="left", on=["projectId"])
         casesummary_df = casesummary_df.drop("Case_Phase_ID").withColumnRenamed("phaseId", "Case_Phase_ID")
+
+        casesummary_df = casesummary_df.withColumnRenamed('caseType', 'Case_Type_Name')
+
+        
+        casesummary_df = casesummary_df.drop('Case_Type_ID')
+        casesummary_df = casesummary_df.join(df_processed_casetype.select('Case_Type_ID', 'Practice_Type_ID', 'Case_Type_Name'), on=['Case_Type_Name', 'Practice_Type_ID'])
+
 
         col_list = [field.name for field in table_fields]
         
@@ -498,15 +528,15 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         casesummary_df = casesummary_df.join(df_project_vitals, how="left", on=["Case_ID"]) \
             .drop("Case_Create_Date") \
             .withColumnRenamed("value", "Case_Create_Date")
-
+            
+        
         for field in table_fields:
             cls = self._get_dtype_mapping(field.data_type)
             casesummary_df = casesummary_df.withColumn(field.name, casesummary_df[field.name].cast(cls))
 
-        casesummary_df.show(n=100)
-
-        casesummary_df.printSchema()
-        
+        casesummary_df.select('Practice_Type_ID').show()
+        #print(casesummary_df.count())
+        exit()
         return {table_name : casesummary_df}
 
 if __name__ == "__main__":
@@ -566,16 +596,24 @@ if __name__ == "__main__":
     exit()
     '''
 
-    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casesummary.parquet")
-    project_vital_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project_vitals.parquet")
-    df_project = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/10000654/project.parquet")
+    casesummary_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/s3_raw_data/casesummary/")
+    project_vital_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/s3_raw_data/projectvitals/")
+    df_project = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/s3_raw_data/project/")
+    df_intake = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/s3_raw_data/intkae/")
     
     processed_case_types = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/casetypes/")
 
     project_vital_df = project_vital_df.withColumn("input_file", F.input_file_name())
     project_vital_df = project_vital_df.withColumn('projectId', F.element_at(F.split(F.col('input_file'), '/'), -2))
 
-    builder.build_casemaster(project_df=df_project, processed_casetype_df=processed_case_types, df_project_vitals=project_vital_df, df_casesummary=casesummary_df)
+    
+    result = builder.build_casesummary(casesummary_df=casesummary_df, df_project_vitals=project_vital_df, df_project=df_project, df_processed_casetype=processed_case_types, df_intake=df_intake)
+
+    processed_casesummary_df = result["CMS_CaseDetails"]
+    processed_casesummary_df.write.mode('overwrite').parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_output_data/s3_output_data/casesummary/")
+
+    
+    #builder.build_casemaster(project_df=df_project, processed_casetype_df=processed_case_types, df_project_vitals=project_vital_df, df_casesummary=casesummary_df)
    
     #builder.build_casetypes(casesummary_df=casesummary_df, project_df=df_project)
     exit()
