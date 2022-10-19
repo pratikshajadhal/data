@@ -9,7 +9,10 @@ schemas:
       - SeverityLevel: string
       - Code: string
       - Contact: int
-      - PracticeArea: int
+      - PracticeAreaId: int
+      - PracticeAreaName: string
+      - PracticeAreaCode: string
+      - PracticeAreaDescription: string
       - MarketingSource: string
       - ContactSource: string
       - TalkedToOtherAttorneys: string

@@ -28,7 +28,8 @@ class LeadDetailETL(LeadModelETL):
 
     def transform(self, leads):
         needed_custom_fields = ["Qualified Lead", "Were You At Fault?", "Was anyone else in the vehicle with you?",
-                            "Treatment at Hospital", "Did you seek any other doctors/treatment?"]
+                            "Treatment at Hospital", "Did you seek any other doctors/treatment?",
+                            "PracticeAreaId","PracticeAreaName", "PracticeAreaCode", "PracticeAreaDescription"]
         for needed in needed_custom_fields:
             # Chaning functions is not working ???
             fixed_name = needed.replace(" ", "")
@@ -57,6 +58,13 @@ class LeadDetailETL(LeadModelETL):
                 leads[key] = value
                 # leads[key] = ",".join( map( str, custom_fields ))
 
+            elif key == 'PracticeArea':
+                print(value)
+                leads["PracticeAreaId"] = value.get("Id")
+                leads["PracticeAreaName"] = value.get("Name")
+                leads["PracticeAreaCode"] = value.get("Code")
+                leads["PracticeAreaDescription"] = value.get("Description")
+
             elif isinstance(value, list):
                 ids = list()
                 if isinstance( value, list):
@@ -69,6 +77,7 @@ class LeadDetailETL(LeadModelETL):
 
             elif isinstance(value, dict):
                 leads[key] = value.get("Id")
+
 
         return pd.DataFrame([leads])
 

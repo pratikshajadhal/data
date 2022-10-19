@@ -59,8 +59,11 @@ table_leaddetail:
     - SubStatus 
     - SeverityLevel 
     - Code
-    - Contact 
-    - PracticeArea
+    - Contact git 
+    - PracticeAreaId
+    - PracticeAreaName
+    - PracticeAreaCode
+    - PracticeAreaDescription
     - MarketingSource
     - ContactSource
     - TalkedToOtherAttorneys
