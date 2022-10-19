@@ -282,10 +282,28 @@ tsm:
       data_type: int
     - name: Plaintiff_Full_Name
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: warehouse
+        source_field: clientName
+        type: data
     - name: Case_Marketing_Source
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: casesummary
+        source_field: referralsource
+        type: data
     - name: Case_Source_Name
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: warehouse
+        source_field: details
+        type: data
     - name: Attorney_Fee_Percentage
       data_type: double
       transform:
@@ -327,7 +345,13 @@ tsm:
         source_field: vIPCase
         type: data
     - name: If_Case_Referred_Out
-      data_type: string
+      data_type: boolean
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: warehouse
+        source_field: wasthiscasereferredout
+        type: data
     - name: Case_Type_ID
       data_type: int         
     - name: Attorney_ID
@@ -516,6 +540,12 @@ tsm:
         type: data
     - name: Intake_Source
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: referralsource
+        type: data
     - name: Date_of_Intake
       data_type: date
       transform:
@@ -562,9 +592,69 @@ tsm:
       data_type: string
     - name: If_VIP_Lead
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: form
+        source_entity_name: intake
+        source_field: vipCase
+        type: data
     - name: Custom1
       data_type: string  
     - name: Custom2
       data_type: string  
     - name: Custom3
       data_type: string
+  - name: CMS_PhaseChanges
+    fields: 
+    - name: Truve_Org_ID
+      data_type: int
+      transform: 
+        source: internal
+        type: key
+    - name: Client_Org_ID
+      data_type: string
+      transform:
+        source: etl
+        type: org_id
+    - name: Parent_Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projectphases
+        source_field: project_id
+        type: data
+    - name: Case_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projectphases
+        source_field: project_id
+        type: data
+    - name: Practice_Type_ID
+      data_type: int
+    - name: Phase_Change_Date
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projectphases
+        source_field: timestamp
+        type: data
+    
+    - name: Phase_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: projectphases
+        source_field: phase
+        type: data
+    - name: Custom1
+      data_type: string  
+    - name: Custom2
+      data_type: string  
+    - name: Custom3
+      data_type: string
+    
