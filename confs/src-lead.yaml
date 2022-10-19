@@ -59,7 +59,7 @@ table_leaddetail:
     - SubStatus 
     - SeverityLevel 
     - Code
-    - Contact git 
+    - Contact
     - PracticeAreaId
     - PracticeAreaName
     - PracticeAreaCode
