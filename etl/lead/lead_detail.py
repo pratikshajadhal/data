@@ -27,9 +27,11 @@ class LeadDetailETL(LeadModelETL):
 
 
     def transform(self, leads):
-        needed_custom_fields = ["Qualified Lead", "Were You At Fault?", "Was anyone else in the vehicle with you?",
-                            "Treatment at Hospital", "Did you seek any other doctors/treatment?",
-                            "PracticeAreaId","PracticeAreaName", "PracticeAreaCode", "PracticeAreaDescription"]
+        needed_custom_fields = [
+            "Qualified Lead", "Were You At Fault?", "Was anyone else in the vehicle with you?",
+            "Treatment at Hospital", "Did you seek any other doctors/treatment?",
+            "PracticeAreaId","PracticeAreaName", "PracticeAreaCode", "PracticeAreaDescription"
+        ]
         for needed in needed_custom_fields:
             # Chaning functions is not working ???
             fixed_name = needed.replace(" ", "")
@@ -114,18 +116,20 @@ class LeadDetailETL(LeadModelETL):
                     #     contact_obj.load_data(trans_df=transformed, client_id=client_id)
                     #     time.sleep(2)
 
-                    # if lead.get("Opportunity"):
-                    #     opport_id = lead.get("Opportunity").get("Id")
-                    #     extracted = opport_obj.extract_data_from_source(opport_id)
-                    #     opport_df = opport_obj.transform(extracted)
-                    #     transformed = opport_obj.eliminate_nonyaml(opport_df)
-                    #     opport_obj.load_data(trans_df=transformed, client_id=client_id)
-                    #     time.sleep(2)
+                    if lead.get("Opportunity"):
+                        opport_id = lead.get("Opportunity").get("Id")
+                        extracted = opport_obj.extract_data_from_source(opport_id)
+                        opport_df = opport_obj.transform(extracted)
+                        transformed = opport_obj.eliminate_nonyaml(opport_df)
+                        opport_obj.load_data(trans_df=transformed, client_id=client_id)
+                        # # Please uncomment below line.
+                        # time.sleep(2)
+
 
                     
-                    lead_detail_df = self.transform(lead)
-                    transformed_detail_df = self.eliminate_nonyaml(lead_detail_df)
-                    self.load_data(trans_df=transformed_detail_df, client_id=client_id)
+                    # lead_detail_df = self.transform(lead)
+                    # transformed_detail_df = self.eliminate_nonyaml(lead_detail_df)
+                    # self.load_data(trans_df=transformed_detail_df, client_id=client_id)
 
                 except Exception as e:
                     logger.warn("=" * 60)

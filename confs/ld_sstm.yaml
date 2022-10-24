@@ -20,7 +20,7 @@ tsm:
         source_entity_name: contact
         source_field: Id
         type: data
-    - name: FirstName
+    - name: First_Name
       data_type: string
       transform:
         source: etl
@@ -28,7 +28,7 @@ tsm:
         source_entity_name: contact
         source_field: FirstName
         type: data
-    - name: MiddleName
+    - name: Middle_Name
       data_type: string
       transform:
         source: etl
@@ -36,7 +36,7 @@ tsm:
         source_entity_name: contact
         source_field: MiddleName
         type: data
-    - name: LastName
+    - name: Last_Name
       data_type: string
       transform:
         source: etl
@@ -140,38 +140,6 @@ tsm:
         source_entity_name: contact
         source_field: Birthdate
         type: data
-    # - name: Longitude
-    #   data_type: string
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: Longitude
-    #     type: data
-    # - name: Latitude
-    #   data_type: string
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: Latitude
-    #     type: data
-    # - name: SubscribeToMailingList
-    #   data_type: boolean
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: SubscribeToMailingList
-    #     type: data
-    # - name: BadAddress
-    #   data_type: boolean
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: BadAddress
-    #     type: data
     - name: If_Deceased
       data_type: boolean
       transform:
@@ -294,21 +262,45 @@ tsm:
       transform:
         source: etl
         type: org_id
-    - name: Id
+    - name: Opportunity_ID
       data_type: int
       transform:
         source: etl
         source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Id
+        source_entity_name: opportunity
+        source_field: opp_Id
         type: data
+    - name: Lead_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_LeadId
+        type: data
+    - name: Status_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: statuses
+        source_field: Status_ID
+        type: data
+    - name: Lead_Source_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leadsource
+        source_field: Lead_Source_ID
+        type: Status
     - name: Summary
       data_type: string
       transform:
         source: etl
         source_entity_type: core
-        source_entity_name: leadDetail
-        source_field: Summary
+        source_entity_name: opportunity
+        source_field: opp_Summary
         type: data
     - name: InjuryInformation
       data_type: string
@@ -316,448 +308,182 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: leaddetail
-        source_field: InjuryInformation
-        type: data
-    - name: Status
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Id
-        type: Status
-    - name: SubStatus
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: SubStatus
-        type: data
-    - name: SeverityLevel
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: SeverityLevel
-        type: data
-    - name: Code
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Code
-        type: data
-    - name: Contact
-      data_type: int
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Contact
-        type: data
-    - name: PracticeArea
-      data_type: int
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: PracticeArea
-        type: data
-    - name: MarketingSource
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: MarketingSource
-        type: data
-    - name: ContactSource
-      data_type: string
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ContactSource
-        type: data
-    - name: TalkedToOtherAttorneys
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: TalkedToOtherAttorneys
-        type: data
-    - name: FoundUsNotes
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: FoundUsNotes
-        type: data
-    - name: UTM
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: UTM
-        type: data
-    - name: CurrentUrl
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: CurrentUrl
-        type: data
-    - name: ReferringUrl
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ReferringUrl
-        type: data
-    - name: ClickId
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ClickId
-        type: data
-    - name: ClientId
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ClientId
-        type: data
-    - name: Keywords
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Keywords
-        type: data
-    - name: Campaign
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Campaign
-        type: data
-    - name: AppointmentLocation
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: AppointmentLocation
-        type: data
-    - name: Office
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Office
-        type: data
-    - name: OfficeCode
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: OfficeCode
-        type: data
-    - name: ReferredTo
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ReferredTo
-        type: data
-    - name: ReferredByName
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ReferredByName
-        type: data
-    - name: ReferredBy
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ReferredBy
-        type: data
-    - name: CreatedDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: CreatedDate
-        type: data
-    - name: IncidentDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: IncidentDate
-        type: data
-    - name: RejectedDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: RejectedDate
-        type: data
-    - name: ReferredDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ReferredDate
-        type: data
-    - name: AssignedDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: AssignedDate
-        type: data
-    - name: AppointmentScheduledDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: AppointmentScheduledDate
-        type: data
-    - name: ChaseDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: ChaseDate
-        type: data
-    #- name: ContactChaseDateSource
-    #  data_type: string
-    #  transform:  
-    #    source: etl
-    #    source_entity_type: core
-    #    source_entity_name: leaddetail
-    #    source_field: ContactChaseDateSource
-    #    type: data
-    - name: SignedUpDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: SignedUpDate
-        type: data
-    - name: CaseClosedDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: CaseClosedDate
-        type: data
-    - name: LostDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: LostDate
-        type: data
-    - name: UnderReviewDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: UnderReviewDate
-        type: data
-    - name: PendingSignupDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: PendingSignupDate
-        type: data
-    - name: HoldDate
-      data_type: timestamp
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: HoldDate
-        type: data
-    - name: Intake
-      data_type: int
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Intake
-        type: data
-    - name: Paralegal
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Paralegal
-        type: data
-    - name: Investigator
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Investigator
-        type: data
-    - name: Attorney
-      data_type: int
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Attorney
-        type: data
-    - name: AssignedTo
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: AssignedTo
-        type: data
-    - name: Creator
-      data_type: int
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Creator
-        type: data
-    - name: RelatedContacts
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: RelatedContacts
-        type: data
-    - name: Messages
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Messages
+        source_field: ld_InjuryInformation
         type: data
     - name: Notes
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_Note
+        type: data
+    - name: Referred_By_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: ld_ReferredBy
+        type: data
+    - name: Severity_Level
+      data_type: str
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_SeverityLevel
+        type: data
+    - name: County_of_Event
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_County
+        type: data
+    - name: If_Processed
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_Processed
+        type: data
+    - name: Processed_Date
+      data_type: date
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_ProcessedDate
+        type: data
+    - name: Processed_By_ID
+      data_type: int
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: users
+        source_field: Processed_By_ID
+        type: data
+    - name: DisregardReason
+      data_type: string
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: opportunity
+        source_field: opp_DisregardReason
+        type: data
+    - name: Assigned_To_ID
+      data_type: int
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: users
+        source_field: Assigned_To_ID
+        type: data
+    - name: Rejected_date
+      data_type: date
       transform:  
         source: etl
         source_entity_type: core
         source_entity_name: leaddetail
-        source_field: Notes
+        source_field: ld_RejectedDate
         type: data
-    - name: Opportunity
+    - name: Referred_date
+      data_type: date
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_ReferredDate
+        type: data
+    - name: Signed_Up_Date
+      data_type: date
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_SignedUpDate
+        type: data
+    - name: Case_Close_Date
+      data_type: date
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_CaseClosedDate
+        type: data
+    - name: Lost_Date
+      data_type: date
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_LostDate
+        type: data
+    - name: Paralegal_ID
+      data_type: int
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_Paralegal
+        type: data
+    - name: Attorney_ID
+      data_type: int
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_Attorney
+        type: data
+    - name: If_Qualified_Lead
+      data_type: boolean
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_QualifiedLead
+        type: data
+    - name: Were_You_At_Fault
+      data_type: boolean
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_WereYouAtFault
+        type: data
+    - name: Anyone_Else_In_Vehicle
+      data_type: boolean
+      transform:  
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_Wasanyoneelseinthevehiclewithyou
+        type: data
+    - name: Treatment_At_Hospital
       data_type: string
       transform:  
         source: etl
         source_entity_type: core
         source_entity_name: leaddetail
-        source_field: Opportunity
+        source_field: ld_TreatmentatHospital
         type: data
-    - name: PhoneCall
-      data_type: string
+    - name: If_Seek_Any_Other_Treatment
+      data_type: boolean
       transform:  
         source: etl
         source_entity_type: core
         source_entity_name: leaddetail
-        source_field: PhoneCall
+        source_field: ld_Didyouseekanyotherdoctorstreatment
         type: data
-    - name: CustomFields
+    - name: Custom1
       data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: CustomFields
-        type: data
-    - name: Settlements
+    - name: Custom2
       data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Settlements
-        type: data
-    - name: QualifiedLead
+    - name: Custom3
       data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: QualifiedLead
-        type: data
-    - name: WereYouAtFault
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: WereYouAtFault
-        type: data
-    - name: Wasanyoneelseinthevehiclewithyou
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Wasanyoneelseinthevehiclewithyou
-        type: data
-    - name: TreatmentatHospital
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: TreatmentatHospital
-        type: data
-    - name: Didyouseekanyotherdoctorstreatment
-      data_type: string
-      transform:  
-        source: etl
-        source_entity_type: core
-        source_entity_name: leaddetail
-        source_field: Didyouseekanyotherdoctorstreatment
-        type: data
   - name: CRM_CaseTypes
     fields:
     - name: Truve_Org_ID
@@ -829,7 +555,7 @@ tsm:
         source: etl
         type: org_id
     - name: Practice_Type_ID
-      data_type: string
+      data_type: int
       transform:
         source: etl
         source_entity_type: core
@@ -862,7 +588,7 @@ tsm:
       transform:
         source: etl
         type: org_id
-    - name: Id
+    - name: Lead_Source_ID
       data_type: int
       transform:
         source: etl
@@ -870,7 +596,7 @@ tsm:
         source_entity_name: leadsource
         source_field: Id
         type: data
-    - name: SourceName
+    - name: Lead_Source_Name
       data_type: string
       transform:
         source: etl
@@ -878,6 +604,16 @@ tsm:
         source_entity_name: leadsource
         source_field: SourceName
         type: data
+    - name: Lead_Source_Type
+      data_type: string
+    - name: Lead_Source_Subtype
+      data_type: string
+    - name: Custom1
+      data_type: string
+    - name: Custom2
+      data_type: string
+    - name: Custom3
+      data_type: string
   - name: CRM_Referrals
     fields:
     - name: Truve_Org_ID
@@ -955,6 +691,14 @@ tsm:
         source_entity_type: core
         source_entity_name: statuses
         source_field: Status
+        type: data
+    - name: Substatus_Id
+      data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: statuses
+        source_field: Substatuses
         type: data
     - name: Substatus_Name
       data_type: string
@@ -1041,7 +785,7 @@ tsm:
       transform:
         source: etl
         source_entity_type: core
-        source_entity_name: leadrow
+        source_entity_name: leaddetail
         source_field: Id
         type: data
     - name: Contact_ID
@@ -1049,17 +793,55 @@ tsm:
       transform:
         source: etl
         source_entity_type: core
-        source_entity_name: leadrow
-        source_field: ContactId
+        source_entity_name: leaddetail
+        source_field: Contact
         type: data
-    - name: Case_Type_ID
-      data_type: string
+    - name: Practice_Type_ID
+      data_type: int
       transform:
         source: etl
         source_entity_type: core
-        source_entity_name: leadrow
-        source_field: CaseType
+        source_entity_name: leaddetail
+        source_field: PracticeAreaCode
         type: data
+    - name: Case_Type_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: PracticeAreaId
+        type: data
+    - name: Date_of_Incident
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: IncidentDate
+        type: data
+    - name: Lead_Create_date
+      data_type: date
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: CreatedDate
+        type: data
+    - name: Created_By_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: Creator
+        type: data
+    - name: Custom1
+      data_type: string
+    - name: Custom2
+      data_type: string
+    - name: Custom3
+      data_type: string
   - name: CRM_StatusChanges # TODO New Table
     fields:
     - name: Truve_Org_ID
@@ -1081,7 +863,7 @@ tsm:
         source_field: Id
         type: data
     - name: Status_ID
-      data_type: string
+      data_type: int
       transform:
         source: etl
         source_entity_type: core
@@ -1089,7 +871,7 @@ tsm:
         source_field: StatusId
         type: data
     - name: Status_Change_Date
-      data_type: string
+      data_type: date
       transform:
         source: etl
         source_entity_type: core

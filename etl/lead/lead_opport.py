@@ -29,6 +29,10 @@ class LeadOpportETL(LeadModelETL):
 
 
     def transform(self, opport:dict):
+        # needed_custom_fields = ["AssignedToEmail", "ProcessedByEmail"]
+        # for needed in needed_custom_fields:
+        #     opport[needed] = None
+            
         for key, value in opport.items():
 
             if key == "CustomFields":
@@ -40,7 +44,7 @@ class LeadOpportETL(LeadModelETL):
 
             if key == "AssignedTo":
                 if value:
-                    name = opport[key][0].get("FirstName") + " " + opport[key][0].get("LastName")
+                    name = opport[key][0].get("Email")
                 else:
                     name = ""
 
@@ -48,7 +52,7 @@ class LeadOpportETL(LeadModelETL):
 
             if key == "ProcessedBy":
                 if isinstance(value, dict):
-                    name = opport[key].get("FirstName") + " " + opport[key].get("LastName")
+                    name = opport[key].get("Email")
                 else:
                     name = ""
 
