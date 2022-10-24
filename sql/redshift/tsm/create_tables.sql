@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS CMS_Teams (
   Custom2 varchar(255),
   Custom3 varchar(255),
   primary key (Client_Org_ID, Team_ID), --JS Revised to add Client Org ID. Reason: Different clients may have the same Team ID.
-  Constraint UniqueTeams UNIQUE (Client_Org_ID, Team_Name) --JS added unique constraint
+  Constraint UniqueTeams UNIQUE (Client_Org_ID, Team_Name)
+ --JS added unique constraint
 );
 
 CREATE TABLE IF NOT EXISTS CMS_People (
@@ -518,7 +519,7 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
   Contact_Source_SubType varchar(255),--JS added ***NO CONTACT SOURCE IN RAW DATA
   --Code varchar(255), --JS removed
   --DoNotText boolean, --JS removed
-  Created_On date, --changed data type
+  Created_On timestamp, --changed data type
   Created_By_ID int, --revised from CreatedBy_ID -- There is no created_by_id are we gonna get by joining them?
   Created_By_Full_Name varchar(255), --revised from CreatedBy_ID -- There is no created_by_id are we gonna get by joining them?
   --PendingGeocode boolean, --JS removed
@@ -527,8 +528,9 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
-  primary key (Client_Org_ID, Contact_ID), --JS added
+  primary key (Client_Org_ID, Contact_ID) --JS added
 );
+
 
 -- sparkla
   CREATE TABLE IF NOT EXISTS CRM_Status (
@@ -537,12 +539,14 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
   Status_ID int, --JS updated from ID
   --Status varchar(255), --JS Removed
   Status_Name varchar(255), --revised from StatusName
-  Substatus_Id int, -- need to extract -- from Substatuses, ** --Substatus names are pushed as json 
+  Substatus_Id varchar(255), -- from Substatuses, ** --Substatus names are pushed as json 
   Substatus_Name varchar(max), -- need to extract -- revised from Substatuses, ** --Substatus names are pushed as json 
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
-  primary key (Client_Org_ID, Status_ID, Substatus_Id) -- ***
+  primary key (Client_Org_ID, Status_ID) 
+  -- ERROR: there is no unique constraint matching given keys for referenced table "crm_status" [ErrorId: 1-63566099-60b3be7b41154fc86d7f2b68]
+  -- Constraint UniqueTeams UNIQUE (Status_ID) -- Added by M7 due to commmon error
   );
 
 -- DC removed - duplication
@@ -562,29 +566,39 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
 --);
 
 -- DC added below table **What is the input/source of this table? ****CRM Type id, name and CODE ??????
+-- CREATE TABLE IF NOT EXISTS CRM_PracticeTypes (
+--   Truve_Org_ID int not null,
+--   Client_Org_ID varchar(255) not null,
+--   Practice_Type_ID int , -- Code -- Constraint must be deleted.
+--   Practice_Type_Name varchar(255), -- Code
+--   Custom1 varchar(255),
+--   Custom2 varchar(255),
+--   Custom3 varchar(255),
+--   primary key (Client_Org_ID, Practice_Type_ID), --JS added Client_Org_ID
+--   Constraint CRM_UniquePracticeNames UNIQUE (Client_Org_ID, Practice_Type_ID) -- DC revised constraint name
+-- );
+-- M7 added.
 CREATE TABLE IF NOT EXISTS CRM_PracticeTypes (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Practice_Type_ID int not null, -- Code
-  Practice_Type_Name varchar(255), -- Code
+  Practice_Type_ID int not null,
+  Practice_Type_Name varchar(255) not null,
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
-  primary key (Client_Org_ID, Practice_Type_ID), --JS added Client_Org_ID
-  Constraint CRM_UniquePracticeNames UNIQUE (Client_Org_ID, Practice_Type_Name) -- DC revised constraint name
+  primary key (Client_Org_ID, Practice_Type_ID), -- M7 revised
+  Constraint CRM_UniquePracticeNames UNIQUE (Client_Org_ID, Practice_Type_ID) -- DC revised constraint name
 );
 
---DC changed the place of the below table for referential integrity
--- ** OK MOSTLY
+-- --*******************************
 CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Practice_Type_ID varchar(255), --JS removed, DC added back, revised from Code
-  Case_Type_ID int, --JS revised from ID ***** Id
+  Practice_Type_ID varchar(255) not null, --******************************* Bunun refer ettği tablo practice type null olamazken bu oluyor check.|| JS removed, DC added back, revised from Code -- Bu null ikeen referr ettiği tablonun practice_type_id'si null olamaz diyor ve hata veriyor.
+  Case_Type_ID int not null, --JS revised from ID ***** Id
   Case_Type_Name varchar(255), --JS revised from TypeName *****
   Case_Type_NameShort varchar(255), --JS revised from TypeNameShort
   IsMassTort boolean,
-  --CustomQuestionOrder varchar(255) --JS removed
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
@@ -593,31 +607,31 @@ CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   Constraint CRM_UniqueCaseTypes UNIQUE (Client_Org_ID, Practice_Type_ID, Case_Type_Name) -- DC added, revised the constraint name
   );
 
---DC changed the place of the below table for referential integrity
+CREATE TABLE IF NOT EXISTS CRM_Referrals (
+  Truve_Org_ID int not null,
+  Client_Org_ID varchar(255) not null,
+  Referral_ID  int, --revised from ID
+  Referral_Name varchar(255), --revised from name
+  Referral_Type varchar(255), --revised from Type
+  --Code varchar(255), --JS removed
+  If_Case_Referred_Out Boolean, --revised from Outgoing
+  Custom1 varchar(255), --JS added
+  Custom2 varchar(255), --JS added
+  Custom3 varchar(255), --JS added
+  primary key(Client_Org_ID, Referral_ID)
+  );
+  
+ -- Leadraw ve LeadDetail
  CREATE TABLE IF NOT EXISTS CRM_Leads ( --JS Revised from LeadRow
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Lead_Id int, --Revised from ID
-  Contact_ID int, --JS added
-  Practice_Type_ID int, --DC added, it should be the same as Code in CRM_CaseTypes and CRM_PracticeTypes -- ***** PRACTİCE TYPE ID****** THE CODE IN CRM_CASETYPES is 18764 whic is project type id
-  --PhoneNumber varchar(255),--JS Removed
-  --MobilePhone varchar(255),--JS Removed
-  --HomePhone varchar(255),--JS Removed
-  --WorkPhone varchar(255),--JS Removed
-  --PreferredContactMethod varchar(255),--JS Removed
-  --Email varchar(255),--JS Removed
-  --FirstName varchar(255),--JS Removed
-  --LastName varchar(255),--JS Removed
-  --StatusId int, --JS Removed
-  --StatusName varchar(255),--JS Removed
-  --SubStatusId varchar(255),--JS Removed
-  --SubStatusName varchar(255),--JS Removed
-  Case_Type_ID int, -- No case tpye id only include case type name -- Check foreing keys
-  --Code varchar(255),--JS Removed
-  --LastStatusChangeDate timestamp --JS removed
-  Date_of_Incident date, --JS added -- ***** NOT IN LEAD_ROW TABLE 
-  Lead_Create_date date, --JS added -- ***** NOT IN LEAD_ROW TABLE
-  Created_By_ID int, --JS added ******NOT IN LEAD_ROW TABLE
+  Contact_ID int,  --JS added
+  Practice_Type_ID int, -- PracticeAreaCode     M7 Updated--DC added, it should be the same as Code in CRM_CaseTypes and CRM_PracticeTypes -- ***** PRACTİCE TYPE ID****** THE CODE IN CRM_CASETYPES is 18764 whic is project type id
+  Case_Type_ID int, -- PracticeAreaId, currently getting fro mPracticeAreacolumn/// There is no case typa id in RAW. WE can fill blank but should we skip case_type_name
+  Date_of_Incident date, -- IncidentDate   M7 Updated--  JS added  
+  Lead_Create_date date, -- CreatedDate In leaddetail table M7 Updated
+  Created_By_ID int, --  Creator M7 Updated-- JS added 
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
@@ -626,9 +640,9 @@ CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   foreign key (Client_Org_ID, Practice_Type_ID, Case_Type_ID) references CRM_CaseTypes (Client_Org_ID, Practice_Type_ID, Case_Type_ID), --JS added, DC added Practice_Type_ID too
   foreign key (Client_Org_ID, Practice_Type_ID) references CRM_PracticeTypes (Client_Org_ID, Practice_Type_ID), --DC added
   foreign key (Client_Org_ID, Created_By_ID) references CRM_Users (Client_Org_ID, User_ID)
-   );
+  );
 
--- JS added below table ***** You can get from LeadRaw
+
   CREATE TABLE IF NOT EXISTS CRM_StatusChanges (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
@@ -643,12 +657,12 @@ CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   );
 
 
-  -- *******
+
   CREATE TABLE IF NOT EXISTS CRM_LeadSource ( -- ***** IN RAW: We only have lead source_name column in this table. Are we gonna get lead_detail again?
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Lead_Source_ID int, --revised from ID ***** FROM WHERE?
-  Lead_Source_Name varchar(255), --revised from SourceName
+  Lead_Source_ID int, --revised from ID //  M7 can get from leadsources
+  Lead_Source_Name varchar(255), --revised from SourceName //  from opport/leaddetails_leadsorces
   Lead_Source_Type varchar(255), --JS added
   Lead_Source_Subtype varchar(255), --JS added
   Custom1 varchar(255), --JS added
@@ -657,95 +671,47 @@ CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   primary key (Client_Org_ID, Lead_Source_ID)
   );
 
-  -- DC moved over CRM_LeadDetail for referential integrity ***** OK ******
-CREATE TABLE IF NOT EXISTS CRM_Referrals (
-  Truve_Org_ID int not null,
-  Client_Org_ID varchar(255) not null,
-  Referral_ID int, --revised from ID
-  Referral_Name varchar(255), --revised from name
-  Referral_Type varchar(255), --revised from Type
-  --Code varchar(255), --JS removed
-  If_Case_Referred_Out Boolean, --revised from Outgoing
-  Custom1 varchar(255), --JS added
-  Custom2 varchar(255), --JS added
-  Custom3 varchar(255), --JS added
-  primary key(Client_Org_ID, Referral_ID)
-  );
+  -- DC moved over CRM_LeadDetail for referential integrity OK ******
 
     
---Jay removed below table
+--Jay removed below table/ What is the source OPPORT?
+-- LeadDetail, Opportunity, Statuses, LeadSources, Users
   CREATE TABLE IF NOT EXISTS CRM_LeadDetail ( --Revised from CRM_Opportunities
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Opportunity_ID int, --JS revised from ID
+  Opportunity_ID int, --JS revised from ID -- 
   Lead_ID int, --JS added
-  --FirstName varchar(255),--JS Removed
-  --MiddleName varchar(255),--JS Removed
-  --LastName varchar(255),--JS Removed
-  --Address1 varchar(255),--JS Removed
-  --Address2 varchar(255),--JS Removed
-  --City varchar(255),--JS Removed
-  --State varchar(255),--JS Removed
-  --Zip varchar(255),--JS Removed
-  --HomePhone varchar(255),--JS Removed
-  --WorkPhone varchar(255),--JS Removed
-  --MobilePhone varchar(255),--JS Removed
-  --Email varchar(255),--JS Removed
-  --Gender varchar(255),--JS Removed
-  --Language varchar(255),--JS Removed
-  --Birthdate timestamp,--JS Removed
-  --PreferredContactMethod varchar(255),--JS Removed
-  Status_ID int,  -- ***** ONLY HAVE STATUS NAME NEED TO JOIN ???
-  --LeadStatus varchar(255),--JS Removed
-  --SubStatus varchar(255),--JS Removed
-  --Office varchar(255),--JS Removed
-  Lead_Source_ID int, -- ****** FROM WHERE?
-  --MarketingSource varchar(255),--JS Removed
-  --MarketingSourceDetails varchar(255),--JS Removed
-  --ContactSource varchar(255),--JS Removed
-  Summary varchar(max),
-  InjuryInformation varchar(255),
-  --IncidentDate timestamp,--JS Removed
-  --CreatedDate timestamp,--JS Removed
-  --LeadId int,--JS Removed
+  Status_ID int, --Need to join two table lead_detail_statuses(name) column and CRM_Status status_name column  -- ******ONLY STATUS_NAME SHOULD WE IGNORE Status_Name ?
+  Lead_Source_ID int, -- Need to join two more tables LeadDetail ContactSource needs to be join LeadSources SourceName ON  ContactSource=LeadSource GET LEAD ID  ******
+  Summary varchar(max), --LeadDetail Summary
+  InjuryInformation varchar(255), -- LD InjuryInformation
   Notes varchar(max), --revised from note
-  Referred_By_ID int, -- revised from Referred by
-  Referral_ID int, -- DC added   ***** From wherE?
-  Severity_Level varchar(255),
-  County_of_Event varchar(255), --revised from County
-  --AppointmentLocation varchar(255),--JS Removed
-  --AppointmentScheduledDate timestamp,--JS Removed
-  --Code varchar(255),--JS Removed
-  --ReferringUrl varchar(255),--JS Removed
-  --CurrentUrl varchar(255),--JS Removed
-  --UTM varchar(255),--JS Removed
-  --ClientId varchar(255),--JS Removed
-  --ClickId varchar(255),--JS Removed
-  --Keywords varchar(255),--JS Removed
-  --Campaign varchar(255),--JS Removed
-  If_Processed boolean, --revised from processed
-  Processed_Date date, --revised from ProcessedDate
-  Processed_By_ID int, --JS revised from ProcessedbyName --> Extract processed and then id***
-  --OpportunityTypeId int,--JS Removed
-  DisregardReason varchar(255),
-  --IsBeingEdited boolean,--JS Removed
-  --CustomFields varchar(255),--JS Removed
-  If_Assigned boolean, --JS added
-  Assigned_To_ID int, --revised from AssignedTo
-  --ProcessedBy varchar(255),--JS Removed
-  Rejected_date date, --JS added
-  Referred_date date, --JS added
-  Signed_Up_Date date, 
-  Case_Close_Date date,
-  Lost_Date date,
-  Paralegal_ID int,
-  --Investigator varchar(255),
-  Attorney_ID int,
-  If_Qualified_Lead boolean, -- DC added, moved from CRM_Leads
-  Were_You_At_Fault boolean, -- DC added, wereyouatfault
-  Anyone_Else_In_Vehicle boolean, -- DC added, wasanyoneelseinthevehiclewithyou
-  Treatment_At_Hospital varchar(255), -- DC added treatmentathospital
-  If_Seek_Any_Other_Treatment boolean, -- DC added, didyouseekanyotherdoctorstreatment
+  Referred_By_ID int, -- Lead ReferredBy -- revised from Referred by
+  -- Referral_ID int, -- This is wrong Referral_ID Should match CRM_LeadDetail.Referred_By_ID and CRM.Referral.ReferralId  I've tested with values. DOLMAN LAW GROUPS
+  Severity_Level varchar(255), -- Lead Detail from SeverityLevel
+  County_of_Event varchar(255), -- Opport from County //    revised from County ******* COUNTY FROM CONTACT json FIELD???????
+  If_Processed boolean, --Opport from Processed
+  Processed_Date date, --Opport from ProcessedDate
+  -- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- 
+  Processed_By_ID int, -- Join on email. Processed by Id column is wrong always comes 0 . I dropped By_Id constraints and column, added ProcessedByName column
+  -- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- 
+  DisregardReason varchar(255), -- Opport from DisregardReason
+  -- *************
+  -- If_Assigned boolean, -- M7 - No such column, we can handle manuelly by adding Spark function to check Assigned column filled or not
+  Assigned_To_ID int, -- 
+  -- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- -------- 
+  Rejected_date date, -- Leaddetail from RejectedDate --JS added
+  Referred_date date, --LeadDetail from ReferredDate -- JS added
+  Signed_Up_Date date, -- LeadDetail from SignedUpDate
+  Case_Close_Date date,-- LeadDetail from CaseClosedDate
+  Lost_Date date,-- LeadDetail from LostDate
+  Paralegal_ID int,-- LeadDetail from Paralegal
+  Attorney_ID int,-- LeadDetail from Attorney
+  If_Qualified_Lead boolean, -- -- LeadDetail from QualifiedLead
+  Were_You_At_Fault boolean, -- -- LeadDetail from WereYouAtFault
+  Anyone_Else_In_Vehicle boolean, -- -- LeadDetail from Wasanyoneelseinthevehiclewithyou
+  Treatment_At_Hospital varchar(255), -- -- LeadDetail from TreatmentatHospital
+  If_Seek_Any_Other_Treatment boolean, -- LeadDetail from Didyouseekanyotherdoctorstreatment" 
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
@@ -753,8 +719,9 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
   foreign key (Client_Org_ID, Lead_ID) references CRM_Leads(Client_Org_ID, Lead_ID),
   foreign key (Client_Org_ID, Status_ID) references CRM_Status (Client_Org_ID, Status_ID),
   foreign key (Client_Org_ID, Lead_Source_ID) references CRM_LeadSource (Client_Org_ID, Lead_Source_ID),
-  foreign key (Client_Org_ID, Referred_By_ID) references CRM_Contacts(Client_Org_ID, Contact_ID),
-  foreign key (Client_Org_ID, Referral_ID) references CRM_Referrals (Client_Org_ID, Referral_ID), -- DC added
+  -- foreign key (Client_Org_ID, Referred_By_ID) references CRM_Contacts(Client_Org_ID, Contact_ID), -- , deleted by M7
+  -- foreign key (Client_Org_ID, Referral_ID) references CRM_Referrals (Client_Org_ID, Referral_ID), -- DC added, deleted by M7
+  foreign key (Client_Org_ID, Referred_By_ID) references CRM_Referrals(Client_Org_ID, Referral_ID), -- Aded by M7
   foreign key (Client_Org_ID, Processed_By_ID) references CRM_Users(Client_Org_ID, User_ID),
   foreign key (Client_Org_ID, Assigned_To_ID) references CRM_Users(Client_Org_ID, User_ID),
   foreign key (Client_Org_ID, Paralegal_ID) references CRM_Users(Client_Org_ID, User_ID),
