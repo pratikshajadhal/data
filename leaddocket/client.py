@@ -32,8 +32,8 @@ class LeadDocketClient(object):
             logger.warn(f"(-) failed endpoint is: {end_point} ")
             if response.status_code == 429:
                 logger.warn("(-) status 429, sleeping 30 secs")
-                time.sleep(15)
-                response = requests.get(url, headers=self.headers, params=query_param)
+                time.sleep(25)
+                response = self.make_request(end_point=end_point, query_param=query_param)
             elif response.status_code == 404:
                 logger.warn(response.text)
                 return None
@@ -65,6 +65,7 @@ class LeadDocketClient(object):
 
     def get_lookups(self, lookup_type:str):
         endpoint = f"/api/lookups"
+        print(f"type is: {lookup_type}")
         query_param = {"type": lookup_type}
         logger.info(f"Given Param is: {query_param}")
         return self.make_request(end_point = endpoint, query_param=query_param)
