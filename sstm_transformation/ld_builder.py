@@ -8,12 +8,44 @@ import json
 from pyspark.sql import SparkSession
 from pyspark.sql import DataFrame as SP_DATAFRAME
 from pyspark.sql.types import *
-from pyspark.sql.functions import split, col, explode, lit, monotonically_increasing_id
+from pyspark.sql.functions import split, col, explode, lit, monotonically_increasing_id, udf
 from pyspark.sql import functions as F
-from pyspark.sql import Window 
 
 
 from sstm_transformation.datamodel import SSTM, TSMTableField
+
+def deDupeDfCols(df, separator=''):
+    newcols = []
+
+    for col in df.columns:
+        if col not in newcols:
+            newcols.append(col)
+        else:
+            for i in range(2, 1000):
+                if (col + separator + str(i)) not in newcols:
+                    newcols.append(col + separator + str(i))
+                    break
+
+    return df.toDF(*newcols)
+
+#@staticmethod but Spark gives error.
+def split_substatuses(custom: str, substatus_type: str):
+    if custom == '[]':
+        return ""
+
+    ids = list()
+    names = list()
+    arr = custom.split("},")
+    for each_arr in arr:
+        sub_spl = each_arr.split(",")
+        id = str(sub_spl[0].split("'Id': ")[1])
+        name = str(sub_spl[1].split("'SubStatusName': ")[1].replace("'", "")).replace("}]", "")
+        
+        ids.append(id)
+        names.append(name)
+
+    return ", ".join(ids) if  substatus_type == 'SubStatusId'  else ", ".join(names)
+
 
 class LDBuilder(metaclass=abc.ABCMeta):
 
@@ -45,7 +77,6 @@ class LDBuilder(metaclass=abc.ABCMeta):
             dtype = self._get_dtype_mapping(field.data_type)
             df = df.withColumn(field.name, df[field.name].cast(dtype))
 
-        df.show(n=100)
 
         return df
         
@@ -53,6 +84,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
     def _get_dtype_mapping(self, data_type):
         d_map = {
             "string": StringType(),
+            "str": StringType(),
             "date": DateType(),
             "int": IntegerType(),
             "timestamp": TimestampType(),
@@ -107,124 +139,100 @@ class LDBuilder(metaclass=abc.ABCMeta):
         table_name = "CRM_Contacts"
         df = self.transform(df, table_name)
         df.show(100)
+        df.printSchema()
 
         return {table_name : df}
 
-    def build_leaddetail(self, df: SP_DATAFRAME):
-        table_name = "CRM_LeadDetail"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
+    def build_leads(self, df: SP_DATAFRAME):
+        table_name = "CRM_Leads"
+        df = self.transform(df, table_name)
+
+        # Not null and PK constraints
+        df = df.na.drop(subset=["Client_Org_ID", "Client_Org_ID"])
+        df = df.dropDuplicates(["Client_Org_ID","Lead_ID"])
         
-        table_fields = self._get_table_config(table_name)
-
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
-
+        df.show()
         return {table_name : df}
-
-    def build_leadraw(self, df: SP_DATAFRAME):
-        table_name = "CRM_LeadRow"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         
-        table_fields = self._get_table_config(table_name)
-
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
-
-        return {table_name : df}
 
     def build_leadsource(self, df: SP_DATAFRAME):
         table_name = "CRM_LeadSource"
-        df = df.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
-        df = df.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
+        df = self.transform(df, table_name)
+
+        # Not null and PK constraints
+        df = df.na.drop(subset=["Client_Org_ID", "Lead_Source_ID"])
+
+        df = df.dropDuplicates(["Client_Org_ID","Lead_Source_ID"])
         
-        table_fields = self._get_table_config(table_name)
-
-        
-        for field in table_fields:
-            if field.transform and field.transform.type == "data":
-                df = df.withColumn(field.name, df[field.transform.source_field])
-            elif not field.transform:
-                df = df.withColumn(field.name, lit(None).cast(StringType()))
-
-
-        df = self.add_default_columns(df)
-        col_list = [field.name for field in table_fields]
-        
-        df = df.select(*col_list)
-
-        df.show(n=100)
-        
-
-        for field in table_fields:
-            cls = self._get_dtype_mapping(field.data_type)
-            df = df.withColumn(field.name, df[field.name].cast(cls))
-
+        df.show()
         return {table_name : df}
 
     def build_casetype(self, df: SP_DATAFRAME):
         table_name = "CRM_CaseTypes"
         df = self.transform(df=df, table_name=table_name)
+
+        # Not null and PK constraints
+        df = df.na.drop(subset=["Client_Org_ID", "Truve_Org_ID", "Practice_Type_ID", "Case_Type_ID"])
+        df = df.dropDuplicates(["Client_Org_ID","Practice_Type_ID", "Case_Type_ID"])
+        
+        df.show(100)
         return {table_name : df}
 
     def build_opportunities(self, df: SP_DATAFRAME):
         table_name = "CRM_Opportunities"
         df = self.transform(df=df, table_name=table_name)
+        df.show(100)
         return {table_name : df}
 
     def build_referrals(self, df: SP_DATAFRAME):
         table_name = "CRM_Referrals"
         df = self.transform(df=df, table_name=table_name)
+
+        # Not null and PK constraints
+        df = df.na.drop(subset=["Truve_Org_ID", "Client_Org_ID"])
+        df = df.dropDuplicates(["Client_Org_ID","Referral_ID"])
+
+
+        df.show(100)
+
         return {table_name : df}
+
 
     def build_statuses(self, df: SP_DATAFRAME):
         table_name = "CRM_Status"
         df = self.transform(df=df, table_name=table_name)
+
+        get_substatus_ids = udf(lambda z: split_substatuses(z, 'SubStatusId'))
+        get_substatus_names = udf(lambda z: split_substatuses(z, "SubStatusName"))
+
+        df = df.withColumn("Substatus_Id", get_substatus_ids(col("Substatus_Id")))
+        df = df.withColumn("Substatus_Name", get_substatus_names(col("Substatus_Name")))
+
+        df.show()
         return {table_name : df}
 
     def build_status_changes(self, df: SP_DATAFRAME):
         table_name = "CRM_StatusChanges"
         df = self.transform(df=df, table_name=table_name)
+
+        # Not null and PK constraints
+        df = df.na.drop(subset=["Client_Org_ID", "Truve_Org_ID", "Lead_ID", "Status_ID", "Status_Change_Date"])
+
+        df.show()
+        df.printSchema()
         return {table_name : df}
 
     def build_practice_type(self, df: SP_DATAFRAME):
         table_name = "CRM_PracticeTypes"
         df = self.transform(df=df, table_name=table_name)
+        
+                
+        # Not null and PK constraints# Not null constraint
+        df = df.na.drop(subset=["Client_Org_ID", "Truve_Org_ID","Practice_Type_ID","Practice_Type_Name"])
+        df = df.distinct()
+        
+        df.show(100)
+        df.printSchema()
         return {table_name : df}
 
     def build_users(self, df: SP_DATAFRAME):
@@ -232,65 +240,180 @@ class LDBuilder(metaclass=abc.ABCMeta):
         df = self.transform(df=df, table_name=table_name)
         df = df.withColumn("Full_Name", F.concat_ws(' ', df.First_Name, df.Last_Name))
         df.show(100)
+        df.printSchema()
 
         return {table_name : df}
 
+    def build_leaddetail(
+        self,
+        df_ld: SP_DATAFRAME, 
+        df_opp: SP_DATAFRAME,
+        df_statuses: SP_DATAFRAME,
+        df_ldsources: SP_DATAFRAME,
+        df_users: SP_DATAFRAME,
+        df_referral: SP_DATAFRAME
+    ) -> Dict:
+        """Builds CRM_LeadDetail dataframes using 5 different df
 
-if __name__ == "__main__":
-    print("Hi")
-    spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
-    builder = LDBuilder("ld_sstm.yaml", spark=spark)
+        Args:
+            df_ld (SP_DATAFRAME): _description_
+            df_opp (SP_DATAFRAME): _description_
+            df_statuses (SP_DATAFRAME): _description_
+            df_ldsources (SP_DATAFRAME): _description_
+            df_users (SP_DATAFRAME): _description_
+            df_referral
 
-    ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
-    ld_users_df = builder.build_statuses(df=ld_users_df)
-    (ld_users_df["LD_Statuses"]).printSchema()
-    
-    '''
-    ld_contact_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_contact.parquet")
-    ld_contact_df = builder.build_contact(df=ld_contact_df)
-    (ld_contact_df["LD_Contact"]).printSchema()
-    '''
+        Returns:
+            Dict: _description_
+        """
+        table_name = "CRM_LeadDetail"
+        
+        # Modify column names to prevent naming conflict
+        df_opp = df_opp.toDF(*[f'opp_{c}' for c in df_opp.columns])
+        df_ld = df_ld.toDF(*[f'ld_{c}' for c in df_ld.columns])
+        df_statuses = df_statuses.toDF(*[f'statuses_{c}' for c in df_statuses.columns])
+        df_ldsources = df_ldsources.toDF(*[f'sources_{c}' for c in df_ldsources.columns])
+        df_users = df_users.toDF(*[f'users_{c}' for c in df_users.columns])
+        df_referral = df_referral.toDF(*[f'referral_{c}' for c in df_referral.columns])
+        df_referral.printSchema()
 
-    '''
-    ld_leaddetail_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_leaddetail.parquet")
-    ld_leaddetail_df = builder.build_leaddetail(df=ld_leaddetail_df)
-    (ld_leaddetail_df["LD_LeadDetail"]).printSchema()
-    '''
+        # Joins tables on by on respectively: opport - lead - statuses - sources - users
+        joined1 = df_opp.join(df_ld,df_opp.opp_Id ==  df_ld.ld_Opportunity,"left")
+        
+        joined1_0 = joined1\
+                    .join(df_referral,joined1.ld_ReferredBy ==  df_referral.referral_Id,"left")\
+                    .select(joined1['*'], df_referral['referral_Id'].alias('Referred_By_ID')) # get statuses_Id
+        joined2 = joined1_0\
+                    .join(df_statuses,joined1_0.ld_Status ==  df_statuses.statuses_Status,"left")\
+                    .select(joined1_0['*'], df_statuses['statuses_Id'].alias('Status_ID')) # get statuses_Id
+        joined3 = joined2\
+                    .join(df_ldsources,joined2.ld_ContactSource ==  df_ldsources.sources_SourceName,"left")\
+                    .select(joined2['*'], df_ldsources['sources_Id'].alias('Lead_Source_ID')) # get sources_Id
+        joined4 = joined3\
+                    .join(df_users,joined3.opp_ProcessedBy ==  df_users.users_Email,"left")\
+                    .select(joined3['*'], df_users['users_Id'].alias('Processed_By_ID')) # get users_Id
+        joined5 = joined4\
+                    .join(df_users,joined4.opp_AssignedTo ==  df_users.users_Email,"left")\
+                    .select(joined4['*'], df_users['users_Id'].alias('Assigned_To_ID')) # get users_Id
+        
+        # Add default columns        
+        joined5 = joined5.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        joined5 = joined5.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
+        # Specify columns to get
+        columns = ["Truve_Org_ID", "Client_Org_ID",
+                   "opp_Id", "opp_LeadId", "Status_ID", 
+                   "Lead_Source_ID", "opp_Summary",
+                   "ld_InjuryInformation", "opp_Note",
+                   "ld_ReferredBy", "ld_SeverityLevel", "opp_County", "opp_Processed", "opp_ProcessedDate",
+                   "Processed_By_ID", "opp_DisregardReason", "Assigned_To_ID",
+                   "ld_RejectedDate", "ld_ReferredDate", "ld_SignedUpDate", "ld_CaseClosedDate",
+                   "ld_LostDate", "ld_Paralegal", "ld_Attorney",
+                   "ld_QualifiedLead", "ld_WereYouAtFault",
+                   "ld_Wasanyoneelseinthevehiclewithyou", "ld_TreatmentatHospital", "ld_Didyouseekanyotherdoctorstreatment"
+                   ]
+        
+        final_df = joined5.select(*columns)
+        table_fields = self._get_table_config(table_name)
+        
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                final_df = final_df.withColumn(field.name, final_df[field.transform.source_field])
+            elif not field.transform:
+                final_df = final_df.withColumn(field.name, lit(None).cast(StringType()))
+            
+        
+        col_list = [field.name for field in table_fields]
+        
+        final_df = final_df.select(*col_list)
 
-    '''
-    ld_leadraw_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_leadrow.parquet")
-    ld_leadraw_df = builder.build_leadraw(df=ld_leadraw_df)
-    (ld_leadraw_df["LD_LeadRow"]).printSchema()
-    '''
+        for field in table_fields:
+            dtype = self._get_dtype_mapping(field.data_type)
+            final_df = final_df.withColumn(field.name, final_df[field.name].cast(dtype))
 
-    '''
-    ld_leadsource_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_leadsource.parquet")
-    ld_leadsource_df = builder.build_leadsource(df=ld_leadsource_df)
-    (ld_leadsource_df["LD_LeadSource"]).printSchema()
-    '''
+        # final_df.show()
+        
+        # final_df \
+        #     .write.option("header",True) \
+        #     .csv("temp_data/CSV_OUTPUT")
+        final_df.printSchema()
+        final_df.select("Referred_By_ID").show()
+        return {table_name : final_df}
 
-    '''
-    ld_casetype_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_casetype.parquet")
-    ld_casetype_df = builder.build_casetype(df=ld_casetype_df)
-    (ld_casetype_df["LD_CaseType"]).printSchema()
-    '''
 
-    '''
-    ld_opport_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_opportunities.parquet")
-    ld_opport_df = builder.build_opportunities(df=ld_opport_df)
-    (ld_opport_df["LD_Opportunities"]).printSchema()
-    '''
+"""
+# - - - Test Local spark
+from sstm_transformation.ld_builder import LDBuilder
+from pyspark.sql import SparkSession
+spark = SparkSession \
+    .builder \
+    .config("spark.debug.maxToStringFields", 2000) \
+    .config('spark.ui.port', 8284) \
+    .appName('TSMTransformation') \
+    .getOrCreate()
 
-    '''
-    ld_referrals_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_referrals.parquet")
-    ld_referrals_df = builder.build_referrals(df=ld_referrals_df)
-    (ld_referrals_df["LD_Referrals"]).printSchema()
-    '''
+builder = LDBuilder("confs/ld_sstm.yaml", spark=spark)
 
-    '''
-    ld_statuses_df = spark.read.parquet("/home/ubuntu/freelancer/scylla/data-api/sstm_input_data/ld_statuses.parquet")
-    ld_statuses_df = builder.build_statuses(df=ld_statuses_df)
-    (ld_statuses_df["LD_Statuses"]).printSchema()
-    '''
-    #bulk_LeadSource
+#     ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+#     ld_users_df = builder.build_users(df=ld_users_df)
+#     print(ld_users_df)
+#     (ld_users_df["LD_Statuses"]).printSchema()
 
+#     # - - -
+
+#     ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
+#     ld_contacts = builder.build_contact(df=ld_contacts)
+#     print(ld_contacts)
+
+#     # - - -
+
+#     ld_statuses_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
+#     ld_statuses_df = builder.build_statuses(df=ld_statuses_df)
+#     print(ld_statuses_df)
+
+#     # - - -
+
+#     ld_casetype_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
+#     ld_casetype_df = builder.build_casetype(df=ld_casetype_df)
+#     print(ld_casetype_df)
+
+#     # - - -
+
+#     ld_practice_types = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
+#     ld_practice_types = builder.build_practice_type(df=ld_practice_types)
+#     print(ld_practice_types)
+
+#     # # - - -
+
+#     ld_referral_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
+#     ld_referral_df = builder.build_referrals(df=ld_referral_df)
+#     print(ld_referral_df)
+
+
+# # - - -
+# ld_leads = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+# ld_leads = builder.build_leads(df=ld_leads)
+# print(ld_leads)
+
+# #     # # - - -
+#     ld_status_changes = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_raw\*.parquet")
+#     ld_status_changes = builder.build_status_changes(df=ld_status_changes)
+#     print(ld_status_changes)
+
+
+# - - -
+# leadsource = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
+# leadsource = builder.build_leadsource(df=leadsource)
+# print(leadsource)
+
+# - - -
+ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+ld_opport = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\opport\*.parquet")
+ld_statuses = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
+ld_source = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
+ld_users = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+ld_referral = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
+
+builder.build_leaddetail(ld_detail, ld_opport, ld_statuses, ld_source, ld_users, ld_referral)
+
+
+"""
