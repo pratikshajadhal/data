@@ -262,6 +262,14 @@ tsm:
       transform:
         source: etl
         type: org_id
+    - name: Lead_ID
+      data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_Id
+        type: data
     - name: Opportunity_ID
       data_type: int
       transform:
@@ -269,14 +277,6 @@ tsm:
         source_entity_type: core
         source_entity_name: opportunity
         source_field: opp_Id
-        type: data
-    - name: Lead_ID
-      data_type: int
-      transform:
-        source: etl
-        source_entity_type: core
-        source_entity_name: opportunity
-        source_field: opp_LeadId
         type: data
     - name: Status_ID
       data_type: int

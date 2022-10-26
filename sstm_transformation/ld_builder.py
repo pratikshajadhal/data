@@ -269,16 +269,16 @@ class LDBuilder(metaclass=abc.ABCMeta):
         table_name = "CRM_LeadDetail"
         
         # Modify column names to prevent naming conflict
-        df_opp = df_opp.toDF(*[f'opp_{c}' for c in df_opp.columns])
         df_ld = df_ld.toDF(*[f'ld_{c}' for c in df_ld.columns])
+        df_opp = df_opp.toDF(*[f'opp_{c}' for c in df_opp.columns])
+        df_opp.printSchema()
         df_statuses = df_statuses.toDF(*[f'statuses_{c}' for c in df_statuses.columns])
         df_ldsources = df_ldsources.toDF(*[f'sources_{c}' for c in df_ldsources.columns])
         df_users = df_users.toDF(*[f'users_{c}' for c in df_users.columns])
         df_referral = df_referral.toDF(*[f'referral_{c}' for c in df_referral.columns])
-        df_referral.printSchema()
 
         # Joins tables on by on respectively: opport - lead - statuses - sources - users
-        joined1 = df_opp.join(df_ld,df_opp.opp_Id ==  df_ld.ld_Opportunity,"left")
+        joined1 = df_ld.join(df_opp, df_ld.ld_Opportunity == df_opp.opp_Id ,"left")
         
         joined1_0 = joined1\
                     .join(df_referral,joined1.ld_ReferredBy ==  df_referral.referral_Id,"left")\
@@ -301,7 +301,7 @@ class LDBuilder(metaclass=abc.ABCMeta):
         joined5 = joined5.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
         # Specify columns to get
         columns = ["Truve_Org_ID", "Client_Org_ID",
-                   "opp_Id", "opp_LeadId", "Status_ID", 
+                   "ld_Id", "opp_Id", "Status_ID", 
                    "Lead_Source_ID", "opp_Summary",
                    "ld_InjuryInformation", "opp_Note",
                    "ld_ReferredBy", "ld_SeverityLevel", "opp_County", "opp_Processed", "opp_ProcessedDate",
@@ -336,84 +336,87 @@ class LDBuilder(metaclass=abc.ABCMeta):
         #     .write.option("header",True) \
         #     .csv("temp_data/CSV_OUTPUT")
         final_df.printSchema()
-        final_df.select("Referred_By_ID").show()
+        final_df.select(["Lead_ID", "Opportunity_ID", "Status_ID"]).show()
         return {table_name : final_df}
 
 
-"""
-# - - - Test Local spark
-from sstm_transformation.ld_builder import LDBuilder
-from pyspark.sql import SparkSession
-spark = SparkSession \
-    .builder \
-    .config("spark.debug.maxToStringFields", 2000) \
-    .config('spark.ui.port', 8284) \
-    .appName('TSMTransformation') \
-    .getOrCreate()
 
-builder = LDBuilder("confs/ld_sstm.yaml", spark=spark)
 
-#     ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
-#     ld_users_df = builder.build_users(df=ld_users_df)
-#     print(ld_users_df)
-#     (ld_users_df["LD_Statuses"]).printSchema()
 
-#     # - - -
+# '''
+# # - - - Test Local spark
+# from sstm_transformation.ld_builder import LDBuilder
+# from pyspark.sql import SparkSession
+# spark = SparkSession \
+#     .builder \
+#     .config("spark.debug.maxToStringFields", 2000) \
+#     .config('spark.ui.port', 8284) \
+#     .appName('TSMTransformation') \
+#     .getOrCreate()
 
-#     ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
-#     ld_contacts = builder.build_contact(df=ld_contacts)
-#     print(ld_contacts)
+# builder = LDBuilder("confs/ld_sstm.yaml", spark=spark)
 
-#     # - - -
+# #     ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+# #     ld_users_df = builder.build_users(df=ld_users_df)
+# #     print(ld_users_df)
+# #     (ld_users_df["LD_Statuses"]).printSchema()
 
-#     ld_statuses_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
-#     ld_statuses_df = builder.build_statuses(df=ld_statuses_df)
-#     print(ld_statuses_df)
+# #     # - - -
 
-#     # - - -
+# #     ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
+# #     ld_contacts = builder.build_contact(df=ld_contacts)
+# #     print(ld_contacts)
 
-#     ld_casetype_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
-#     ld_casetype_df = builder.build_casetype(df=ld_casetype_df)
-#     print(ld_casetype_df)
+# #     # - - -
 
-#     # - - -
+# #     ld_statuses_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
+# #     ld_statuses_df = builder.build_statuses(df=ld_statuses_df)
+# #     print(ld_statuses_df)
 
-#     ld_practice_types = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
-#     ld_practice_types = builder.build_practice_type(df=ld_practice_types)
-#     print(ld_practice_types)
+# #     # - - -
 
-#     # # - - -
+# #     ld_casetype_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
+# #     ld_casetype_df = builder.build_casetype(df=ld_casetype_df)
+# #     print(ld_casetype_df)
 
-#     ld_referral_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
-#     ld_referral_df = builder.build_referrals(df=ld_referral_df)
-#     print(ld_referral_df)
+# #     # - - -
+
+# #     ld_practice_types = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\casetype\*.parquet")
+# #     ld_practice_types = builder.build_practice_type(df=ld_practice_types)
+# #     print(ld_practice_types)
+
+# #     # # - - -
+
+# #     ld_referral_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
+# #     ld_referral_df = builder.build_referrals(df=ld_referral_df)
+# #     print(ld_referral_df)
+
+
+# # # - - -
+# # ld_leads = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+# # ld_leads = builder.build_leads(df=ld_leads)
+# # print(ld_leads)
+
+# # #     # # - - -
+# #     ld_status_changes = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_raw\*.parquet")
+# #     ld_status_changes = builder.build_status_changes(df=ld_status_changes)
+# #     print(ld_status_changes)
 
 
 # # - - -
-# ld_leads = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
-# ld_leads = builder.build_leads(df=ld_leads)
-# print(ld_leads)
+# # leadsource = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
+# # leadsource = builder.build_leadsource(df=leadsource)
+# # print(leadsource)
 
-# #     # # - - -
-#     ld_status_changes = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_raw\*.parquet")
-#     ld_status_changes = builder.build_status_changes(df=ld_status_changes)
-#     print(ld_status_changes)
+# # - - -
+# ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+# ld_opport = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\opport\*.parquet")
+# ld_statuses = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
+# ld_source = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
+# ld_users = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+# ld_referral = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
 
+# builder.build_leaddetail(ld_detail, ld_opport, ld_statuses, ld_source, ld_users, ld_referral)
 
-# - - -
-# leadsource = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
-# leadsource = builder.build_leadsource(df=leadsource)
-# print(leadsource)
-
-# - - -
-ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
-ld_opport = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\opport\*.parquet")
-ld_statuses = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
-ld_source = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
-ld_users = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
-ld_referral = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
-
-builder.build_leaddetail(ld_detail, ld_opport, ld_statuses, ld_source, ld_users, ld_referral)
-
-
-"""
+# """
+# '''

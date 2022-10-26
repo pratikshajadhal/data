@@ -650,8 +650,8 @@ CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Referrals" (
   CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_LeadDetail" ( --Revised from CRM_Opportunities
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
-  Opportunity_ID int, --JS revised from ID -- 
   Lead_ID int, --JS added
+  Opportunity_ID int, --JS revised from ID -- 
   Status_ID int, --Need to join two table lead_detail_statuses(name) column and CRM_Status status_name column  -- ******ONLY STATUS_NAME SHOULD WE IGNORE Status_Name ?
   Lead_Source_ID int, -- Need to join two more tables LeadDetail ContactSource needs to be join LeadSources SourceName ON  ContactSource=LeadSource GET LEAD ID  ******
   Summary varchar(max), --LeadDetail Summary
