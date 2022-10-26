@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pandas as pd
 
 from .config import FVContactWebhookInput, FVWebhookInput
 from api_server.config import FVWebhookInput
@@ -188,13 +189,19 @@ def handle_wb_input(wb_input: FVWebhookInput):
     if wb_input.entity == "Project":
         if wb_input.event_name == "PhaseChanged":
             s3_dest = S3Destination(org_id=wb_input.org_id)
-            key = f"filevine/{wb_input.org_id}/{wb_input.project_type_id}/{wb_input.project_id}/phases/{wb_input.event_timestamp}.parquet"
-            logger.info(f"PhaseChanged event {key}")
-            phase_name = wb_input.webhook_body["Other"]["PhaseName"]
+            
+            # Prepare df
+            phase_dict = {
+                "project_id" : wb_input.project_id,
+                "phase": wb_input.webhook_body.get("Other").get("PhaseName"),
+                "timestamp": wb_input.webhook_body.get("Timestamp")
+            }
+            
+            # Load to the appropriate folder of s3 bucket.
             s3_dest.save_project_phase(
-                s3_key=key,
-                project_id=wb_input.project_id,
-                phase_name=phase_name)
+                phase_df = pd.DataFrame(data=[phase_dict]),
+                wb_input=wb_input
+            )
             return
         cls = handle_project_object(wb_input, selected_field_config)
     elif wb_input.entity == "Form":

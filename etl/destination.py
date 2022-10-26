@@ -1,18 +1,14 @@
-from cmath import phase
-from ctypes import Union
-from dataclasses import asdict, dataclass
-from typing import Dict
-from numpy import dtype
-import pandas as pd
 import os
-import psycopg2
-from dacite import from_dict
-import datetime
-import logging
-        
+
+import awswrangler as wr
 import boto3
 import pandas_redshift as pr
-import awswrangler as wr
+import psycopg2
+import pandas as pd
+
+from dataclasses import asdict
+from typing import Dict
+from dacite import from_dict
 
 from utils import get_logger
 from etl.datamodel import ColumnDefn, RedshiftConfig
@@ -100,16 +96,31 @@ class S3Destination(ETLDestination):
 
         return s3_key
 
-    def save_project_phase(self, s3_key, project_id, phase_name):
-        phase_df = pd.DataFrame([{"project_id" : project_id, "phase" : phase_name}])
+    def save_project_phase(self, phase_df:pd.DataFrame, wb_input):
+        """_summary_
+
+        Args:
+            phase_df (pd.DataFrame): _description_
+            dtypes (Dict): Dict[str, str], optional
+                Dictionary of columns names and Athena/Glue types to be casted.
+                Useful when you have columns with undetermined or mixed data types.
+                (e.g. {'col name': 'bigint', 'col2 name': 'int'})
+            wb_input (_type_): _description_
+        """
+        s3_key = f"filevine/{wb_input.org_id}/{wb_input.project_type_id}/{wb_input.project_id}/phases/{wb_input.event_timestamp}.parquet"
+        logger.info(f"PhaseChanged event {s3_key}")
         
         s3_path = f"s3://{self.config['bucket']}/{s3_key}"
-        
+        dtypes = {
+            "project_id": "int",
+            "phase": "string",
+            "timestamp": "timestamp"
+        }
         wr.s3.to_parquet(
-                df=phase_df,
-                path=f"{s3_path}",
-                boto3_session=self.s3_session,
-                use_threads=8
+            df=phase_df,
+            path=s3_path,
+            boto3_session=self.s3_session,
+            dtype=dtypes
         )
 
         logger.info(f"S3 Upload successful for {s3_path}")
