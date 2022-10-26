@@ -468,7 +468,7 @@ CREATE TABLE IF NOT EXISTS APP_Targets (
 
 
 --CRM Standard Models
-CREATE TABLE IF NOT EXISTS CRM_Users (
+CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Users" (
   Truve_Org_ID int not null,  -- 
   Client_Org_ID varchar(255) not null, 
   User_ID int, --revised from User_ID 
@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS CRM_Users (
   );
 
 
-CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
+CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Contacts" ( --Revised from CRM_Contact
   Truve_Org_ID int not null, -- **
   Client_Org_ID varchar(255) not null, -- **
   Contact_ID int, --Js revised from ID
@@ -533,7 +533,7 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
 
 
 -- sparkla
-  CREATE TABLE IF NOT EXISTS CRM_Status (
+  CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Status" (
   Truve_Org_ID int not null, -- **
   Client_Org_ID varchar(255) not null, -- **
   Status_ID int, --JS updated from ID
@@ -549,36 +549,7 @@ CREATE TABLE IF NOT EXISTS CRM_Contacts ( --Revised from CRM_Contact
   -- Constraint UniqueTeams UNIQUE (Status_ID) -- Added by M7 due to commmon error
   );
 
--- DC removed - duplication
---  CREATE TABLE IF NOT EXISTS CMS_PhaseChanges (
---  Truve_Org_ID int not null,
---  Client_Org_ID varchar(255) not null,
---  Parent_Case_ID int not null,
---  Case_ID int not null,
---  Practice_Type_ID int,
---  Phase_ID int not null, --JS removed 'references CMS_Phases (Phase_ID)'
---  Phase_Change_Date date not null,
---  Custom1 varchar(255), --JS added
---  Custom2 varchar(255), --JS added
---  Custom3 varchar(255), --JS added
---  foreign key (Client_Org_ID, Parent_Case_ID, Case_ID) references CMS_CaseDetails (Client_Org_ID, Parent_Case_ID, Case_ID) --JS revised to add Client_Org_ID
---  foreign key (Client_Org_ID, Practice_Type_ID, Phase_ID) references CMS_Phases (Client_Org_ID, Practice_Type_ID, Phase_ID) --JS added
---);
-
--- DC added below table **What is the input/source of this table? ****CRM Type id, name and CODE ??????
--- CREATE TABLE IF NOT EXISTS CRM_PracticeTypes (
---   Truve_Org_ID int not null,
---   Client_Org_ID varchar(255) not null,
---   Practice_Type_ID int , -- Code -- Constraint must be deleted.
---   Practice_Type_Name varchar(255), -- Code
---   Custom1 varchar(255),
---   Custom2 varchar(255),
---   Custom3 varchar(255),
---   primary key (Client_Org_ID, Practice_Type_ID), --JS added Client_Org_ID
---   Constraint CRM_UniquePracticeNames UNIQUE (Client_Org_ID, Practice_Type_ID) -- DC revised constraint name
--- );
--- M7 added.
-CREATE TABLE IF NOT EXISTS CRM_PracticeTypes (
+CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_PracticeTypes" (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Practice_Type_ID int not null,
@@ -591,7 +562,7 @@ CREATE TABLE IF NOT EXISTS CRM_PracticeTypes (
 );
 
 -- --*******************************
-CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
+CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_CaseTypes" ( --JS revised from CaseType
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Practice_Type_ID varchar(255) not null, --******************************* Bunun refer ettği tablo practice type null olamazken bu oluyor check.|| JS removed, DC added back, revised from Code -- Bu null ikeen referr ettiği tablonun practice_type_id'si null olamaz diyor ve hata veriyor.
@@ -607,7 +578,7 @@ CREATE TABLE IF NOT EXISTS CRM_CaseTypes ( --JS revised from CaseType
   Constraint CRM_UniqueCaseTypes UNIQUE (Client_Org_ID, Practice_Type_ID, Case_Type_Name) -- DC added, revised the constraint name
   );
 
-CREATE TABLE IF NOT EXISTS CRM_Referrals (
+CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Referrals" (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Referral_ID  int, --revised from ID
@@ -622,7 +593,7 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
   );
   
  -- Leadraw ve LeadDetail
- CREATE TABLE IF NOT EXISTS CRM_Leads ( --JS Revised from LeadRow
+ CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Leads" ( --JS Revised from LeadRow
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Lead_Id int, --Revised from ID
@@ -636,14 +607,14 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
   primary key (Client_Org_ID, Lead_ID), --JS added
-  foreign key (Client_Org_ID, Contact_ID) references CRM_Contacts (Client_Org_ID, Contact_ID), --JS added
-  foreign key (Client_Org_ID, Practice_Type_ID, Case_Type_ID) references CRM_CaseTypes (Client_Org_ID, Practice_Type_ID, Case_Type_ID), --JS added, DC added Practice_Type_ID too
-  foreign key (Client_Org_ID, Practice_Type_ID) references CRM_PracticeTypes (Client_Org_ID, Practice_Type_ID), --DC added
-  foreign key (Client_Org_ID, Created_By_ID) references CRM_Users (Client_Org_ID, User_ID)
+  foreign key (Client_Org_ID, Contact_ID) references "truve"."tsm"."CRM_Contacts" (Client_Org_ID, Contact_ID), --JS added
+  foreign key (Client_Org_ID, Practice_Type_ID, Case_Type_ID) references "truve"."tsm"."CRM_CaseTypes" (Client_Org_ID, Practice_Type_ID, Case_Type_ID), --JS added, DC added Practice_Type_ID too
+  foreign key (Client_Org_ID, Practice_Type_ID) references "truve"."tsm"."CRM_PracticeTypes" (Client_Org_ID, Practice_Type_ID), --DC added
+  foreign key (Client_Org_ID, Created_By_ID) references "truve"."tsm"."CRM_Users" (Client_Org_ID, User_ID)
   );
 
 
-  CREATE TABLE IF NOT EXISTS CRM_StatusChanges (
+  CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_StatusChanges" (
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Lead_ID int not null,
@@ -652,13 +623,13 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
   Custom1 varchar(255),
   Custom2 varchar(255),
   Custom3 varchar(255),
-  foreign key (Client_Org_ID, Lead_ID) references CRM_Leads (Client_Org_ID, Lead_ID),
-  foreign key (Client_Org_ID, Status_ID) references CRM_Status (Client_Org_ID, Status_ID)
+  foreign key (Client_Org_ID, Lead_ID) references "truve"."tsm"."CRM_Leads" (Client_Org_ID, Lead_ID),
+  foreign key (Client_Org_ID, Status_ID) references "truve"."tsm"."CRM_Status" (Client_Org_ID, Status_ID)
   );
 
 
 
-  CREATE TABLE IF NOT EXISTS CRM_LeadSource ( -- ***** IN RAW: We only have lead source_name column in this table. Are we gonna get lead_detail again?
+  CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_LeadSource" ( -- ***** IN RAW: We only have lead source_name column in this table. Are we gonna get lead_detail again?
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Lead_Source_ID int, --revised from ID //  M7 can get from leadsources
@@ -676,7 +647,7 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
     
 --Jay removed below table/ What is the source OPPORT?
 -- LeadDetail, Opportunity, Statuses, LeadSources, Users
-  CREATE TABLE IF NOT EXISTS CRM_LeadDetail ( --Revised from CRM_Opportunities
+  CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_LeadDetail" ( --Revised from CRM_Opportunities
   Truve_Org_ID int not null,
   Client_Org_ID varchar(255) not null,
   Opportunity_ID int, --JS revised from ID -- 
@@ -716,16 +687,16 @@ CREATE TABLE IF NOT EXISTS CRM_Referrals (
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
   primary key (Client_Org_ID, Opportunity_ID),
-  foreign key (Client_Org_ID, Lead_ID) references CRM_Leads(Client_Org_ID, Lead_ID),
-  foreign key (Client_Org_ID, Status_ID) references CRM_Status (Client_Org_ID, Status_ID),
-  foreign key (Client_Org_ID, Lead_Source_ID) references CRM_LeadSource (Client_Org_ID, Lead_Source_ID),
+  foreign key (Client_Org_ID, Lead_ID) references "truve"."tsm"."CRM_Leads"(Client_Org_ID, Lead_ID),
+  foreign key (Client_Org_ID, Status_ID) references "truve"."tsm"."CRM_Status" (Client_Org_ID, Status_ID),
+  foreign key (Client_Org_ID, Lead_Source_ID) references "truve"."tsm"."CRM_LeadSource" (Client_Org_ID, Lead_Source_ID),
   -- foreign key (Client_Org_ID, Referred_By_ID) references CRM_Contacts(Client_Org_ID, Contact_ID), -- , deleted by M7
   -- foreign key (Client_Org_ID, Referral_ID) references CRM_Referrals (Client_Org_ID, Referral_ID), -- DC added, deleted by M7
-  foreign key (Client_Org_ID, Referred_By_ID) references CRM_Referrals(Client_Org_ID, Referral_ID), -- Aded by M7
-  foreign key (Client_Org_ID, Processed_By_ID) references CRM_Users(Client_Org_ID, User_ID),
-  foreign key (Client_Org_ID, Assigned_To_ID) references CRM_Users(Client_Org_ID, User_ID),
-  foreign key (Client_Org_ID, Paralegal_ID) references CRM_Users(Client_Org_ID, User_ID),
-  foreign key (Client_Org_ID, Attorney_ID) references CRM_Users(Client_Org_ID, User_ID)
+  foreign key (Client_Org_ID, Referred_By_ID) references "truve"."tsm"."CRM_Referrals"(Client_Org_ID, Referral_ID), -- Aded by M7
+  foreign key (Client_Org_ID, Processed_By_ID) references "truve"."tsm"."CRM_Users"(Client_Org_ID, User_ID),
+  foreign key (Client_Org_ID, Assigned_To_ID) references "truve"."tsm"."CRM_Users"(Client_Org_ID, User_ID),
+  foreign key (Client_Org_ID, Paralegal_ID) references "truve"."tsm"."CRM_Users"(Client_Org_ID, User_ID),
+  foreign key (Client_Org_ID, Attorney_ID) references "truve"."tsm"."CRM_Users"(Client_Org_ID, User_ID)
   );
 
   

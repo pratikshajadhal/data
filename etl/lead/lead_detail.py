@@ -110,11 +110,11 @@ class LeadDetailETL(LeadModelETL):
             for idx, lead_id in enumerate(lead_ids):
                 try:
                     lead = self.extract_data_from_source(lead_id)
-                    # if lead.get("Contact"):
-                    #     contact_df = contact_obj.transform(lead["Contact"])
-                    #     transformed = contact_obj.eliminate_nonyaml(contact_df)
-                    #     contact_obj.load_data(trans_df=transformed, client_id=client_id)
-                    #     time.sleep(2)
+                    if lead.get("Contact"):
+                        contact_df = contact_obj.transform(lead["Contact"])
+                        transformed = contact_obj.eliminate_nonyaml(contact_df)
+                        contact_obj.load_data(trans_df=transformed, client_id=client_id)
+                        time.sleep(2)
 
                     if lead.get("Opportunity"):
                         opport_id = lead.get("Opportunity").get("Id")
@@ -122,14 +122,13 @@ class LeadDetailETL(LeadModelETL):
                         opport_df = opport_obj.transform(extracted)
                         transformed = opport_obj.eliminate_nonyaml(opport_df)
                         opport_obj.load_data(trans_df=transformed, client_id=client_id)
-                        # # Please uncomment below line.
-                        # time.sleep(2)
+                        time.sleep(2)
 
 
                     
-                    # lead_detail_df = self.transform(lead)
-                    # transformed_detail_df = self.eliminate_nonyaml(lead_detail_df)
-                    # self.load_data(trans_df=transformed_detail_df, client_id=client_id)
+                    lead_detail_df = self.transform(lead)
+                    transformed_detail_df = self.eliminate_nonyaml(lead_detail_df)
+                    self.load_data(trans_df=transformed_detail_df, client_id=client_id)
 
                 except Exception as e:
                     logger.warn("=" * 60)
