@@ -113,7 +113,15 @@ def start_project_etl():
             project_list = project_etl.extract_data_from_source()
 
             #project_list = project_list
-        
+            '''
+            new_project_list = []
+            for project in project_list:
+                if project["projectId"] == 10888216:
+                    new_project_list.append(project)
+            project_list = new_project_list
+            #project_list = [10888216]
+            '''
+
             project_etl.get_schema_of_model()
 
             project_etl.flattend_map = project_etl.get_filtered_schema(project_etl.source_schema)
@@ -148,6 +156,9 @@ def start_project_etl():
                         t.join()
                     thread_list = []
                     count = 0
+            for t in thread_list:
+                t.join()
+            
             
 
 def start_form_etl(project_type, form_name):
@@ -263,5 +274,7 @@ def start_collection_etl(project_type, section_name):
             
 
 if __name__ == "__main__":
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
-    # start_collection_etl(18764, "insurance")
+   # uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+    #start_form_etl(18764, "casesummary")
+    #start_project_etl()
+    start_contact_etl()

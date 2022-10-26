@@ -219,7 +219,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
         
         table_fields = self._get_table_config(table_name)
 
-        project_df = project_df.join(df_casesummary.select("projectId", "caseType"), on=["projectId"])
+        project_df = project_df.join(df_casesummary.select("projectId", "caseType"), on=["projectId"], how="left")
 
         
         for field in table_fields:
@@ -257,7 +257,7 @@ class TSMBuilder(metaclass=abc.ABCMeta):
             .withColumnRenamed("value", "Case_Create_Date")
 
         project_df = project_df.drop("Case_Type_ID")
-        project_df = project_df.join(processed_casetype_df.select("Case_Type_ID", "Practice_Type_ID", "Case_Type_Name"), on=["Practice_Type_ID", "Case_Type_Name"])
+        project_df = project_df.join(processed_casetype_df.select("Case_Type_ID", "Practice_Type_ID", "Case_Type_Name"), how="left", on=["Practice_Type_ID", "Case_Type_Name"])
 
         # TODO Change datatype here
         # col_list = ["Truve_Org_ID", "Client_Org_ID", "Case_ID", "Practice_Type_ID", "Is_Archived", "Incident_Date"]

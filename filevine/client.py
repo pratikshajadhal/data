@@ -76,25 +76,33 @@ class FileVineClient(object):
         
 
     def make_request(self, end_point:str, query_param:Dict={}):
-        session_info = self.generate_session()
-        # session_info = self.session_info
-        url = f"{self.base_url}{end_point}"
-        logger.debug("Hitting URL {}".format(url))
-        headers = {"x-fv-sessionid" : session_info["refreshToken"], 
-                "Authorization" : "Bearer {}".format(session_info["accessToken"])}
-        response = requests.get(url, headers=headers, params=query_param)
-        if response.status_code != 200:
-            logging.error(response.text)
-            logging.error(response.status_code)
-            if response.status_code == 404:
-                return None
-            elif response.status_code == 429:
-                logging.warning("Too many request, waiting")
-                time.sleep(30)
-                self.make_request(end_point=end_point, query_param=query_param)
-            raise
-        
-        return json.loads(response.text)
+        count = 0
+        while count < 3:
+            try:
+                count += 1
+                session_info = self.generate_session()
+                # session_info = self.session_info
+                url = f"{self.base_url}{end_point}"
+                logger.debug("Hitting URL {}".format(url))
+                headers = {"x-fv-sessionid" : session_info["refreshToken"], 
+                        "Authorization" : "Bearer {}".format(session_info["accessToken"])}
+                response = requests.get(url, headers=headers, params=query_param)
+                if response.status_code != 200:
+                    logging.error(response.text)
+                    logging.error(response.status_code)
+                    if response.status_code == 404:
+                        return None
+                    elif response.status_code == 429:
+                        logging.warning("Too many request, waiting")
+                        time.sleep(30)
+                        self.make_request(end_point=end_point, query_param=query_param)
+                    raise
+                
+                return json.loads(response.text)
+            except Exception as e:
+                logging.error(f"make_request error in processing. So, waiting. Exception {e}")
+                time.sleep(10)
+                
 
     def get_entity(self, end_point:str, requested_fields:list=['*']):
         has_more = True

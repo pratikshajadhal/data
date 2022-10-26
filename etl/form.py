@@ -62,21 +62,24 @@ class FormETL(ModelETL):
 
     def trigger_etl(self, project_list:list[int], dest_col_format):
         for project in project_list[:500]:
-            if project > 10813786:
-                continue
-            form_data_list = self.extract_data_from_source(project_list=[project])
+            try:
+            #if project > 10813786:
+            #    continue
+                form_data_list = self.extract_data_from_source(project_list=[project])
 
-            form_df = self.transform_data(record_list=form_data_list)
+                form_df = self.transform_data(record_list=form_data_list)
 
-            if form_df.shape[0] == 0:
-                print("Empty dataframe")
-                continue
-            
-            self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
+                if form_df.shape[0] == 0:
+                    print("Empty dataframe")
+                    continue
+                
+                self.load_data_to_destination(trans_df=form_df, schema=dest_col_format, project=project)
 
-            #count = count + 1
+                #count = count + 1
 
-            #print("Total processed {}".format(count))
+                #print("Total processed {}".format(count))
+            except Exception as e:
+                print(f"Error::::: processing in project {project} {e}")  
 
 
     def get_snapshot(self, project_type_id):
