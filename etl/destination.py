@@ -114,7 +114,7 @@ class S3Destination(ETLDestination):
         dtypes = {
             "project_id": "int",
             "phase": "string",
-            "timestamp": "timestamp"
+            "timestamp": "bigint"
         }
         wr.s3.to_parquet(
             df=phase_df,
