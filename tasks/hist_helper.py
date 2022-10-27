@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import threading
 
 from etl.lead.lead_row import LeadRowETL
@@ -6,10 +7,10 @@ from etl.lead.lead_contact import LeadContactETL
 from etl.lead.lead_opport import LeadOpportETL
 from etl.lead.lead_referrals import LeadReferralsETL
 from etl.lead.lead_users import LeadUsersETL
-from etl.datamodel import ETLSource, FileVineConfig, LeadDocketConfig
-from utils import load_config, get_chunks, load_lead_config
+from etl.datamodel import LeadDocketConfig
 from etl.lead.core import CoreETL 
-from etl.destination import RedShiftDestination, S3Destination
+from etl.destination import SqsDestination, S3Destination
+from utils import  load_lead_config
 
 
 def start_leadsource_etl(s3_conf_file_path):
@@ -145,13 +146,13 @@ def start_lead_detail_etl(s3_conf_file_path, lead_ids:list = None, client_id = N
         number_of_chunk = 10
         # It is an elegant way to break a list into one line of code to split a list into multiple lists in Python.Auxiliary Space: O(1)
         lead_id_chunks = [lead_ids[i * number_of_chunk:(i + 1) * number_of_chunk] for i in range((len(lead_ids) + number_of_chunk - 1) // number_of_chunk )]
-        thread_count = 8
+        thread_count = 10
 
         count = 0
         thread_list = []
 
         for index, each_chunk in enumerate(lead_id_chunks):
-            print(f"Total number of chunk is {len(lead_id_chunks)} Total proessed so far {index + 1}")
+            logger.warn(f"Total number of chunk is {len(lead_id_chunks)} Total proessed so far {index + 1}")
             
             if count < thread_count:
                 t = threading.Thread(target=lead_detail.trigger_etl, args=(each_chunk, client_id, contact_etl, opport_etl))
@@ -281,4 +282,3 @@ def start_statuses_etl(s3_conf_file_path):
     transformed = core_etl.eliminate_nonyaml(core_df)
     core_etl.load_data(trans_df=transformed)
     
-

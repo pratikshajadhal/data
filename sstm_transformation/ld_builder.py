@@ -135,13 +135,63 @@ class LDBuilder(metaclass=abc.ABCMeta):
         with open('transformation/schema/{}.json'.format(table_name.lower())) as f:
             return StructType.fromJson(json.load(f))
     
-    def build_contact(self, df: SP_DATAFRAME):
+    def build_contact(
+        self,
+        df_contact: SP_DATAFRAME,
+        df_ld: SP_DATAFRAME,
+        df_users: SP_DATAFRAME
+    )-> dict:
         table_name = "CRM_Contacts"
-        df = self.transform(df, table_name)
-        df.show(100)
-        df.printSchema()
+        
+        df_contact = df_contact.toDF(*[f'contact_{c}' for c in df_contact.columns])
+        df_ld = df_ld.toDF(*[f'ld_{c}' for c in df_ld.columns])
+        df_users = df_users.toDF(*[f'users_{c}' for c in df_users.columns])
 
-        return {table_name : df}
+        # Manipulate users table to join on
+        df_users = df_users.withColumn('users_FullName', F.concat(F.col('users_FirstName'),F.lit(' '), F.col('users_LastName')))
+
+        joined1 = df_contact\
+            .join(df_ld,  df_contact.contact_LeadIds  ==  df_ld.ld_Id ,"left")\
+            .select(df_contact['*'], df_ld['ld_ContactSource'].alias('ld_ContactSource')) 
+        joined2 = joined1\
+            .join(df_users,  joined1.contact_CreatedBy  ==  df_users.users_FullName ,"left")\
+            .select(joined1['*'], df_users['users_Id'].alias('users_Id')) 
+
+        joined2 = joined2.withColumn("Truve_Org_ID", lit(self._get_truve_org(self.config.org_id)))
+        joined2 = joined2.withColumn("Client_Org_ID", lit(self._get_client_org(self.config.org_id)).cast(StringType()))
+        
+        columns = ["Truve_Org_ID", "Client_Org_ID",
+            "contact_Id", "contact_FirstName", "contact_MiddleName", 
+            "contact_LastName", "contact_Address1",
+            "contact_Address2", "contact_City",
+            "contact_State", "contact_Zip", "contact_County", "contact_HomePhone", "contact_MobilePhone",
+            "contact_WorkPhone", "contact_Email", "contact_PreferredContactMethod",
+            "contact_Birthdate", "contact_Deceased", "contact_Gender", "contact_Minor",
+            "contact_Language", "ld_ContactSource", "contact_CreatedOn", "users_Id",
+            "contact_CreatedBy"]
+        final_df = joined2.select(*columns)
+        table_fields = self._get_table_config(table_name)
+        
+        for field in table_fields:
+            if field.transform and field.transform.type == "data":
+                final_df = final_df.withColumn(field.name, final_df[field.transform.source_field])
+            elif not field.transform:
+                final_df = final_df.withColumn(field.name, lit(None).cast(StringType()))
+            
+        
+        col_list = [field.name for field in table_fields]
+        
+        final_df = final_df.select(*col_list)
+
+        for field in table_fields:
+            dtype = self._get_dtype_mapping(field.data_type)
+            final_df = final_df.withColumn(field.name, final_df[field.name].cast(dtype))
+
+        columns = ["Contact_ID", "First_Name", "Contact_Source", "Created_By_ID", "Created_By_Full_Name"]
+        final_df.select(*columns).show()
+        final_df.printSchema()
+        return {table_name : final_df}
+
 
     def build_leads(self, df: SP_DATAFRAME):
         table_name = "CRM_Leads"
@@ -363,9 +413,12 @@ class LDBuilder(metaclass=abc.ABCMeta):
 
 # #     # - - -
 
-# #     ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
-# #     ld_contacts = builder.build_contact(df=ld_contacts)
-# #     print(ld_contacts)
+    # ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
+    # # ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+    # # ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+
+    # ld_contacts = builder.build_contact(df=ld_contacts)
+    # print(ld_contacts)
 
 # #     # - - -
 
