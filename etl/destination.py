@@ -1,14 +1,10 @@
-from cmath import phase
-from ctypes import Union
-from dataclasses import asdict, dataclass
+import json
+from dataclasses import asdict
 from typing import Dict
-from numpy import dtype
 import pandas as pd
 import os
 import psycopg2
 from dacite import from_dict
-import datetime
-import logging
         
 import boto3
 import pandas_redshift as pr
@@ -252,3 +248,4 @@ class RedShiftDestination(ETLDestination):
 
         # Write the DataFrame to S3 and then to redshift
         pr.pandas_to_redshift(data_frame=data_df, redshift_table_name=rs_config.table_name)
+

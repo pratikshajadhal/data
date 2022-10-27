@@ -24,23 +24,26 @@ class LeadDocketClient(object):
                         }
 
     def make_request(self, end_point:str, query_param:Dict={}):
-        url = f"{self.base_url}{end_point}"
-        logger.info("Hitting URL {}".format(url))
-        response = requests.get(url, headers=self.headers, params=query_param)
-        if response.status_code != 200:
-            logger.warn(response.text)
-            logger.warn(f"(-) failed endpoint is: {end_point} ")
-            if response.status_code == 429:
-                logger.warn("(-) status 429, sleeping 30 secs")
-                time.sleep(25)
-                response = self.make_request(end_point=end_point, query_param=query_param)
-            elif response.status_code == 404:
-                logger.warn(response.text)
-                return None
-            raise
-            
-            
-        return json.loads(response.text)
+        count = 0
+        while count < 3:
+            try:
+                count += 1
+                url = f"{self.base_url}{end_point}"
+                logger.debug("Hitting URL {}".format(url))
+                response = requests.get(url, headers=self.headers, params=query_param)
+                if response.status_code != 200:
+                    logging.error(f"(-) Status code :{response.status_code}, endpoint: {end_point} \n response text: {response.text}")
+                    if response.status_code == 404:
+                        return None
+                    elif response.status_code == 429:
+                        logger.warn("(-) status 429 Too many request, sleeping 30 secs")
+                        time.sleep(25)
+                        self.make_request(end_point=end_point, query_param=query_param)
+                    raise
+                return json.loads(response.text)
+            except Exception as e:
+                logging.error(f"make_request error in processing. So, waiting. Exception {e}")
+                time.sleep(10)
 
     def get_row_lead_iteratively(self, endpoint, status, page=1):
         query_param = {"status": status,

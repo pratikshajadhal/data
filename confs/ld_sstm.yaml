@@ -18,7 +18,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Id
+        source_field: contact_Id
         type: data
     - name: First_Name
       data_type: string
@@ -26,7 +26,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: FirstName
+        source_field: contact_FirstName
         type: data
     - name: Middle_Name
       data_type: string
@@ -34,7 +34,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: MiddleName
+        source_field: contact_MiddleName
         type: data
     - name: Last_Name
       data_type: string
@@ -42,7 +42,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: LastName
+        source_field: contact_LastName
         type: data
     - name: Address1
       data_type: string
@@ -50,7 +50,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Address1
+        source_field: contact_Address1
         type: data
     - name: Address2
       data_type: string
@@ -58,7 +58,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Address2
+        source_field: contact_Address2
         type: data
     - name: City
       data_type: string
@@ -66,7 +66,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: City
+        source_field: contact_City
         type: data
     - name: State
       data_type: string
@@ -74,7 +74,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: State
+        source_field: contact_State
         type: data
     - name: Zip
       data_type: string
@@ -82,7 +82,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Zip
+        source_field: contact_Zip
         type: data
     - name: County
       data_type: string
@@ -90,7 +90,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: County
+        source_field: contact_County
         type: data
     - name: HomePhone
       data_type: string
@@ -98,7 +98,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: HomePhone
+        source_field: contact_HomePhone
         type: data
     - name: MobilePhone
       data_type: string
@@ -106,7 +106,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: MobilePhone
+        source_field: contact_MobilePhone
         type: data
     - name: WorkPhone
       data_type: string
@@ -114,7 +114,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: WorkPhone
+        source_field: contact_WorkPhone
         type: data
     - name: Email
       data_type: string
@@ -122,7 +122,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Email
+        source_field: contact_Email
         type: data
     - name: PreferredContactMethod
       data_type: string
@@ -130,7 +130,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: PreferredContactMethod
+        source_field: contact_PreferredContactMethod
         type: data
     - name: Date_of_Birth
       data_type: timestamp
@@ -138,7 +138,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Birthdate
+        source_field: contact_Birthdate
         type: data
     - name: If_Deceased
       data_type: boolean
@@ -146,7 +146,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Deceased
+        source_field: contact_Deceased
         type: data
     - name: Gender
       data_type: string
@@ -154,7 +154,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Gender
+        source_field: contact_Gender
         type: data
     - name: Minor
       data_type: boolean
@@ -162,7 +162,7 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Minor
+        source_field: contact_Minor
         type: data
     - name: Language
       data_type: string
@@ -170,47 +170,43 @@ tsm:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: Language
+        source_field: contact_Language
         type: data
     - name: Contact_Source
       data_type: string
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: leaddetail
+        source_field: ld_ContactSource
+        type: data
     - name: Contact_Source_Type
       data_type: string
     - name: Contact_Source_SubType
       data_type: string
-    # - name: Code
-    #   data_type: string
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: Code
-    #     type: data
-    # - name: DoNotText
-    #   data_type: boolean
-    #   transform:
-    #     source: etl
-    #     source_entity_type: core
-    #     source_entity_name: contact
-    #     source_field: DoNotText
-    #     type: data
     - name: Created_On
       data_type: timestamp
       transform:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: CreatedOn
+        source_field: contact_CreatedOn
         type: data
     - name: Created_By_ID
       data_type: int
+      transform:
+        source: etl
+        source_entity_type: core
+        source_entity_name: users
+        source_field: users_Id
+        type: data
     - name: Created_By_Full_Name
       data_type: string
       transform:
         source: etl
         source_entity_type: core
         source_entity_name: contact
-        source_field: CreatedBy
+        source_field: contact_CreatedBy
         type: data
     - name: Custom1
       data_type: string
