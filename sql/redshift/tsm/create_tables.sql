@@ -686,7 +686,8 @@ CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_Referrals" (
   Custom1 varchar(255), --JS added
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
-  primary key (Client_Org_ID, Opportunity_ID),
+  -- primary key (Client_Org_ID, Opportunity_ID), -- changed after Using leaddetails instead of opport
+  primary key (Client_Org_ID, Lead_ID),
   foreign key (Client_Org_ID, Lead_ID) references "truve"."tsm"."CRM_Leads"(Client_Org_ID, Lead_ID),
   foreign key (Client_Org_ID, Status_ID) references "truve"."tsm"."CRM_Status" (Client_Org_ID, Status_ID),
   foreign key (Client_Org_ID, Lead_Source_ID) references "truve"."tsm"."CRM_LeadSource" (Client_Org_ID, Lead_Source_ID),
