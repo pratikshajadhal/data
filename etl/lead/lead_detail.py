@@ -112,10 +112,11 @@ class LeadDetailETL(LeadModelETL):
                     lead = self.extract_data_from_source(lead_id)
                     if lead.get("Contact"):
                         contact_df = contact_obj.transform(lead["Contact"])
+                        contact_df["LeadIds"] = lead_id
                         transformed = contact_obj.eliminate_nonyaml(contact_df)
                         contact_obj.load_data(trans_df=transformed, client_id=client_id)
                         time.sleep(2)
-
+                        
                     if lead.get("Opportunity"):
                         opport_id = lead.get("Opportunity").get("Id")
                         extracted = opport_obj.extract_data_from_source(opport_id)
@@ -131,5 +132,5 @@ class LeadDetailETL(LeadModelETL):
                     self.load_data(trans_df=transformed_detail_df, client_id=client_id)
 
                 except Exception as e:
-                    logger.warn("=" * 60)
                     logger.error(e)
+        
