@@ -1,4 +1,6 @@
+import os
 import threading
+
 from etl.collections import CollectionETL
 from etl.contact import ContactETL
 from etl.datamodel import ETLSource, FileVineConfig, LeadDocketConfig
@@ -11,9 +13,7 @@ from etl.lead.lead_opport import LeadOpportETL
 from etl.lead.lead_referrals import LeadReferralsETL
 from etl.lead.lead_users import LeadUsersETL
 
-import os
 from dotenv import load_dotenv
-import uvicorn
 
 
 from etl.destination import RedShiftDestination, S3Destination
@@ -263,15 +263,18 @@ def start_collection_etl(project_type, section_name):
             
 
 if __name__ == "__main__":
-    uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
+    # uvicorn.run("api_server.app:app", host="0.0.0.0", port=int(os.environ["SERVER_PORT"]), reload=True, root_path="/")
     # start_collection_etl(18764, "insurance")
+    # from tasks.tasks import start_lead_contact_etl, start_lead_detail_etl
+    # start_lead_detail_etl("confs/src-lead.yaml")
+    # start_lead_contact_etl(s3_conf_file_path="confs/src-lead.yaml", contact_ids=[10038])
 
 
-# # - - - Test Local spark
-#     from sstm_transformation.ld_builder import LDBuilder
-#     from pyspark.sql import SparkSession
-#     spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
-#     builder = LDBuilder("confs/ld_sstm.yaml", spark=spark)
+# - - - Test Local spark
+    from sstm_transformation.ld_builder import LDBuilder
+    from pyspark.sql import SparkSession
+    spark = SparkSession.builder.appName('TSMTransformation').getOrCreate()
+    builder = LDBuilder("confs/ld_sstm.yaml", spark=spark)
 
 #     # ld_users_df = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
 #     # ld_users_df = builder.build_users(df=ld_users_df)
@@ -281,9 +284,12 @@ if __name__ == "__main__":
 #     # # - - -
 
 #     # Read lead_contacts
-#     # ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
-#     # ld_contacts = builder.build_contact(df=ld_contacts)
-#     # print(ld_contacts)
+    # ld_contacts = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\contacts\*.parquet")
+    # ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+    # ld_users = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\*.parquet")
+
+    # ld_contacts = builder.build_contact(ld_contacts, ld_detail, ld_users)
+    # print(ld_contacts)
 
 #     # # - - -
 #     # TODO
@@ -309,9 +315,17 @@ if __name__ == "__main__":
 #     # print(ld_referral_df)
     
 #     # # - - -
-#     # Read lead_raw
-#     # ld_status_changes = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_raw\*.parquet")
-#     # ld_status_changes = builder.build_status_changes(df=ld_status_changes)
-#     # print(ld_status_changes)
+    # Read lead_raw
+    # ld_status_changes = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_raw\*.parquet")
+    # ld_status_changes = builder.build_status_changes(df=ld_status_changes)
+    # print(ld_status_changes)
 
 
+    ld_detail = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_detail\*.parquet")
+    ld_opport = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\opport\*.parquet")
+    ld_statuses = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\statuses\*.parquet")
+    ld_source = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\lead_source\*.parquet")
+    ld_users = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\users\12.parquet")
+    ld_referral = spark.read.parquet(r"C:\Users\mert.seven\Desktop\Projects\Truve\shiv-apı\latest\data-api\temp_data\referrals\*.parquet")
+
+    builder.build_leaddetail(ld_detail, ld_opport, ld_statuses, ld_source, ld_users, ld_referral)

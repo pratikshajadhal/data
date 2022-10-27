@@ -339,7 +339,7 @@ tsm:
         source_field: opp_County
         type: data
     - name: If_Processed
-      data_type: string
+      data_type: boolean
       transform:
         source: etl
         source_entity_type: core
