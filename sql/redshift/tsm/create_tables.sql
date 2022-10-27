@@ -574,7 +574,7 @@ CREATE TABLE IF NOT EXISTS "truve"."tsm"."CRM_CaseTypes" ( --JS revised from Cas
   Custom2 varchar(255), --JS added
   Custom3 varchar(255), --JS added
   primary key (Client_Org_ID, Practice_Type_ID, Case_Type_ID), --DC added Client_Org_ID, Practice_Type_ID
-  foreign key (Client_Org_ID, Practice_Type_ID) references CRM_PracticeTypes (Client_Org_ID, Practice_Type_ID), -- DC added
+  foreign key (Client_Org_ID, Practice_Type_ID) references "truve"."tsm"."CRM_PracticeTypes" (Client_Org_ID, Practice_Type_ID), -- DC added
   Constraint CRM_UniqueCaseTypes UNIQUE (Client_Org_ID, Practice_Type_ID, Case_Type_Name) -- DC added, revised the constraint name
   );
 
