@@ -4,7 +4,8 @@ import pandas as pd
 
 from .datamodel import ColumnDefn, ETLDestination, ETLSource, RedshiftConfig
 from .modeletl import ModelETL
-from filevine import client
+from utils import get_logger
+logger = get_logger(__name__)
 
 class ProjectETL(ModelETL):
 
@@ -55,26 +56,34 @@ class ProjectETL(ModelETL):
     def trigger_etl(self, project_list:list[int], dest_col_format):
         for contact in project_list:
             try:
+                project_id = contact.get("projectId")
                 contact_df = self.transform_data(record_list=[contact])
                 projectId = contact_df["projectId"].tolist()[0]
                 project_vital = self.fv_client.get_project_vital(project_id=contact["projectId"])
-                #project_record = {"fieldName" : "projectId", 
-                #                "friendlyName" : "projectId",
-                #                "fieldType" : "string",
-                #                "value" : f"{contact['projectId']}",
-                #                }
-                #project_vital.append(project_record)
+                project_record = {
+                    "fieldName" : "projectId", 
+                    "friendlyName" : "projectId",
+                    "fieldType" : "string",
+                    "value" : f"{contact['projectId']}",}
+                project_vital.append(project_record)
                 vital_df = pd.DataFrame(project_vital)
-                vital_schema = [ColumnDefn(name="fieldName", data_type="string"),
-                            ColumnDefn(name="friendlyName", data_type="string"),
-                            ColumnDefn(name="fieldType", data_type="string"),
-                            ColumnDefn(name="value", data_type="string"),
-                            ColumnDefn(name="position", data_type="string"),
-                            ColumnDefn(name="links", data_type="string")]
+                vital_schema = [
+                    ColumnDefn(name="fieldName", data_type="string"),
+                    ColumnDefn(name="friendlyName", data_type="string"),
+                    ColumnDefn(name="fieldType", data_type="string"),
+                    ColumnDefn(name="value", data_type="string"),
+                    ColumnDefn(name="position", data_type="string"),
+                    ColumnDefn(name="links", data_type="string")]
                 self.load_data_to_destination(trans_df=contact_df, schema=dest_col_format, project=projectId)
                 self.load_data_to_destination(trans_df=vital_df, schema=vital_schema, project=projectId, extra_params={"subentity" : "vitals"})
+                
             except Exception as e:
-                print(f"Error::::: processing in project {contact} {e}")        
+                print(f"(-) Failed project id: {project_id}")
+                print("--- "* 30)
+                print(f"Exception is {e}")
+                logger.critical(f"(-) Failed project id: {project_id} \t Reason: {e}")
+                # print(f"Error::::: processing in project {contact} {e}")     
+                   
             
 
     

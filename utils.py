@@ -104,36 +104,38 @@ def load_lead_config(file_path:str) -> LeadSelectedConfig:
         return from_dict(data=data, data_class=LeadSelectedConfig)
 
 def get_logger(__name__):
-    # logging.basicConfig(filename="historical_logs",
-    #                 filemode='a',
-    #                 format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-    #                 datefmt='%H:%M:%S',
-    #                 level=logging.INFO)
+    logging.basicConfig(
+        filename="historical_logs",
+        filemode='a',
+        format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+        datefmt='%H:%M:%S',
+        level=50 # Critical
+    )
 
 
-    # logger = logging.getLogger('HistoricalLogs')
-    # return logger
+    logger = logging.getLogger('HistoricalLogs')
+    return logger
 
     # - - - - - - - - - - - - - - - - - - - - - 
 
-    logger = logging.getLogger(__name__)
+    # logger = logging.getLogger(__name__)
 
-    if len(logger.handlers) > 0:
-        return logger
+    # if len(logger.handlers) > 0:
+    #     return logger
 
-    logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.DEBUG)
     
-    # create console handler with a higher log level
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG)
+    # # create console handler with a higher log level
+    # handler = logging.StreamHandler()
+    # handler.setLevel(logging.DEBUG)
     
-    # create formatter and add it to the handler
-    formatter = logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s')
-    handler.setFormatter(formatter)
-    # add the handler to the logger
-    logger.addHandler(handler)
+    # # create formatter and add it to the handler
+    # formatter = logging.Formatter('%(levelname)s - %(asctime)s - %(name)s - %(message)s')
+    # handler.setFormatter(formatter)
+    # # add the handler to the logger
+    # logger.addHandler(handler)
 
-    return logger
+    # return logger
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
